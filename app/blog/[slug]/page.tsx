@@ -78,8 +78,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     .slice(0, 3)
     .map(({ candidate }) => candidate);
 
-  const schema = {
-    "@context": "https://schema.org",
+  const blogPostingSchema = {
     "@type": "BlogPosting",
     headline: post.title,
     description: post.excerpt,
@@ -100,6 +99,26 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
       }
     },
     keywords: [post.primaryKeyword, ...post.tags].join(", ")
+  };
+
+  const faqSchema =
+    post.faqItems.length > 0
+      ? {
+          "@type": "FAQPage",
+          mainEntity: post.faqItems.map((item) => ({
+            "@type": "Question",
+            name: item.question,
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: item.answer
+            }
+          }))
+        }
+      : null;
+
+  const schema = {
+    "@context": "https://schema.org",
+    "@graph": faqSchema ? [blogPostingSchema, faqSchema] : [blogPostingSchema]
   };
 
   return (
