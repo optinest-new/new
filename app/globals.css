@@ -1,0 +1,112 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: only light;
+  --pop-yellow: #f7de46;
+  --pop-red: #ff5f4a;
+  --pop-blue: #3a4bf0;
+  --stroke-dark: #131313;
+  --stroke-soft: #f8f3d8;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: #f5f6ef;
+  font-family: "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+.font-display {
+  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+}
+
+.font-mono {
+  font-family: "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+.checker-bg {
+  position: absolute;
+  inset: 0;
+  background-color: #f0f1e8;
+  background-image:
+    linear-gradient(45deg, rgba(0, 0, 0, 0.1) 25%, transparent 25%),
+    linear-gradient(-45deg, rgba(0, 0, 0, 0.1) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, rgba(0, 0, 0, 0.1) 75%),
+    linear-gradient(-45deg, transparent 75%, rgba(0, 0, 0, 0.1) 75%);
+  background-size: 64px 64px;
+  background-position:
+    0 0,
+    0 32px,
+    32px -32px,
+    -32px 0;
+}
+
+.hero-title {
+  text-shadow: 8px 8px 0 rgba(0, 0, 0, 0.14);
+}
+
+.hero-line {
+  display: inline-block;
+  letter-spacing: -0.02em;
+}
+
+.hero-line-top {
+  color: var(--pop-yellow);
+}
+
+.hero-line-bottom {
+  color: var(--pop-red);
+}
+
+.eyebrow-pop {
+  display: inline-block;
+  padding: 0.65rem 1.1rem;
+  border: 2px solid var(--stroke-dark);
+  border-radius: 999px;
+  background: linear-gradient(90deg, #f7de46 0%, #ffd86a 45%, #ffb457 100%);
+  color: #0f1419;
+  font-size: 0.85rem;
+  font-weight: 800;
+  line-height: 1.35;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  box-shadow: 6px 6px 0 rgba(19, 19, 19, 0.28);
+  text-shadow: 0.7px 0.7px 0 var(--stroke-soft);
+  white-space: normal;
+  text-wrap: balance;
+}
+
+.tagline-pop {
+  color: #1a245f;
+  box-shadow: 6px 6px 0 rgba(19, 19, 19, 0.3);
+  text-shadow: 0.8px 0.8px 0 var(--stroke-soft);
+}
+
+@supports (-webkit-text-stroke: 1px #000) {
+  .hero-line-top,
+  .hero-line-bottom {
+    -webkit-text-stroke: 2px var(--stroke-dark);
+  }
+
+  .eyebrow-pop {
+    -webkit-text-stroke: 0.5px var(--stroke-dark);
+  }
+
+  .tagline-pop {
+    -webkit-text-stroke: 0.35px var(--stroke-dark);
+  }
+}
+
+@media (min-width: 768px) {
+  .eyebrow-pop {
+    padding: 0.75rem 1.35rem;
+    font-size: 0.95rem;
+    letter-spacing: 0.14em;
+  }
+}
