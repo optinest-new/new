@@ -124,7 +124,7 @@ export default function Home() {
           </h1>
 
           <p className="tagline-pop mt-6 max-w-3xl rounded-2xl border-2 border-ink/80 bg-mist/95 px-5 py-4 text-balance font-mono text-[0.98rem] font-bold leading-relaxed tracking-[0.02em] text-ink sm:text-base md:mt-7 md:px-6 md:text-xl">
-            Building fast websites and strong SEO systems for brands ready to grow.
+            We build fast, SEO-friendly websites that help growing brands attract qualified traffic and turn visits into leads.
           </p>
           <section aria-label="Primary call to action" className="mt-10 md:mt-12">
             <a
