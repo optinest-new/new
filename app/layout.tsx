@@ -51,7 +51,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Optinest Digital | Web Design & SEO Agency",
     description:
-      "Live web design and SEO agency founded by Jeff Gab.",
+      "Optinest Digital is a small web design and SEO agency helping businesses grow with fast websites, technical SEO, and conversion-focused strategy.",
     images: ["/og.png"]
   },
   robots: {
