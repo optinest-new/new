@@ -36,7 +36,7 @@ export const metadata: Metadata = {
     url: siteUrl,
     title: "Optinest Digital | Small Web Design & SEO Agency",
     description:
-      "Optinest Digital is live and helping brands grow through technical SEO and fast, modern websites.",
+      "Optinest Digital is a small web design and SEO agency helping businesses grow with fast websites, technical SEO, and conversion-focused strategy.",
     siteName: "Optinest Digital",
     images: [
       {
