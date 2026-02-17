@@ -124,10 +124,12 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             {post.title}
           </h1>
           <p className="mt-3 text-sm text-ink/80 sm:text-base">{post.excerpt}</p>
-          <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-ink/70 sm:gap-x-5 sm:text-sm">
-            <span>{post.author}</span>
-            <time dateTime={post.date}>{post.date}</time>
-            <span>{post.readingTime} min read</span>
+          <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 text-[0.78rem] sm:gap-x-5 sm:text-sm">
+            <span className="font-semibold text-[#1f2d5a]">{post.author}</span>
+            <time dateTime={post.date} className="text-ink/65">
+              {post.date}
+            </time>
+            <span className="font-semibold text-[#9a6b00]">{post.readingTime} min read</span>
           </div>
         </header>
 
