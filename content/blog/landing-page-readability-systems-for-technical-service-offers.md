@@ -157,7 +157,7 @@ After each change, compare search visibility, on-page engagement, and conversion
 
 To expand this topic without overlap, review these focused guides:
 
-- [authority focused design system for SEO websites](/blog/authority-focused-design-tokens-for-seo-driven-brand-sites)
-- [authority section design for query relevance](/blog/authority-section-design-improves-query-relevance-signals)
-- [before after layout for SEO case pages](/blog/before-after-story-layouts-for-seo-case-narrative-pages)
+- [case study page structure for organic conversion](/blog/case-study-page-structures-turn-organic-traffic-into-calls)
+- [content architecture for fitness studios](/blog/fitness-studios-content-architecture-guide)
+- [local SEO strategy for med spas](/blog/med-spas-local-seo-strategy-guide)
 

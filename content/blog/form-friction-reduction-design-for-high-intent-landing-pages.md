@@ -155,7 +155,7 @@ Over time, these iterative improvements help landing pages maintain search visib
 
 To expand this topic without overlap, review these focused guides:
 
-- [authority focused design system for SEO websites](/blog/authority-focused-design-tokens-for-seo-driven-brand-sites)
-- [authority section design for query relevance](/blog/authority-section-design-improves-query-relevance-signals)
-- [before after layout for SEO case pages](/blog/before-after-story-layouts-for-seo-case-narrative-pages)
+- [service comparison page design for organic queries](/blog/service-comparison-page-design-for-non-branded-organic-queries)
+- [multistep service funnel from SEO landing pages](/blog/multistep-service-funnels-built-on-seo-landing-architecture)
+- [website redesign for fitness studios](/blog/fitness-studios-website-redesign-guide)
 

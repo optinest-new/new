@@ -151,7 +151,7 @@ Over time, these iterative improvements help SEO leads maintain search visibilit
 
 To expand this topic without overlap, review these focused guides:
 
-- [authority focused design system for SEO websites](/blog/authority-focused-design-tokens-for-seo-driven-brand-sites)
-- [authority section design for query relevance](/blog/authority-section-design-improves-query-relevance-signals)
-- [before after layout for SEO case pages](/blog/before-after-story-layouts-for-seo-case-narrative-pages)
+- [lead qualification widget for SEO landing pages](/blog/lead-qualification-widget-design-for-seo-landing-experiences)
+- [conversion UX optimization for ecommerce brands](/blog/ecommerce-brands-conversion-ux-optimization-guide)
+- [content architecture for restaurants](/blog/restaurants-content-architecture-guide)
 

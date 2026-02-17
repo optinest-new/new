@@ -157,7 +157,7 @@ After each change, compare search visibility, on-page engagement, and conversion
 
 To expand this topic without overlap, review these focused guides:
 
-- [local SEO strategy for accountants](/blog/accountants-local-seo-strategy-guide)
-- [local SEO strategy for b2b manufacturers](/blog/b2b-manufacturers-local-seo-strategy-guide)
-- [local SEO strategy for consulting firms](/blog/consulting-firms-local-seo-strategy-guide)
+- [local SEO strategy for med spas](/blog/med-spas-local-seo-strategy-guide)
+- [website redesign for ecommerce brands](/blog/ecommerce-brands-website-redesign-guide)
+- [mobile first conversion layout for local search](/blog/mobile-first-conversion-layouts-for-local-search-visitors)
 

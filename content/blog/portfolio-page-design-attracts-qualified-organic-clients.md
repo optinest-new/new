@@ -155,7 +155,7 @@ Over time, these iterative improvements help organic clients maintain search vis
 
 To expand this topic without overlap, review these focused guides:
 
-- [authority focused design system for SEO websites](/blog/authority-focused-design-tokens-for-seo-driven-brand-sites)
-- [authority section design for query relevance](/blog/authority-section-design-improves-query-relevance-signals)
-- [before after layout for SEO case pages](/blog/before-after-story-layouts-for-seo-case-narrative-pages)
+- [sidebar utility design for topical discovery](/blog/sidebar-utility-design-for-better-topical-page-discovery)
+- [website redesign for plumbing services](/blog/plumbing-services-website-redesign-guide)
+- [conversion UX optimization for insurance agencies](/blog/insurance-agencies-conversion-ux-optimization-guide)
 

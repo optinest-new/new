@@ -157,7 +157,7 @@ After each change, compare search visibility, on-page engagement, and conversion
 
 To expand this topic without overlap, review these focused guides:
 
-- [website redesign for accountants](/blog/accountants-website-redesign-guide)
-- [website redesign for b2b manufacturers](/blog/b2b-manufacturers-website-redesign-guide)
-- [website redesign for consulting firms](/blog/consulting-firms-website-redesign-guide)
+- [website redesign for law firms](/blog/law-firms-website-redesign-guide)
+- [content architecture for insurance agencies](/blog/insurance-agencies-content-architecture-guide)
+- [before after layout for SEO case pages](/blog/before-after-story-layouts-for-seo-case-narrative-pages)
 

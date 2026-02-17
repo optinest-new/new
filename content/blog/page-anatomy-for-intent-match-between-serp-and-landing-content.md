@@ -151,7 +151,7 @@ Over time, these iterative improvements help serp to landing intent match mainta
 
 To expand this topic without overlap, review these focused guides:
 
-- [authority focused design system for SEO websites](/blog/authority-focused-design-tokens-for-seo-driven-brand-sites)
-- [authority section design for query relevance](/blog/authority-section-design-improves-query-relevance-signals)
-- [before after layout for SEO case pages](/blog/before-after-story-layouts-for-seo-case-narrative-pages)
+- [faq interface design for people also ask](/blog/faq-interface-design-supports-people-also-ask-visibility)
+- [website redesign for insurance agencies](/blog/insurance-agencies-website-redesign-guide)
+- [technical SEO audit for consulting firms](/blog/consulting-firms-technical-seo-audit-guide)
 

@@ -155,7 +155,7 @@ Over time, these iterative improvements help insurance agencies maintain search 
 
 To expand this topic without overlap, review these focused guides:
 
-- [technical SEO audit for accountants](/blog/accountants-technical-seo-audit-guide)
-- [technical SEO audit for b2b manufacturers](/blog/b2b-manufacturers-technical-seo-audit-guide)
 - [technical SEO audit for consulting firms](/blog/consulting-firms-technical-seo-audit-guide)
+- [local SEO strategy for insurance agencies](/blog/insurance-agencies-local-seo-strategy-guide)
+- [portfolio page design for organic clients](/blog/portfolio-page-design-attracts-qualified-organic-clients)
 

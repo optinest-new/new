@@ -157,7 +157,7 @@ After each change, compare search visibility, on-page engagement, and conversion
 
 To expand this topic without overlap, review these focused guides:
 
-- [conversion UX optimization for accountants](/blog/accountants-conversion-ux-optimization-guide)
-- [conversion UX optimization for b2b manufacturers](/blog/b2b-manufacturers-conversion-ux-optimization-guide)
-- [conversion UX optimization for consulting firms](/blog/consulting-firms-conversion-ux-optimization-guide)
+- [conversion UX optimization for saas startups](/blog/saas-startups-conversion-ux-optimization-guide)
+- [local SEO strategy for nonprofits](/blog/nonprofits-local-seo-strategy-guide)
+- [topic gateway page design for organic growth](/blog/topic-gateway-page-designs-for-expanding-organic-footprint)
 

@@ -162,6 +162,6 @@ After each change, compare search visibility, on-page engagement, and conversion
 To expand this topic without overlap, review these focused guides:
 
 - [website redesign for accountants](/blog/accountants-website-redesign-guide)
-- [website redesign for b2b manufacturers](/blog/b2b-manufacturers-website-redesign-guide)
-- [website redesign for consulting firms](/blog/consulting-firms-website-redesign-guide)
+- [technical SEO audit for plumbing services](/blog/plumbing-services-technical-seo-audit-guide)
+- [topic gateway page design for organic growth](/blog/topic-gateway-page-designs-for-expanding-organic-footprint)
 

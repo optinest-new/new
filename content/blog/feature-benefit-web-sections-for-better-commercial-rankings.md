@@ -155,7 +155,7 @@ Over time, these iterative improvements help SEO maintain search visibility whil
 
 To expand this topic without overlap, review these focused guides:
 
-- [intent-driven navigation design for SEO](/blog/intent-driven-navigation-design-expands-search-session-depth)
+- [web design patterns for featured snippets](/blog/web-design-patterns-for-capturing-featured-snippet-opportunities)
 - [internal link module design for SEO](/blog/internal-link-module-design-lifts-mid-funnel-page-visibility)
-- [authority focused design system for SEO websites](/blog/authority-focused-design-tokens-for-seo-driven-brand-sites)
+- [faq interface design for people also ask](/blog/faq-interface-design-supports-people-also-ask-visibility)
 

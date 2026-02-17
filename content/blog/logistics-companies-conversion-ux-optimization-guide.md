@@ -155,7 +155,7 @@ Over time, these iterative improvements help logistics companies maintain search
 
 To expand this topic without overlap, review these focused guides:
 
-- [conversion UX optimization for accountants](/blog/accountants-conversion-ux-optimization-guide)
-- [conversion UX optimization for b2b manufacturers](/blog/b2b-manufacturers-conversion-ux-optimization-guide)
-- [conversion UX optimization for consulting firms](/blog/consulting-firms-conversion-ux-optimization-guide)
+- [conversion UX optimization for ecommerce brands](/blog/ecommerce-brands-conversion-ux-optimization-guide)
+- [technical SEO audit for logistics companies](/blog/logistics-companies-technical-seo-audit-guide)
+- [topic gateway page design for organic growth](/blog/topic-gateway-page-designs-for-expanding-organic-footprint)
 

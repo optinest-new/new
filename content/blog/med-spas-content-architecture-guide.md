@@ -157,7 +157,7 @@ After each change, compare search visibility, on-page engagement, and conversion
 
 To expand this topic without overlap, review these focused guides:
 
-- [content architecture for accountants](/blog/accountants-content-architecture-guide)
-- [content architecture for b2b manufacturers](/blog/b2b-manufacturers-content-architecture-guide)
-- [content architecture for consulting firms](/blog/consulting-firms-content-architecture-guide)
+- [content architecture for plumbing services](/blog/plumbing-services-content-architecture-guide)
+- [technical SEO audit for med spas](/blog/med-spas-technical-seo-audit-guide)
+- [website redesign for insurance agencies](/blog/insurance-agencies-website-redesign-guide)
 

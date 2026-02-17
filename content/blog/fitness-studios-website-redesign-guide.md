@@ -157,7 +157,7 @@ After each change, compare search visibility, on-page engagement, and conversion
 
 To expand this topic without overlap, review these focused guides:
 
-- [website redesign for accountants](/blog/accountants-website-redesign-guide)
-- [website redesign for b2b manufacturers](/blog/b2b-manufacturers-website-redesign-guide)
-- [website redesign for consulting firms](/blog/consulting-firms-website-redesign-guide)
+- [website redesign for insurance agencies](/blog/insurance-agencies-website-redesign-guide)
+- [local SEO strategy for fitness studios](/blog/fitness-studios-local-seo-strategy-guide)
+- [authority section design for query relevance](/blog/authority-section-design-improves-query-relevance-signals)
 

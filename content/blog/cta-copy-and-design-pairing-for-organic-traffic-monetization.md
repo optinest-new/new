@@ -151,7 +151,7 @@ Over time, these iterative improvements help organic traffic maintain search vis
 
 To expand this topic without overlap, review these focused guides:
 
+- [location landing page layout for local SEO](/blog/location-landing-page-layouts-rank-and-convert-local-visitors)
 - [homepage hero copy for organic traffic](/blog/homepage-hero-copy-systems-increase-qualified-organic-clicks)
-- [authority focused design system for SEO websites](/blog/authority-focused-design-tokens-for-seo-driven-brand-sites)
-- [authority section design for query relevance](/blog/authority-section-design-improves-query-relevance-signals)
+- [sticky call to action design for organic leads](/blog/sticky-call-to-action-design-for-higher-organic-lead-conversion)
 

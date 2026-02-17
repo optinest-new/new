@@ -155,7 +155,7 @@ Over time, these iterative improvements help fitness studios maintain search vis
 
 To expand this topic without overlap, review these focused guides:
 
-- [technical SEO audit for accountants](/blog/accountants-technical-seo-audit-guide)
-- [technical SEO audit for b2b manufacturers](/blog/b2b-manufacturers-technical-seo-audit-guide)
-- [technical SEO audit for consulting firms](/blog/consulting-firms-technical-seo-audit-guide)
+- [technical SEO audit for law firms](/blog/law-firms-technical-seo-audit-guide)
+- [content architecture for fitness studios](/blog/fitness-studios-content-architecture-guide)
+- [content architecture for accountants](/blog/accountants-content-architecture-guide)
 

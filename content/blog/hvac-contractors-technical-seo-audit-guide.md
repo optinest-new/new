@@ -158,6 +158,6 @@ After each change, compare search visibility, on-page engagement, and conversion
 To expand this topic without overlap, review these focused guides:
 
 - [technical SEO audit for accountants](/blog/accountants-technical-seo-audit-guide)
-- [technical SEO audit for b2b manufacturers](/blog/b2b-manufacturers-technical-seo-audit-guide)
-- [technical SEO audit for consulting firms](/blog/consulting-firms-technical-seo-audit-guide)
+- [conversion UX optimization for hvac contractors](/blog/hvac-contractors-conversion-ux-optimization-guide)
+- [content architecture for consulting firms](/blog/consulting-firms-content-architecture-guide)
 

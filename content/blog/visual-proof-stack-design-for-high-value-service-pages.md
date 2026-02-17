@@ -155,7 +155,7 @@ Over time, these iterative improvements help service pages maintain search visib
 
 To expand this topic without overlap, review these focused guides:
 
-- [visual content blocks to reduce organic bounce rate](/blog/visual-content-blocks-reduce-bounce-on-organic-entrances)
-- [visual search intent cues in web design](/blog/visual-search-intent-cues-for-better-on-page-qualification)
-- [visual topic mapping to reduce keyword cannibalization](/blog/visual-topic-mapping-sections-reduce-keyword-overlap)
+- [intent-driven navigation design for SEO](/blog/intent-driven-navigation-design-expands-search-session-depth)
+- [content architecture for dental clinics](/blog/dental-clinics-content-architecture-guide)
+- [semantic layout design for rich results](/blog/semantic-layout-design-for-rich-results-eligibility)
 

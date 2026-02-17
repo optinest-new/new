@@ -155,7 +155,7 @@ Over time, these iterative improvements help organic queries maintain search vis
 
 To expand this topic without overlap, review these focused guides:
 
-- [service page wireframe for search traffic](/blog/service-page-wireframes-capture-high-intent-search-traffic)
-- [authority focused design system for SEO websites](/blog/authority-focused-design-tokens-for-seo-driven-brand-sites)
-- [authority section design for query relevance](/blog/authority-section-design-improves-query-relevance-signals)
+- [cta copy and design for organic traffic](/blog/cta-copy-and-design-pairing-for-organic-traffic-monetization)
+- [website template system for service page expansion](/blog/website-template-systems-for-programmatic-service-expansion)
+- [page anatomy for serp to landing intent match](/blog/page-anatomy-for-intent-match-between-serp-and-landing-content)
 

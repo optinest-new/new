@@ -156,6 +156,6 @@ Over time, these iterative improvements help education programs maintain search 
 To expand this topic without overlap, review these focused guides:
 
 - [technical SEO audit for accountants](/blog/accountants-technical-seo-audit-guide)
-- [technical SEO audit for b2b manufacturers](/blog/b2b-manufacturers-technical-seo-audit-guide)
-- [technical SEO audit for consulting firms](/blog/consulting-firms-technical-seo-audit-guide)
+- [content architecture for education programs](/blog/education-programs-content-architecture-guide)
+- [technical SEO audit for saas startups](/blog/saas-startups-technical-seo-audit-guide)
 

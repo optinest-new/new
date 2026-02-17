@@ -157,7 +157,7 @@ After each change, compare search visibility, on-page engagement, and conversion
 
 To expand this topic without overlap, review these focused guides:
 
-- [website redesign for accountants](/blog/accountants-website-redesign-guide)
-- [website redesign for b2b manufacturers](/blog/b2b-manufacturers-website-redesign-guide)
-- [website redesign for dental clinics](/blog/dental-clinics-website-redesign-guide)
+- [website redesign for plumbing services](/blog/plumbing-services-website-redesign-guide)
+- [content architecture for consulting firms](/blog/consulting-firms-content-architecture-guide)
+- [service page wireframe for search traffic](/blog/service-page-wireframes-capture-high-intent-search-traffic)
 

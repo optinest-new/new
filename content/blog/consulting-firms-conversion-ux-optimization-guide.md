@@ -158,6 +158,6 @@ After each change, compare search visibility, on-page engagement, and conversion
 To expand this topic without overlap, review these focused guides:
 
 - [conversion UX optimization for accountants](/blog/accountants-conversion-ux-optimization-guide)
-- [conversion UX optimization for b2b manufacturers](/blog/b2b-manufacturers-conversion-ux-optimization-guide)
-- [conversion UX optimization for dental clinics](/blog/dental-clinics-conversion-ux-optimization-guide)
+- [local SEO strategy for consulting firms](/blog/consulting-firms-local-seo-strategy-guide)
+- [pillar page design framework for SEO growth](/blog/pillar-page-design-frameworks-sustain-traffic-growth)
 

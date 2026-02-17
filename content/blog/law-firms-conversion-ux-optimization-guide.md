@@ -155,7 +155,7 @@ Over time, these iterative improvements help law firms maintain search visibilit
 
 To expand this topic without overlap, review these focused guides:
 
-- [conversion UX optimization for accountants](/blog/accountants-conversion-ux-optimization-guide)
-- [conversion UX optimization for b2b manufacturers](/blog/b2b-manufacturers-conversion-ux-optimization-guide)
-- [conversion UX optimization for consulting firms](/blog/consulting-firms-conversion-ux-optimization-guide)
+- [conversion UX optimization for dental clinics](/blog/dental-clinics-conversion-ux-optimization-guide)
+- [local SEO strategy for law firms](/blog/law-firms-local-seo-strategy-guide)
+- [local SEO strategy for restaurants](/blog/restaurants-local-seo-strategy-guide)
 

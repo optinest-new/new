@@ -155,7 +155,7 @@ Over time, these iterative improvements help med spas maintain search visibility
 
 To expand this topic without overlap, review these focused guides:
 
-- [local SEO strategy for accountants](/blog/accountants-local-seo-strategy-guide)
-- [local SEO strategy for b2b manufacturers](/blog/b2b-manufacturers-local-seo-strategy-guide)
-- [local SEO strategy for consulting firms](/blog/consulting-firms-local-seo-strategy-guide)
+- [local SEO strategy for logistics companies](/blog/logistics-companies-local-seo-strategy-guide)
+- [content architecture for med spas](/blog/med-spas-content-architecture-guide)
+- [form friction reduction for landing pages](/blog/form-friction-reduction-design-for-high-intent-landing-pages)
 

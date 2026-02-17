@@ -155,7 +155,7 @@ Over time, these iterative improvements help service page expansion maintain sea
 
 To expand this topic without overlap, review these focused guides:
 
-- [authority focused design system for SEO websites](/blog/authority-focused-design-tokens-for-seo-driven-brand-sites)
-- [authority section design for query relevance](/blog/authority-section-design-improves-query-relevance-signals)
-- [before after layout for SEO case pages](/blog/before-after-story-layouts-for-seo-case-narrative-pages)
+- [sticky call to action design for organic leads](/blog/sticky-call-to-action-design-for-higher-organic-lead-conversion)
+- [conversion UX optimization for med spas](/blog/med-spas-conversion-ux-optimization-guide)
+- [website redesign for insurance agencies](/blog/insurance-agencies-website-redesign-guide)
 

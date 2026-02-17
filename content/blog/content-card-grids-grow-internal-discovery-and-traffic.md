@@ -151,7 +151,7 @@ Over time, these iterative improvements help internal linking maintain search vi
 
 To expand this topic without overlap, review these focused guides:
 
-- [content spacing for conversion and readability](/blog/conversion-oriented-content-spacing-improves-read-completion)
-- [authority focused design system for SEO websites](/blog/authority-focused-design-tokens-for-seo-driven-brand-sites)
-- [authority section design for query relevance](/blog/authority-section-design-improves-query-relevance-signals)
+- [conversion benchmark block design](/blog/conversion-benchmark-blocks-for-high-competition-service-niches)
+- [mobile first conversion layout for local search](/blog/mobile-first-conversion-layouts-for-local-search-visitors)
+- [page anatomy for serp to landing intent match](/blog/page-anatomy-for-intent-match-between-serp-and-landing-content)
 

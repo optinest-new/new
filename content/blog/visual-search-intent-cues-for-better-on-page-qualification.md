@@ -151,7 +151,7 @@ Over time, these iterative improvements help growth-focused businesses maintain 
 
 To expand this topic without overlap, review these focused guides:
 
-- [visual content blocks to reduce organic bounce rate](/blog/visual-content-blocks-reduce-bounce-on-organic-entrances)
-- [visual proof stack design for service pages](/blog/visual-proof-stack-design-for-high-value-service-pages)
-- [visual topic mapping to reduce keyword cannibalization](/blog/visual-topic-mapping-sections-reduce-keyword-overlap)
+- [resource hub design for compounding traffic](/blog/search-friendly-resource-hub-design-for-compounding-traffic)
+- [conversion UX optimization for nonprofits](/blog/nonprofits-conversion-ux-optimization-guide)
+- [conversion UX optimization for hvac contractors](/blog/hvac-contractors-conversion-ux-optimization-guide)
 

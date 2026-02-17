@@ -157,7 +157,7 @@ After each change, compare search visibility, on-page engagement, and conversion
 
 To expand this topic without overlap, review these focused guides:
 
-- [authority focused design system for SEO websites](/blog/authority-focused-design-tokens-for-seo-driven-brand-sites)
-- [authority section design for query relevance](/blog/authority-section-design-improves-query-relevance-signals)
-- [before after layout for SEO case pages](/blog/before-after-story-layouts-for-seo-case-narrative-pages)
+- [scannable section architecture for SEO pages](/blog/scannable-section-architecture-for-long-form-commercial-pages)
+- [technical SEO audit for logistics companies](/blog/logistics-companies-technical-seo-audit-guide)
+- [technical SEO audit for fitness studios](/blog/fitness-studios-technical-seo-audit-guide)
 

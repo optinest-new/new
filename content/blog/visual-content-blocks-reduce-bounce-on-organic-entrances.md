@@ -151,7 +151,7 @@ Over time, these iterative improvements help growth-focused businesses maintain 
 
 To expand this topic without overlap, review these focused guides:
 
-- [visual proof stack design for service pages](/blog/visual-proof-stack-design-for-high-value-service-pages)
-- [visual search intent cues in web design](/blog/visual-search-intent-cues-for-better-on-page-qualification)
-- [visual topic mapping to reduce keyword cannibalization](/blog/visual-topic-mapping-sections-reduce-keyword-overlap)
+- [engagement first web layout for organic retention](/blog/engagement-first-web-layout-systems-for-organic-retention)
+- [topic gateway page design for organic growth](/blog/topic-gateway-page-designs-for-expanding-organic-footprint)
+- [portfolio page design for organic clients](/blog/portfolio-page-design-attracts-qualified-organic-clients)
 

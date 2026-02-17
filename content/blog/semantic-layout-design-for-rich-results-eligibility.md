@@ -157,7 +157,7 @@ After each change, compare search visibility, on-page engagement, and conversion
 
 To expand this topic without overlap, review these focused guides:
 
-- [authority focused design system for SEO websites](/blog/authority-focused-design-tokens-for-seo-driven-brand-sites)
-- [authority section design for query relevance](/blog/authority-section-design-improves-query-relevance-signals)
-- [before after layout for SEO case pages](/blog/before-after-story-layouts-for-seo-case-narrative-pages)
+- [schema ready page design components](/blog/schema-ready-page-design-components-for-agency-websites)
+- [scannable section architecture for SEO pages](/blog/scannable-section-architecture-for-long-form-commercial-pages)
+- [local SEO strategy for franchise brands](/blog/franchise-brands-local-seo-strategy-guide)
 

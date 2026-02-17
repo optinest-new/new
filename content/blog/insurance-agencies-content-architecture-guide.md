@@ -162,6 +162,6 @@ After each change, compare search visibility, on-page engagement, and conversion
 To expand this topic without overlap, review these focused guides:
 
 - [content architecture for accountants](/blog/accountants-content-architecture-guide)
-- [content architecture for b2b manufacturers](/blog/b2b-manufacturers-content-architecture-guide)
-- [content architecture for consulting firms](/blog/consulting-firms-content-architecture-guide)
+- [conversion UX optimization for insurance agencies](/blog/insurance-agencies-conversion-ux-optimization-guide)
+- [technical SEO audit for consulting firms](/blog/consulting-firms-technical-seo-audit-guide)
 

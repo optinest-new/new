@@ -157,7 +157,7 @@ After each change, compare search visibility, on-page engagement, and conversion
 
 To expand this topic without overlap, review these focused guides:
 
-- [conversion UX optimization for accountants](/blog/accountants-conversion-ux-optimization-guide)
-- [conversion UX optimization for b2b manufacturers](/blog/b2b-manufacturers-conversion-ux-optimization-guide)
-- [conversion UX optimization for consulting firms](/blog/consulting-firms-conversion-ux-optimization-guide)
+- [conversion UX optimization for restaurants](/blog/restaurants-conversion-ux-optimization-guide)
+- [local SEO strategy for insurance agencies](/blog/insurance-agencies-local-seo-strategy-guide)
+- [engagement first web layout for organic retention](/blog/engagement-first-web-layout-systems-for-organic-retention)
 

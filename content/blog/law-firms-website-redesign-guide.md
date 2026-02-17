@@ -161,7 +161,7 @@ After each change, compare search visibility, on-page engagement, and conversion
 
 To expand this topic without overlap, review these focused guides:
 
-- [website redesign for accountants](/blog/accountants-website-redesign-guide)
-- [website redesign for b2b manufacturers](/blog/b2b-manufacturers-website-redesign-guide)
-- [website redesign for consulting firms](/blog/consulting-firms-website-redesign-guide)
+- [website redesign for med spas](/blog/med-spas-website-redesign-guide)
+- [content architecture for law firms](/blog/law-firms-content-architecture-guide)
+- [search led homepage personalization design](/blog/search-led-homepage-personalization-design-without-cloaking-risks)
 

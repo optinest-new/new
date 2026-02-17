@@ -155,7 +155,7 @@ Over time, these iterative improvements help fitness studios maintain search vis
 
 To expand this topic without overlap, review these focused guides:
 
-- [local SEO strategy for accountants](/blog/accountants-local-seo-strategy-guide)
-- [local SEO strategy for b2b manufacturers](/blog/b2b-manufacturers-local-seo-strategy-guide)
-- [local SEO strategy for consulting firms](/blog/consulting-firms-local-seo-strategy-guide)
+- [local SEO strategy for med spas](/blog/med-spas-local-seo-strategy-guide)
+- [content architecture for fitness studios](/blog/fitness-studios-content-architecture-guide)
+- [technical SEO audit for law firms](/blog/law-firms-technical-seo-audit-guide)
 

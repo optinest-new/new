@@ -155,7 +155,7 @@ Over time, these iterative improvements help plumbing services maintain search v
 
 To expand this topic without overlap, review these focused guides:
 
-- [local SEO strategy for accountants](/blog/accountants-local-seo-strategy-guide)
-- [local SEO strategy for b2b manufacturers](/blog/b2b-manufacturers-local-seo-strategy-guide)
-- [local SEO strategy for consulting firms](/blog/consulting-firms-local-seo-strategy-guide)
+- [local SEO strategy for med spas](/blog/med-spas-local-seo-strategy-guide)
+- [conversion UX optimization for plumbing services](/blog/plumbing-services-conversion-ux-optimization-guide)
+- [conversion UX optimization for restaurants](/blog/restaurants-conversion-ux-optimization-guide)
 

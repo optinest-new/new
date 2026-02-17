@@ -157,7 +157,7 @@ After each change, compare search visibility, on-page engagement, and conversion
 
 To expand this topic without overlap, review these focused guides:
 
-- [authority focused design system for SEO websites](/blog/authority-focused-design-tokens-for-seo-driven-brand-sites)
-- [authority section design for query relevance](/blog/authority-section-design-improves-query-relevance-signals)
-- [before after layout for SEO case pages](/blog/before-after-story-layouts-for-seo-case-narrative-pages)
+- [mobile first conversion layout for local search](/blog/mobile-first-conversion-layouts-for-local-search-visitors)
+- [technical SEO audit for ecommerce brands](/blog/ecommerce-brands-technical-seo-audit-guide)
+- [local SEO strategy for education programs](/blog/education-programs-local-seo-strategy-guide)
 

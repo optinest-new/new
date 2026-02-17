@@ -155,7 +155,7 @@ Over time, these iterative improvements help insurance agencies maintain search 
 
 To expand this topic without overlap, review these focused guides:
 
-- [local SEO strategy for accountants](/blog/accountants-local-seo-strategy-guide)
-- [local SEO strategy for b2b manufacturers](/blog/b2b-manufacturers-local-seo-strategy-guide)
-- [local SEO strategy for consulting firms](/blog/consulting-firms-local-seo-strategy-guide)
+- [local SEO strategy for restaurants](/blog/restaurants-local-seo-strategy-guide)
+- [technical SEO audit for insurance agencies](/blog/insurance-agencies-technical-seo-audit-guide)
+- [portfolio page design for organic clients](/blog/portfolio-page-design-attracts-qualified-organic-clients)
 

@@ -156,6 +156,6 @@ Over time, these iterative improvements help SEO landing pages maintain search v
 To expand this topic without overlap, review these focused guides:
 
 - [authority focused design system for SEO websites](/blog/authority-focused-design-tokens-for-seo-driven-brand-sites)
-- [authority section design for query relevance](/blog/authority-section-design-improves-query-relevance-signals)
-- [before after layout for SEO case pages](/blog/before-after-story-layouts-for-seo-case-narrative-pages)
+- [conversion UX optimization for logistics companies](/blog/logistics-companies-conversion-ux-optimization-guide)
+- [homepage hero copy for organic traffic](/blog/homepage-hero-copy-systems-increase-qualified-organic-clicks)
 

@@ -157,7 +157,7 @@ After each change, compare search visibility, on-page engagement, and conversion
 
 To expand this topic without overlap, review these focused guides:
 
-- [authority focused design system for SEO websites](/blog/authority-focused-design-tokens-for-seo-driven-brand-sites)
-- [authority section design for query relevance](/blog/authority-section-design-improves-query-relevance-signals)
-- [before after layout for SEO case pages](/blog/before-after-story-layouts-for-seo-case-narrative-pages)
+- [feature benefit section design for SEO](/blog/feature-benefit-web-sections-for-better-commercial-rankings)
+- [conversion UX optimization for saas startups](/blog/saas-startups-conversion-ux-optimization-guide)
+- [local SEO strategy for nonprofits](/blog/nonprofits-local-seo-strategy-guide)
 

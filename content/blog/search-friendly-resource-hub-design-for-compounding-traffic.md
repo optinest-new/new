@@ -156,6 +156,6 @@ Over time, these iterative improvements help compounding traffic maintain search
 To expand this topic without overlap, review these focused guides:
 
 - [authority focused design system for SEO websites](/blog/authority-focused-design-tokens-for-seo-driven-brand-sites)
-- [authority section design for query relevance](/blog/authority-section-design-improves-query-relevance-signals)
-- [before after layout for SEO case pages](/blog/before-after-story-layouts-for-seo-case-narrative-pages)
+- [conversion UX optimization for accountants](/blog/accountants-conversion-ux-optimization-guide)
+- [technical SEO audit for logistics companies](/blog/logistics-companies-technical-seo-audit-guide)
 

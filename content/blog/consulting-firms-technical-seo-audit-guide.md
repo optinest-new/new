@@ -157,7 +157,7 @@ After each change, compare search visibility, on-page engagement, and conversion
 
 To expand this topic without overlap, review these focused guides:
 
-- [technical SEO audit for accountants](/blog/accountants-technical-seo-audit-guide)
-- [technical SEO audit for b2b manufacturers](/blog/b2b-manufacturers-technical-seo-audit-guide)
-- [technical SEO audit for dental clinics](/blog/dental-clinics-technical-seo-audit-guide)
+- [technical SEO audit for med spas](/blog/med-spas-technical-seo-audit-guide)
+- [local SEO strategy for consulting firms](/blog/consulting-firms-local-seo-strategy-guide)
+- [content architecture for plumbing services](/blog/plumbing-services-content-architecture-guide)
 

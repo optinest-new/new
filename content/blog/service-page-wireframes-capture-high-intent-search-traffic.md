@@ -155,7 +155,7 @@ Over time, these iterative improvements help search traffic maintain search visi
 
 To expand this topic without overlap, review these focused guides:
 
-- [service comparison page design for organic queries](/blog/service-comparison-page-design-for-non-branded-organic-queries)
-- [authority focused design system for SEO websites](/blog/authority-focused-design-tokens-for-seo-driven-brand-sites)
-- [authority section design for query relevance](/blog/authority-section-design-improves-query-relevance-signals)
+- [intent-driven navigation design for SEO](/blog/intent-driven-navigation-design-expands-search-session-depth)
+- [mobile first conversion layout for local search](/blog/mobile-first-conversion-layouts-for-local-search-visitors)
+- [local SEO strategy for ecommerce brands](/blog/ecommerce-brands-local-seo-strategy-guide)
 

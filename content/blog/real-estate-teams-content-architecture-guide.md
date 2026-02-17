@@ -157,7 +157,7 @@ After each change, compare search visibility, on-page engagement, and conversion
 
 To expand this topic without overlap, review these focused guides:
 
-- [content architecture for accountants](/blog/accountants-content-architecture-guide)
-- [content architecture for b2b manufacturers](/blog/b2b-manufacturers-content-architecture-guide)
-- [content architecture for consulting firms](/blog/consulting-firms-content-architecture-guide)
+- [content architecture for roofing companies](/blog/roofing-companies-content-architecture-guide)
+- [technical SEO audit for real estate teams](/blog/real-estate-teams-technical-seo-audit-guide)
+- [conversion benchmark block design](/blog/conversion-benchmark-blocks-for-high-competition-service-niches)
 

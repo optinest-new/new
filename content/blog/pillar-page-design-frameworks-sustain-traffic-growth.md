@@ -152,6 +152,6 @@ Over time, these iterative improvements help SEO growth maintain search visibili
 To expand this topic without overlap, review these focused guides:
 
 - [authority focused design system for SEO websites](/blog/authority-focused-design-tokens-for-seo-driven-brand-sites)
-- [authority section design for query relevance](/blog/authority-section-design-improves-query-relevance-signals)
-- [before after layout for SEO case pages](/blog/before-after-story-layouts-for-seo-case-narrative-pages)
+- [pricing page UX for SEO traffic](/blog/pricing-page-ux-for-seo-traffic-with-purchase-intent)
+- [website redesign for roofing companies](/blog/roofing-companies-website-redesign-guide)
 

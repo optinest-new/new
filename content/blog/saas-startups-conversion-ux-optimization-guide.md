@@ -155,7 +155,7 @@ Over time, these iterative improvements help saas startups maintain search visib
 
 To expand this topic without overlap, review these focused guides:
 
-- [conversion UX optimization for accountants](/blog/accountants-conversion-ux-optimization-guide)
-- [conversion UX optimization for b2b manufacturers](/blog/b2b-manufacturers-conversion-ux-optimization-guide)
-- [conversion UX optimization for consulting firms](/blog/consulting-firms-conversion-ux-optimization-guide)
+- [conversion UX optimization for plumbing services](/blog/plumbing-services-conversion-ux-optimization-guide)
+- [content architecture for saas startups](/blog/saas-startups-content-architecture-guide)
+- [schema ready page design components](/blog/schema-ready-page-design-components-for-agency-websites)
 

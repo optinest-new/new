@@ -155,7 +155,7 @@ Over time, these iterative improvements help franchise brands maintain search vi
 
 To expand this topic without overlap, review these focused guides:
 
+- [local SEO strategy for hvac contractors](/blog/hvac-contractors-local-seo-strategy-guide)
+- [content architecture for franchise brands](/blog/franchise-brands-content-architecture-guide)
 - [local SEO strategy for accountants](/blog/accountants-local-seo-strategy-guide)
-- [local SEO strategy for b2b manufacturers](/blog/b2b-manufacturers-local-seo-strategy-guide)
-- [local SEO strategy for consulting firms](/blog/consulting-firms-local-seo-strategy-guide)
 

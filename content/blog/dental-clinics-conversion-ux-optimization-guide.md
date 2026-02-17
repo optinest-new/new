@@ -155,7 +155,7 @@ Over time, these iterative improvements help dental clinics maintain search visi
 
 To expand this topic without overlap, review these focused guides:
 
-- [conversion UX optimization for accountants](/blog/accountants-conversion-ux-optimization-guide)
+- [conversion UX optimization for education programs](/blog/education-programs-conversion-ux-optimization-guide)
+- [website redesign for dental clinics](/blog/dental-clinics-website-redesign-guide)
 - [conversion UX optimization for b2b manufacturers](/blog/b2b-manufacturers-conversion-ux-optimization-guide)
-- [conversion UX optimization for consulting firms](/blog/consulting-firms-conversion-ux-optimization-guide)
 

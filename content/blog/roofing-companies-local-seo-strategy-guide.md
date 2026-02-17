@@ -155,7 +155,7 @@ Over time, these iterative improvements help roofing companies maintain search v
 
 To expand this topic without overlap, review these focused guides:
 
-- [local SEO strategy for accountants](/blog/accountants-local-seo-strategy-guide)
-- [local SEO strategy for b2b manufacturers](/blog/b2b-manufacturers-local-seo-strategy-guide)
-- [local SEO strategy for consulting firms](/blog/consulting-firms-local-seo-strategy-guide)
+- [local SEO strategy for law firms](/blog/law-firms-local-seo-strategy-guide)
+- [content architecture for roofing companies](/blog/roofing-companies-content-architecture-guide)
+- [website redesign for accountants](/blog/accountants-website-redesign-guide)
 

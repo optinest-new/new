@@ -161,7 +161,7 @@ After each change, compare search visibility, on-page engagement, and conversion
 
 To expand this topic without overlap, review these focused guides:
 
-- [website redesign for accountants](/blog/accountants-website-redesign-guide)
-- [website redesign for b2b manufacturers](/blog/b2b-manufacturers-website-redesign-guide)
-- [website redesign for consulting firms](/blog/consulting-firms-website-redesign-guide)
+- [website redesign for saas startups](/blog/saas-startups-website-redesign-guide)
+- [local SEO strategy for franchise brands](/blog/franchise-brands-local-seo-strategy-guide)
+- [serp aligned landing page components](/blog/serp-aligned-landing-page-components-for-better-engagement-time)
 

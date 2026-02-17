@@ -155,7 +155,7 @@ Over time, these iterative improvements help franchise brands maintain search vi
 
 To expand this topic without overlap, review these focused guides:
 
-- [technical SEO audit for accountants](/blog/accountants-technical-seo-audit-guide)
-- [technical SEO audit for b2b manufacturers](/blog/b2b-manufacturers-technical-seo-audit-guide)
-- [technical SEO audit for consulting firms](/blog/consulting-firms-technical-seo-audit-guide)
+- [technical SEO audit for insurance agencies](/blog/insurance-agencies-technical-seo-audit-guide)
+- [content architecture for franchise brands](/blog/franchise-brands-content-architecture-guide)
+- [conversion UX optimization for education programs](/blog/education-programs-conversion-ux-optimization-guide)
 

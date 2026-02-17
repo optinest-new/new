@@ -155,7 +155,7 @@ Over time, these iterative improvements help organic traffic maintain search vis
 
 To expand this topic without overlap, review these focused guides:
 
+- [website template system for service page expansion](/blog/website-template-systems-for-programmatic-service-expansion)
 - [cta copy and design for organic traffic](/blog/cta-copy-and-design-pairing-for-organic-traffic-monetization)
-- [authority focused design system for SEO websites](/blog/authority-focused-design-tokens-for-seo-driven-brand-sites)
-- [authority section design for query relevance](/blog/authority-section-design-improves-query-relevance-signals)
+- [website redesign for restaurants](/blog/restaurants-website-redesign-guide)
 

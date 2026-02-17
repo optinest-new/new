@@ -157,7 +157,7 @@ After each change, compare search visibility, on-page engagement, and conversion
 
 To expand this topic without overlap, review these focused guides:
 
-- [authority focused design system for SEO websites](/blog/authority-focused-design-tokens-for-seo-driven-brand-sites)
-- [authority section design for query relevance](/blog/authority-section-design-improves-query-relevance-signals)
-- [case study page structure for organic conversion](/blog/case-study-page-structures-turn-organic-traffic-into-calls)
+- [pricing page UX for SEO traffic](/blog/pricing-page-ux-for-seo-traffic-with-purchase-intent)
+- [local SEO strategy for med spas](/blog/med-spas-local-seo-strategy-guide)
+- [visual topic mapping to reduce keyword cannibalization](/blog/visual-topic-mapping-sections-reduce-keyword-overlap)
 

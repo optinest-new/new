@@ -151,7 +151,7 @@ Over time, these iterative improvements help people also ask maintain search vis
 
 To expand this topic without overlap, review these focused guides:
 
-- [authority focused design system for SEO websites](/blog/authority-focused-design-tokens-for-seo-driven-brand-sites)
-- [authority section design for query relevance](/blog/authority-section-design-improves-query-relevance-signals)
 - [before after layout for SEO case pages](/blog/before-after-story-layouts-for-seo-case-narrative-pages)
+- [local SEO strategy for nonprofits](/blog/nonprofits-local-seo-strategy-guide)
+- [website redesign for saas startups](/blog/saas-startups-website-redesign-guide)
 

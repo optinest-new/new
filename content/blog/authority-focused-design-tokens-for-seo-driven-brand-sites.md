@@ -151,7 +151,7 @@ Over time, these iterative improvements help SEO websites maintain search visibi
 
 To expand this topic without overlap, review these focused guides:
 
-- [authority section design for query relevance](/blog/authority-section-design-improves-query-relevance-signals)
-- [before after layout for SEO case pages](/blog/before-after-story-layouts-for-seo-case-narrative-pages)
-- [case study page structure for organic conversion](/blog/case-study-page-structures-turn-organic-traffic-into-calls)
+- [lead qualification widget for SEO landing pages](/blog/lead-qualification-widget-design-for-seo-landing-experiences)
+- [website redesign for ecommerce brands](/blog/ecommerce-brands-website-redesign-guide)
+- [technical SEO audit for ecommerce brands](/blog/ecommerce-brands-technical-seo-audit-guide)
 

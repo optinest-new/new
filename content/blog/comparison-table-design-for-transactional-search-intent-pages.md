@@ -155,7 +155,7 @@ Over time, these iterative improvements help transactional pages maintain search
 
 To expand this topic without overlap, review these focused guides:
 
-- [authority focused design system for SEO websites](/blog/authority-focused-design-tokens-for-seo-driven-brand-sites)
-- [authority section design for query relevance](/blog/authority-section-design-improves-query-relevance-signals)
-- [before after layout for SEO case pages](/blog/before-after-story-layouts-for-seo-case-narrative-pages)
+- [homepage hero copy for organic traffic](/blog/homepage-hero-copy-systems-increase-qualified-organic-clicks)
+- [technical SEO audit for insurance agencies](/blog/insurance-agencies-technical-seo-audit-guide)
+- [conversion UX optimization for dental clinics](/blog/dental-clinics-conversion-ux-optimization-guide)
 

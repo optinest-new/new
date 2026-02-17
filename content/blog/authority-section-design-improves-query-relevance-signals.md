@@ -157,7 +157,7 @@ After each change, compare search visibility, on-page engagement, and conversion
 
 To expand this topic without overlap, review these focused guides:
 
-- [authority focused design system for SEO websites](/blog/authority-focused-design-tokens-for-seo-driven-brand-sites)
-- [before after layout for SEO case pages](/blog/before-after-story-layouts-for-seo-case-narrative-pages)
-- [case study page structure for organic conversion](/blog/case-study-page-structures-turn-organic-traffic-into-calls)
+- [information architecture patterns for topic clusters](/blog/information-architecture-patterns-for-topic-cluster-expansion)
+- [content spacing for conversion and readability](/blog/conversion-oriented-content-spacing-improves-read-completion)
+- [content architecture for real estate teams](/blog/real-estate-teams-content-architecture-guide)
 

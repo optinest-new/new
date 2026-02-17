@@ -157,7 +157,7 @@ After each change, compare search visibility, on-page engagement, and conversion
 
 To expand this topic without overlap, review these focused guides:
 
-- [feature benefit section design for SEO](/blog/feature-benefit-web-sections-for-better-commercial-rankings)
+- [landing page readability for technical services](/blog/landing-page-readability-systems-for-technical-service-offers)
 - [intent-driven navigation design for SEO](/blog/intent-driven-navigation-design-expands-search-session-depth)
-- [authority focused design system for SEO websites](/blog/authority-focused-design-tokens-for-seo-driven-brand-sites)
+- [technical SEO audit for real estate teams](/blog/real-estate-teams-technical-seo-audit-guide)
 

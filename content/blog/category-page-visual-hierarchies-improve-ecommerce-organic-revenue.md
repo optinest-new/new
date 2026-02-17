@@ -156,6 +156,6 @@ Over time, these iterative improvements help ecommerce SEO maintain search visib
 To expand this topic without overlap, review these focused guides:
 
 - [authority focused design system for SEO websites](/blog/authority-focused-design-tokens-for-seo-driven-brand-sites)
-- [authority section design for query relevance](/blog/authority-section-design-improves-query-relevance-signals)
-- [before after layout for SEO case pages](/blog/before-after-story-layouts-for-seo-case-narrative-pages)
+- [technical SEO audit for orthodontists](/blog/orthodontists-technical-seo-audit-guide)
+- [website redesign for restaurants](/blog/restaurants-website-redesign-guide)
 

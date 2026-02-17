@@ -161,7 +161,7 @@ After each change, compare search visibility, on-page engagement, and conversion
 
 To expand this topic without overlap, review these focused guides:
 
-- [content architecture for accountants](/blog/accountants-content-architecture-guide)
-- [content architecture for b2b manufacturers](/blog/b2b-manufacturers-content-architecture-guide)
-- [content architecture for consulting firms](/blog/consulting-firms-content-architecture-guide)
+- [content architecture for nonprofits](/blog/nonprofits-content-architecture-guide)
+- [technical SEO audit for education programs](/blog/education-programs-technical-seo-audit-guide)
+- [conversion UX optimization for med spas](/blog/med-spas-conversion-ux-optimization-guide)
 

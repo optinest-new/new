@@ -155,7 +155,7 @@ Over time, these iterative improvements help plumbing services maintain search v
 
 To expand this topic without overlap, review these focused guides:
 
-- [conversion UX optimization for accountants](/blog/accountants-conversion-ux-optimization-guide)
-- [conversion UX optimization for b2b manufacturers](/blog/b2b-manufacturers-conversion-ux-optimization-guide)
-- [conversion UX optimization for consulting firms](/blog/consulting-firms-conversion-ux-optimization-guide)
+- [conversion UX optimization for restaurants](/blog/restaurants-conversion-ux-optimization-guide)
+- [content architecture for plumbing services](/blog/plumbing-services-content-architecture-guide)
+- [conversion UX optimization for med spas](/blog/med-spas-conversion-ux-optimization-guide)
 

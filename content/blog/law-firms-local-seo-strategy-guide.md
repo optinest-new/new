@@ -157,7 +157,7 @@ After each change, compare search visibility, on-page engagement, and conversion
 
 To expand this topic without overlap, review these focused guides:
 
-- [local SEO strategy for accountants](/blog/accountants-local-seo-strategy-guide)
-- [local SEO strategy for b2b manufacturers](/blog/b2b-manufacturers-local-seo-strategy-guide)
-- [local SEO strategy for consulting firms](/blog/consulting-firms-local-seo-strategy-guide)
+- [local SEO strategy for franchise brands](/blog/franchise-brands-local-seo-strategy-guide)
+- [technical SEO audit for law firms](/blog/law-firms-technical-seo-audit-guide)
+- [conversion UX optimization for hvac contractors](/blog/hvac-contractors-conversion-ux-optimization-guide)
 

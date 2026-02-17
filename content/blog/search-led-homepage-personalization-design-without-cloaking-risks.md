@@ -157,7 +157,7 @@ After each change, compare search visibility, on-page engagement, and conversion
 
 To expand this topic without overlap, review these focused guides:
 
-- [search intent segmented hero design](/blog/search-intent-segmented-hero-variants-for-conversion-lift)
-- [authority focused design system for SEO websites](/blog/authority-focused-design-tokens-for-seo-driven-brand-sites)
-- [authority section design for query relevance](/blog/authority-section-design-improves-query-relevance-signals)
+- [cta copy and design for organic traffic](/blog/cta-copy-and-design-pairing-for-organic-traffic-monetization)
+- [technical SEO audit for education programs](/blog/education-programs-technical-seo-audit-guide)
+- [local SEO strategy for orthodontists](/blog/orthodontists-local-seo-strategy-guide)
 

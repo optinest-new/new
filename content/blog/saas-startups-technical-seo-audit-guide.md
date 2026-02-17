@@ -155,7 +155,7 @@ Over time, these iterative improvements help saas startups maintain search visib
 
 To expand this topic without overlap, review these focused guides:
 
-- [technical SEO audit for accountants](/blog/accountants-technical-seo-audit-guide)
-- [technical SEO audit for b2b manufacturers](/blog/b2b-manufacturers-technical-seo-audit-guide)
-- [technical SEO audit for consulting firms](/blog/consulting-firms-technical-seo-audit-guide)
+- [technical SEO audit for fitness studios](/blog/fitness-studios-technical-seo-audit-guide)
+- [website redesign for saas startups](/blog/saas-startups-website-redesign-guide)
+- [technical SEO audit for plumbing services](/blog/plumbing-services-technical-seo-audit-guide)
 

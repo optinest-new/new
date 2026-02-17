@@ -157,7 +157,7 @@ After each change, compare search visibility, on-page engagement, and conversion
 
 To expand this topic without overlap, review these focused guides:
 
-- [content card grid design for internal linking](/blog/content-card-grids-grow-internal-discovery-and-traffic)
-- [authority focused design system for SEO websites](/blog/authority-focused-design-tokens-for-seo-driven-brand-sites)
-- [authority section design for query relevance](/blog/authority-section-design-improves-query-relevance-signals)
+- [topic gateway page design for organic growth](/blog/topic-gateway-page-designs-for-expanding-organic-footprint)
+- [conversion UX optimization for accountants](/blog/accountants-conversion-ux-optimization-guide)
+- [local SEO strategy for fitness studios](/blog/fitness-studios-local-seo-strategy-guide)
 

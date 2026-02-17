@@ -155,7 +155,7 @@ Over time, these iterative improvements help med spas maintain search visibility
 
 To expand this topic without overlap, review these focused guides:
 
-- [technical SEO audit for accountants](/blog/accountants-technical-seo-audit-guide)
-- [technical SEO audit for b2b manufacturers](/blog/b2b-manufacturers-technical-seo-audit-guide)
-- [technical SEO audit for consulting firms](/blog/consulting-firms-technical-seo-audit-guide)
+- [technical SEO audit for logistics companies](/blog/logistics-companies-technical-seo-audit-guide)
+- [content architecture for med spas](/blog/med-spas-content-architecture-guide)
+- [cta copy and design for organic traffic](/blog/cta-copy-and-design-pairing-for-organic-traffic-monetization)
 

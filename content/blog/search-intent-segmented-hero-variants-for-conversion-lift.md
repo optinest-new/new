@@ -161,7 +161,7 @@ After each change, compare search visibility, on-page engagement, and conversion
 
 To expand this topic without overlap, review these focused guides:
 
-- [search led homepage personalization design](/blog/search-led-homepage-personalization-design-without-cloaking-risks)
-- [authority focused design system for SEO websites](/blog/authority-focused-design-tokens-for-seo-driven-brand-sites)
-- [authority section design for query relevance](/blog/authority-section-design-improves-query-relevance-signals)
+- [resource hub design for compounding traffic](/blog/search-friendly-resource-hub-design-for-compounding-traffic)
+- [local SEO strategy for b2b manufacturers](/blog/b2b-manufacturers-local-seo-strategy-guide)
+- [website redesign for consulting firms](/blog/consulting-firms-website-redesign-guide)
 

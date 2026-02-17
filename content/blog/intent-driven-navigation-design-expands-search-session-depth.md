@@ -157,7 +157,7 @@ After each change, compare search visibility, on-page engagement, and conversion
 
 To expand this topic without overlap, review these focused guides:
 
+- [offer stack page design for SEO revenue](/blog/offer-stack-page-design-boosts-search-traffic-revenue)
 - [feature benefit section design for SEO](/blog/feature-benefit-web-sections-for-better-commercial-rankings)
-- [internal link module design for SEO](/blog/internal-link-module-design-lifts-mid-funnel-page-visibility)
-- [authority focused design system for SEO websites](/blog/authority-focused-design-tokens-for-seo-driven-brand-sites)
+- [visual content blocks to reduce organic bounce rate](/blog/visual-content-blocks-reduce-bounce-on-organic-entrances)
 

@@ -157,7 +157,7 @@ After each change, compare search visibility, on-page engagement, and conversion
 
 To expand this topic without overlap, review these focused guides:
 
-- [website redesign for accountants](/blog/accountants-website-redesign-guide)
-- [website redesign for b2b manufacturers](/blog/b2b-manufacturers-website-redesign-guide)
-- [website redesign for consulting firms](/blog/consulting-firms-website-redesign-guide)
+- [website redesign for logistics companies](/blog/logistics-companies-website-redesign-guide)
+- [local SEO strategy for real estate teams](/blog/real-estate-teams-local-seo-strategy-guide)
+- [visual search intent cues in web design](/blog/visual-search-intent-cues-for-better-on-page-qualification)
 

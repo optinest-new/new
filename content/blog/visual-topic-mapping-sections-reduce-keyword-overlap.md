@@ -151,7 +151,7 @@ Over time, these iterative improvements help growth-focused businesses maintain 
 
 To expand this topic without overlap, review these focused guides:
 
-- [visual content blocks to reduce organic bounce rate](/blog/visual-content-blocks-reduce-bounce-on-organic-entrances)
-- [visual proof stack design for service pages](/blog/visual-proof-stack-design-for-high-value-service-pages)
-- [visual search intent cues in web design](/blog/visual-search-intent-cues-for-better-on-page-qualification)
+- [serp aligned landing page components](/blog/serp-aligned-landing-page-components-for-better-engagement-time)
+- [topic gateway page design for organic growth](/blog/topic-gateway-page-designs-for-expanding-organic-footprint)
+- [local SEO strategy for insurance agencies](/blog/insurance-agencies-local-seo-strategy-guide)
 
