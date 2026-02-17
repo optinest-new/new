@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Link from "next/link";
 import "./globals.css";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://optinestdigital.com";
@@ -82,9 +83,55 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const year = new Date().getFullYear();
+
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body className="bg-[#f5f6ef] text-ink">
+        <header className="border-b-2 border-ink/70 bg-mist/90 backdrop-blur">
+          <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-between gap-3 px-4 py-4 sm:flex-row sm:gap-0 sm:px-6">
+            <Link
+              href="/"
+              className="font-display text-xl uppercase leading-none tracking-tight text-ink hover:opacity-80 sm:text-2xl"
+            >
+              Optinest Digital
+            </Link>
+            <nav aria-label="Primary" className="flex flex-wrap items-center justify-center gap-4 text-sm font-semibold text-ink sm:justify-end sm:gap-6">
+              <Link href="/" className="hover:underline">
+                Home
+              </Link>
+              <Link href="/blog" className="hover:underline">
+                Blog
+              </Link>
+              <a href="mailto:optinestdigital@gmail.com" className="hover:underline">
+                Schedule a Call
+              </a>
+            </nav>
+          </div>
+        </header>
+
+        {children}
+
+        <footer className="mt-8 border-t-2 border-ink/70 bg-mist/95">
+          <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-4 py-6 text-sm text-ink/80 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+            <p>© {year} Optinest Digital. All rights reserved.</p>
+            <nav aria-label="Footer" className="flex flex-wrap items-center gap-4">
+              <Link href="/" className="hover:underline">
+                Home
+              </Link>
+              <Link href="/blog" className="hover:underline">
+                Blog
+              </Link>
+              <a href="https://facebook.com/optinestdigital" target="_blank" rel="noopener noreferrer" className="hover:underline">
+                Facebook
+              </a>
+              <a href="https://x.com/optinestdigital" target="_blank" rel="noopener noreferrer" className="hover:underline">
+                X
+              </a>
+            </nav>
+          </div>
+        </footer>
+      </body>
     </html>
   );
 }

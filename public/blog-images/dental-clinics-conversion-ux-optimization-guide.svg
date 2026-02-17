@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="630" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="hsl(196 86% 66%)" />
+      <stop offset="100%" stop-color="hsl(231 92% 60%)" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect x="44" y="44" width="1112" height="542" rx="26" fill="#F8F8F0" stroke="#111" stroke-width="6"/>
+  <rect x="82" y="78" width="468" height="56" rx="28" fill="#FFE171" stroke="#111" stroke-width="3"/>
+  <text x="316" y="114" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="700" letter-spacing="1.5" fill="#111">OPTINEST DIGITAL BLOG</text>
+  <text x="90" y="232" font-family="Arial Black, Arial, sans-serif" font-size="66" font-weight="900" fill="#111"><tspan x="90" dy="0">Dental Clinics Conversion UX</tspan><tspan x="90" dy="80">Optimization</tspan></text>
+  <text x="90" y="550" font-family="Arial, sans-serif" font-size="30" font-weight="700" fill="#1f2d5a">Web Design &amp; SEO Growth Insights</text>
+</svg>
