@@ -6,6 +6,21 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://optinestdigital.com
 
 const tools = [
   {
+    href: "/tools/seo-health-scanner",
+    title: "SEO Health Scanner",
+    description: "Scan live URLs for SEO fundamentals: title, description, canonical, robots directives, and heading structure."
+  },
+  {
+    href: "/tools/sitemap-indexation-validator",
+    title: "Sitemap & Indexation Validator",
+    description: "Validate sitemap URLs, check indexability signals, and detect status/canonical issues at scale."
+  },
+  {
+    href: "/tools/utm-builder-campaign-library",
+    title: "UTM Builder + Campaign Library",
+    description: "Generate clean UTM tracking URLs and save reusable campaign presets for consistent reporting."
+  },
+  {
     href: "/tools/serp-snippet-preview",
     title: "SERP Snippet Preview",
     description: "Preview Google-style desktop and mobile snippets with title length and pixel width checks."
@@ -60,7 +75,7 @@ const tools = [
 export const metadata: Metadata = {
   title: "Web Developer Tools",
   description:
-    "Use Optinest Digital web developer tools for SERP previews, meta tags, schema markup, robots testing, internal links, content briefs, and layout CSS.",
+    "Use Optinest Digital web developer tools for SEO health scans, UTM tracking, sitemap validation, SERP previews, meta tags, schema markup, robots testing, internal links, content briefs, and layout CSS.",
   alternates: {
     canonical: "/tools"
   },
@@ -69,14 +84,14 @@ export const metadata: Metadata = {
     url: `${siteUrl}/tools`,
     title: "Optinest Digital Web Developer Tools",
     description:
-      "SEO and web workflow tools including SERP snippets, meta tags, schema markup, robots testing, internal links, content briefs, and CSS layout generation.",
+      "SEO and web workflow tools including SEO health scans, UTM builders, sitemap validation, SERP snippets, meta tags, schema markup, robots testing, internal links, content briefs, and CSS layout generation.",
     images: ["/og.png"]
   },
   twitter: {
     card: "summary_large_image",
     title: "Optinest Digital Web Developer Tools",
     description:
-      "SEO and web workflow tools including SERP snippets, meta tags, schema markup, robots testing, internal links, content briefs, and CSS layout generation.",
+      "SEO and web workflow tools including SEO health scans, UTM builders, sitemap validation, SERP snippets, meta tags, schema markup, robots testing, internal links, content briefs, and CSS layout generation.",
     images: ["/og.png"]
   }
 };
@@ -90,7 +105,7 @@ export default function ToolsPage() {
           Build Faster With Practical Generators
         </h1>
         <p className="tagline-pop mx-auto mt-5 max-w-3xl rounded-2xl border-2 border-ink/80 bg-mist/95 px-4 py-4 font-mono text-sm font-bold leading-relaxed sm:px-6 sm:text-base">
-          Create SERP previews, meta tags, schema markup, robots and redirect checks, internal link plans, content briefs, mailto links, and layout CSS with clean copy-ready outputs for real projects.
+          Create SEO health scans, UTM campaign links, sitemap indexation audits, SERP previews, meta tags, schema markup, robots and redirect checks, internal link plans, content briefs, mailto links, and layout CSS with clean copy-ready outputs for real projects.
         </p>
       </header>
 
