@@ -64,6 +64,41 @@ create table if not exists public.project_members (
   primary key (project_id, user_id)
 );
 
+create table if not exists public.project_member_emails (
+  project_id uuid not null references public.projects(id) on delete cascade,
+  email text not null,
+  role text not null default 'client' check (role in ('client', 'manager', 'owner')),
+  added_at timestamptz not null default timezone('utc', now()),
+  primary key (project_id, email)
+);
+
+alter table public.project_member_emails
+  add column if not exists project_id uuid references public.projects(id) on delete cascade,
+  add column if not exists email text,
+  add column if not exists role text not null default 'client',
+  add column if not exists added_at timestamptz not null default timezone('utc', now());
+
+alter table public.project_member_emails
+  alter column project_id set not null,
+  alter column email set not null;
+
+alter table public.project_member_emails drop constraint if exists project_member_emails_role_check;
+alter table public.project_member_emails
+add constraint project_member_emails_role_check
+check (role in ('client', 'manager', 'owner'));
+
+insert into public.project_member_emails (project_id, email, role)
+select
+  pm.project_id,
+  lower(trim(u.email)),
+  pm.role
+from public.project_members pm
+join auth.users u on u.id = pm.user_id
+where u.email is not null
+  and trim(u.email) <> ''
+on conflict (project_id, email) do update
+set role = excluded.role;
+
 create table if not exists public.project_updates (
   id uuid primary key default gen_random_uuid(),
   project_id uuid not null references public.projects(id) on delete cascade,
@@ -252,7 +287,88 @@ create table if not exists public.project_approval_tasks (
   created_at timestamptz not null default timezone('utc', now())
 );
 
+create table if not exists public.onboarding_leads (
+  id uuid primary key default gen_random_uuid(),
+  full_name text not null,
+  email text not null,
+  company_name text,
+  phone text,
+  services_needed text[] not null default '{}'::text[],
+  budget_range text,
+  timeline_goal text,
+  preferred_call_at timestamptz,
+  goals text,
+  notes text,
+  status text not null default 'call_scheduled' check (
+    status in (
+      'call_scheduled',
+      'qualified',
+      'deposited',
+      'project_started'
+    )
+  ),
+  manager_notes text,
+  proposed_project_name text,
+  quoted_amount numeric(12, 2),
+  deposit_amount numeric(12, 2),
+  payment_reference text,
+  converted_project_id uuid references public.projects(id) on delete set null,
+  converted_at timestamptz,
+  created_by uuid references auth.users(id) on delete set null,
+  created_at timestamptz not null default timezone('utc', now()),
+  updated_at timestamptz not null default timezone('utc', now())
+);
+
+alter table public.onboarding_leads
+  add column if not exists full_name text,
+  add column if not exists email text,
+  add column if not exists company_name text,
+  add column if not exists phone text,
+  add column if not exists services_needed text[] not null default '{}'::text[],
+  add column if not exists budget_range text,
+  add column if not exists timeline_goal text,
+  add column if not exists preferred_call_at timestamptz,
+  add column if not exists goals text,
+  add column if not exists notes text,
+  add column if not exists status text not null default 'call_scheduled',
+  add column if not exists manager_notes text,
+  add column if not exists proposed_project_name text,
+  add column if not exists quoted_amount numeric(12, 2),
+  add column if not exists deposit_amount numeric(12, 2),
+  add column if not exists payment_reference text,
+  add column if not exists converted_project_id uuid references public.projects(id) on delete set null,
+  add column if not exists converted_at timestamptz,
+  add column if not exists created_by uuid references auth.users(id) on delete set null,
+  add column if not exists created_at timestamptz not null default timezone('utc', now()),
+  add column if not exists updated_at timestamptz not null default timezone('utc', now());
+
+alter table public.onboarding_leads
+  alter column full_name set not null,
+  alter column email set not null;
+
+alter table public.onboarding_leads drop constraint if exists onboarding_leads_status_check;
+
+update public.onboarding_leads
+set status = case
+  when status in ('call_scheduled', 'intake_submitted') then 'call_scheduled'
+  when status in ('qualified', 'proposal_sent', 'proposal_approved', 'contract_signed', 'invoice_sent', 'not_fit') then 'qualified'
+  when status = 'deposit_paid' then 'deposited'
+  when status in ('deposited', 'project_started') then status
+  else 'call_scheduled'
+end;
+alter table public.onboarding_leads
+add constraint onboarding_leads_status_check
+check (
+  status in (
+    'call_scheduled',
+    'qualified',
+    'deposited',
+    'project_started'
+  )
+);
+
 create index if not exists idx_project_members_user_id on public.project_members(user_id);
+create index if not exists idx_project_member_emails_email on public.project_member_emails(lower(email));
 create index if not exists idx_project_updates_project_id_created_at on public.project_updates(project_id, created_at desc);
 create index if not exists idx_project_questions_project_id_created_at on public.project_questions(project_id, created_at desc);
 create index if not exists idx_project_question_messages_project_id_created_at on public.project_question_messages(project_id, created_at asc);
@@ -262,6 +378,9 @@ create index if not exists idx_project_client_intake_updated_at on public.projec
 create index if not exists idx_project_access_items_project_id_created_at on public.project_access_items(project_id, created_at asc);
 create index if not exists idx_project_milestones_project_id_sort on public.project_milestones(project_id, sort_order asc, created_at asc);
 create index if not exists idx_project_approval_tasks_project_id_created_at on public.project_approval_tasks(project_id, created_at desc);
+create index if not exists idx_onboarding_leads_created_at on public.onboarding_leads(created_at desc);
+create index if not exists idx_onboarding_leads_status on public.onboarding_leads(status);
+create index if not exists idx_onboarding_leads_email on public.onboarding_leads(lower(email));
 
 create or replace function public.set_updated_at()
 returns trigger
@@ -288,18 +407,29 @@ create trigger project_access_items_set_updated_at
 before update on public.project_access_items
 for each row execute function public.set_updated_at();
 
+drop trigger if exists onboarding_leads_set_updated_at on public.onboarding_leads;
+create trigger onboarding_leads_set_updated_at
+before update on public.onboarding_leads
+for each row execute function public.set_updated_at();
+
 create or replace function public.is_project_member(project_uuid uuid)
 returns boolean
 language sql
 stable
 security definer
-set search_path = public
+set search_path = public, auth
 as $$
   select public.is_bootstrap_manager() or exists (
     select 1
     from public.project_members pm
     where pm.project_id = project_uuid
       and pm.user_id = auth.uid()
+  ) or exists (
+    select 1
+    from public.project_member_emails pme
+    join auth.users u on u.id = auth.uid()
+    where pme.project_id = project_uuid
+      and lower(pme.email) = lower(coalesce(u.email, ''))
   );
 $$;
 
@@ -308,7 +438,7 @@ returns boolean
 language sql
 stable
 security definer
-set search_path = public
+set search_path = public, auth
 as $$
   select public.is_bootstrap_manager() or exists (
     select 1
@@ -316,6 +446,13 @@ as $$
     where pm.project_id = project_uuid
       and pm.user_id = auth.uid()
       and pm.role in ('manager', 'owner')
+  ) or exists (
+    select 1
+    from public.project_member_emails pme
+    join auth.users u on u.id = auth.uid()
+    where pme.project_id = project_uuid
+      and lower(pme.email) = lower(coalesce(u.email, ''))
+      and pme.role in ('manager', 'owner')
   );
 $$;
 
@@ -331,6 +468,7 @@ set search_path = public, auth
 as $$
 declare
   target_user_id uuid;
+  normalized_email text := lower(trim(client_email));
 begin
   if not public.is_project_admin(project_uuid) then
     raise exception 'not_authorized';
@@ -340,23 +478,70 @@ begin
     raise exception 'invalid_role';
   end if;
 
+  if normalized_email is null or normalized_email = '' then
+    raise exception 'invalid_email';
+  end if;
+
+  insert into public.project_member_emails (project_id, email, role)
+  values (project_uuid, normalized_email, client_role)
+  on conflict (project_id, email) do update
+  set role = excluded.role;
+
   select u.id
   into target_user_id
   from auth.users u
-  where lower(u.email) = lower(trim(client_email))
+  where lower(u.email) = normalized_email
   order by u.created_at asc
   limit 1;
 
-  if target_user_id is null then
-    raise exception 'user_not_found';
+  if target_user_id is not null then
+    insert into public.project_members (project_id, user_id, role)
+    values (project_uuid, target_user_id, client_role)
+    on conflict (project_id, user_id) do update
+    set role = excluded.role;
+  end if;
+
+  return target_user_id;
+end;
+$$;
+
+drop function if exists public.claim_pending_project_memberships();
+
+create function public.claim_pending_project_memberships()
+returns integer
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+  current_email text;
+  changed_count integer := 0;
+begin
+  if auth.uid() is null then
+    return 0;
+  end if;
+
+  select lower(trim(u.email))
+  into current_email
+  from auth.users u
+  where u.id = auth.uid();
+
+  if current_email is null or current_email = '' then
+    return 0;
   end if;
 
   insert into public.project_members (project_id, user_id, role)
-  values (project_uuid, target_user_id, client_role)
+  select
+    pme.project_id,
+    auth.uid(),
+    pme.role
+  from public.project_member_emails pme
+  where lower(pme.email) = current_email
   on conflict (project_id, user_id) do update
   set role = excluded.role;
 
-  return target_user_id;
+  get diagnostics changed_count = row_count;
+  return changed_count;
 end;
 $$;
 
@@ -450,11 +635,17 @@ grant execute on function public.is_bootstrap_manager() to authenticated;
 revoke all on function public.assign_client_to_project(uuid, text, text) from public;
 grant execute on function public.assign_client_to_project(uuid, text, text) to authenticated;
 
+revoke all on function public.claim_pending_project_memberships() from public;
+grant execute on function public.claim_pending_project_memberships() to authenticated;
+
 revoke all on function public.update_project_summary(uuid, text) from public;
 grant execute on function public.update_project_summary(uuid, text) to authenticated;
 
 revoke all on function public.search_project_user_emails(uuid, text, integer) from public;
 grant execute on function public.search_project_user_emails(uuid, text, integer) to authenticated;
+
+grant insert on table public.onboarding_leads to anon, authenticated;
+grant select, update on table public.onboarding_leads to authenticated;
 
 alter table public.projects enable row level security;
 alter table public.project_members enable row level security;
@@ -466,6 +657,7 @@ alter table public.project_client_intake enable row level security;
 alter table public.project_access_items enable row level security;
 alter table public.project_milestones enable row level security;
 alter table public.project_approval_tasks enable row level security;
+alter table public.onboarding_leads enable row level security;
 
 drop policy if exists "Members can view projects" on public.projects;
 create policy "Members can view projects"
@@ -701,6 +893,28 @@ for update
 to authenticated
 using (public.is_project_member(project_id))
 with check (public.is_project_member(project_id));
+
+drop policy if exists "Anyone can submit onboarding leads" on public.onboarding_leads;
+create policy "Anyone can submit onboarding leads"
+on public.onboarding_leads
+for insert
+to anon, authenticated
+with check (true);
+
+drop policy if exists "Managers can view onboarding leads" on public.onboarding_leads;
+create policy "Managers can view onboarding leads"
+on public.onboarding_leads
+for select
+to authenticated
+using (public.is_bootstrap_manager());
+
+drop policy if exists "Managers can update onboarding leads" on public.onboarding_leads;
+create policy "Managers can update onboarding leads"
+on public.onboarding_leads
+for update
+to authenticated
+using (public.is_bootstrap_manager())
+with check (public.is_bootstrap_manager());
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values (

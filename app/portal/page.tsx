@@ -140,6 +140,46 @@ type QuestionMessage = {
   created_at: string;
 };
 
+type OnboardingStatus =
+  | "call_scheduled"
+  | "qualified"
+  | "deposited"
+  | "project_started";
+
+type OnboardingLead = {
+  id: string;
+  full_name: string;
+  email: string;
+  company_name: string | null;
+  phone: string | null;
+  services_needed: string[] | null;
+  budget_range: string | null;
+  timeline_goal: string | null;
+  preferred_call_at: string | null;
+  goals: string | null;
+  notes: string | null;
+  status: OnboardingStatus;
+  manager_notes: string | null;
+  proposed_project_name: string | null;
+  quoted_amount: number | null;
+  deposit_amount: number | null;
+  payment_reference: string | null;
+  converted_project_id: string | null;
+  converted_at: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+type OnboardingLeadDraft = {
+  status: OnboardingStatus;
+  manager_notes: string;
+  proposed_project_name: string;
+  quoted_amount: string;
+  deposit_amount: string;
+  payment_reference: string;
+};
+
 type ClientDirectorySuggestion = {
   email: string;
   full_name: string | null;
@@ -163,6 +203,12 @@ type MilestoneStatus = "planned" | "in_progress" | "done";
 type ApprovalStatus = "pending" | "approved" | "changes_requested";
 
 const projectStatuses: ProjectStatus[] = ["planning", "in_progress", "review", "completed"];
+const onboardingStatuses: OnboardingStatus[] = [
+  "call_scheduled",
+  "qualified",
+  "deposited",
+  "project_started"
+];
 const milestoneStatuses: MilestoneStatus[] = ["planned", "in_progress", "done"];
 const approvalStatuses: ApprovalStatus[] = ["pending", "approved", "changes_requested"];
 const accessItemStatuses: AccessItemStatus[] = ["missing", "submitted", "verified", "not_needed"];
@@ -200,6 +246,13 @@ const approvalStatusStyles: Record<ApprovalStatus, string> = {
   pending: "bg-[#fff5cf] text-[#8a5a00]",
   approved: "bg-[#d5f4e2] text-[#0b6a40]",
   changes_requested: "bg-[#ffe2e2] text-[#892727]"
+};
+
+const onboardingStatusStyles: Record<OnboardingStatus, string> = {
+  call_scheduled: "bg-[#d8ecff] text-[#134d7a]",
+  qualified: "bg-[#d5f4e2] text-[#0b6a40]",
+  deposited: "bg-[#d1fae5] text-[#065f46]",
+  project_started: "bg-[#def7f7] text-[#0f6a70]"
 };
 
 const accessStatusStyles: Record<AccessItemStatus, string> = {
@@ -328,6 +381,22 @@ function formatRole(role: MemberRole | null): string {
   }
 
   return "client";
+}
+
+function formatKeyLabel(value: string): string {
+  return value.replace(/_/g, " ");
+}
+
+function formatUsd(value: number | null): string {
+  if (value === null || Number.isNaN(value)) {
+    return "Not set";
+  }
+
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 2
+  }).format(value);
 }
 
 function formatBytes(sizeBytes: number): string {
@@ -510,8 +579,8 @@ function clipThreadTitle(value: string): string {
 }
 
 function formatAssignmentError(message: string): string {
-  if (message.includes("user_not_found")) {
-    return "Client email not found. Ask the client to sign in to the portal once, then assign again.";
+  if (message.includes("invalid_email")) {
+    return "Please use a valid client email.";
   }
 
   if (message.includes("not_authorized")) {
@@ -574,6 +643,8 @@ export default function PortalPage() {
   const [isUploadingFile, setIsUploadingFile] = useState(false);
   const [projectStatusDraft, setProjectStatusDraft] = useState<ProjectStatus>("planning");
   const [projectProgressDraft, setProjectProgressDraft] = useState("0");
+  const [projectStartDateDraft, setProjectStartDateDraft] = useState("");
+  const [projectDueDateDraft, setProjectDueDateDraft] = useState("");
   const [projectSummaryDraft, setProjectSummaryDraft] = useState("");
   const [isSavingProject, setIsSavingProject] = useState(false);
   const [isArchivingProject, setIsArchivingProject] = useState(false);
@@ -589,6 +660,26 @@ export default function PortalPage() {
   const [newProjectStartDate, setNewProjectStartDate] = useState("");
   const [newProjectDueDate, setNewProjectDueDate] = useState("");
   const [newProjectClientEmail, setNewProjectClientEmail] = useState("");
+  const [scheduleCallFullName, setScheduleCallFullName] = useState("");
+  const [scheduleCallEmail, setScheduleCallEmail] = useState("");
+  const [scheduleCallCompanyName, setScheduleCallCompanyName] = useState("");
+  const [scheduleCallPhone, setScheduleCallPhone] = useState("");
+  const [scheduleCallServicesNeeded, setScheduleCallServicesNeeded] = useState("");
+  const [scheduleCallBudgetRange, setScheduleCallBudgetRange] = useState("");
+  const [scheduleCallTimelineGoal, setScheduleCallTimelineGoal] = useState("");
+  const [scheduleCallPreferredAt, setScheduleCallPreferredAt] = useState("");
+  const [scheduleCallGoals, setScheduleCallGoals] = useState("");
+  const [scheduleCallNotes, setScheduleCallNotes] = useState("");
+  const [isSubmittingScheduleCall, setIsSubmittingScheduleCall] = useState(false);
+  const [scheduleCallMessage, setScheduleCallMessage] = useState("");
+  const [scheduleCallError, setScheduleCallError] = useState("");
+  const [onboardingLeads, setOnboardingLeads] = useState<OnboardingLead[]>([]);
+  const [isLoadingOnboardingLeads, setIsLoadingOnboardingLeads] = useState(false);
+  const [onboardingSearchDraft, setOnboardingSearchDraft] = useState("");
+  const [onboardingStatusFilter, setOnboardingStatusFilter] = useState<"all" | OnboardingStatus>("all");
+  const [onboardingLeadDrafts, setOnboardingLeadDrafts] = useState<Record<string, OnboardingLeadDraft>>({});
+  const [savingOnboardingLeadById, setSavingOnboardingLeadById] = useState<Record<string, boolean>>({});
+  const [convertingOnboardingLeadById, setConvertingOnboardingLeadById] = useState<Record<string, boolean>>({});
   const [newProjectEmailSuggestions, setNewProjectEmailSuggestions] = useState<
     ClientDirectorySuggestion[]
   >([]);
@@ -596,6 +687,7 @@ export default function PortalPage() {
     useState(false);
   const [isCreatingProject, setIsCreatingProject] = useState(false);
   const [assignmentMessage, setAssignmentMessage] = useState("");
+  const [isManagerProjectsDrawerOpen, setIsManagerProjectsDrawerOpen] = useState(true);
   const [isManagerControlsOpen, setIsManagerControlsOpen] = useState(false);
   const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
   const [replyUrlDrafts, setReplyUrlDrafts] = useState<Record<string, string>>({});
@@ -734,6 +826,35 @@ export default function PortalPage() {
       return matchesSearch && matchesStatus;
     });
   }, [accessStatusFilter, normalizedContentSearch, projectAccessItems]);
+  const normalizedOnboardingSearch = onboardingSearchDraft.trim().toLowerCase();
+  const onboardingPipelineLeads = useMemo(
+    () => onboardingLeads.filter((lead) => !lead.converted_project_id),
+    [onboardingLeads]
+  );
+  const filteredOnboardingLeads = useMemo(() => {
+    return onboardingPipelineLeads.filter((lead) => {
+      const haystack =
+        `${lead.full_name} ${lead.email} ${lead.company_name ?? ""} ${lead.goals ?? ""} ${lead.manager_notes ?? ""}`
+          .toLowerCase();
+      const matchesSearch = !normalizedOnboardingSearch || haystack.includes(normalizedOnboardingSearch);
+      const matchesStatus = onboardingStatusFilter === "all" || lead.status === onboardingStatusFilter;
+      return matchesSearch && matchesStatus;
+    });
+  }, [normalizedOnboardingSearch, onboardingPipelineLeads, onboardingStatusFilter]);
+  const onboardingStatusCounts = useMemo(() => {
+    return onboardingPipelineLeads.reduce<Record<OnboardingStatus, number>>(
+      (counts, lead) => {
+        counts[lead.status] += 1;
+        return counts;
+      },
+      {
+        call_scheduled: 0,
+        qualified: 0,
+        deposited: 0,
+        project_started: 0
+      }
+    );
+  }, [onboardingPipelineLeads]);
   const accessStatusCounts = useMemo(() => {
     return projectAccessItems.reduce<Record<AccessItemStatus, number>>(
       (counts, item) => {
@@ -988,6 +1109,52 @@ export default function PortalPage() {
     [session, supabase]
   );
 
+  const loadOnboardingLeads = useCallback(async () => {
+    if (!supabase || !session || !isBootstrapManager) {
+      setOnboardingLeads([]);
+      setOnboardingLeadDrafts({});
+      setSavingOnboardingLeadById({});
+      setConvertingOnboardingLeadById({});
+      return;
+    }
+
+    setIsLoadingOnboardingLeads(true);
+    setPortalError("");
+
+    const { data, error } = await supabase
+      .from("onboarding_leads")
+      .select(
+        "id,full_name,email,company_name,phone,services_needed,budget_range,timeline_goal,preferred_call_at,goals,notes,status,manager_notes,proposed_project_name,quoted_amount,deposit_amount,payment_reference,converted_project_id,converted_at,created_by,created_at,updated_at"
+      )
+      .order("created_at", { ascending: false });
+
+    setIsLoadingOnboardingLeads(false);
+
+    if (error) {
+      setPortalError(error.message);
+      return;
+    }
+
+    const rows = (data ?? []) as OnboardingLead[];
+    setOnboardingLeads(rows);
+
+    const nextDrafts: Record<string, OnboardingLeadDraft> = {};
+    for (const lead of rows) {
+      nextDrafts[lead.id] = {
+        status: lead.status,
+        manager_notes: lead.manager_notes || "",
+        proposed_project_name: lead.proposed_project_name || "",
+        quoted_amount: lead.quoted_amount !== null ? String(lead.quoted_amount) : "",
+        deposit_amount: lead.deposit_amount !== null ? String(lead.deposit_amount) : "",
+        payment_reference: lead.payment_reference || ""
+      };
+    }
+
+    setOnboardingLeadDrafts(nextDrafts);
+    setSavingOnboardingLeadById({});
+    setConvertingOnboardingLeadById({});
+  }, [isBootstrapManager, session, supabase]);
+
   useEffect(() => {
     if (!session) {
       setProjects([]);
@@ -1004,6 +1171,15 @@ export default function PortalPage() {
       setMemberRolesByUserId({});
       setCurrentRole(null);
       setIsBootstrapManager(false);
+      setOnboardingLeads([]);
+      setOnboardingLeadDrafts({});
+      setSavingOnboardingLeadById({});
+      setConvertingOnboardingLeadById({});
+      setOnboardingSearchDraft("");
+      setOnboardingStatusFilter("all");
+      setScheduleCallMessage("");
+      setScheduleCallError("");
+      setIsSubmittingScheduleCall(false);
       setReplyDrafts({});
       setReplyUrlDrafts({});
       setReplyFileDrafts({});
@@ -1034,12 +1210,18 @@ export default function PortalPage() {
       setIsAccessChecklistOpen(false);
       setIsProjectSnapshotModalOpen(false);
       setAssignmentMessage("");
+      setIsManagerProjectsDrawerOpen(true);
       setIsManagerControlsOpen(false);
       return;
     }
 
-    void loadProjects();
-  }, [loadProjects, session]);
+    void (async () => {
+      if (supabase) {
+        await supabase.rpc("claim_pending_project_memberships");
+      }
+      await loadProjects();
+    })();
+  }, [loadProjects, session, supabase]);
 
   useEffect(() => {
     if (!supabase || !session) {
@@ -1182,6 +1364,8 @@ export default function PortalPage() {
     if (!selectedProject) {
       setProjectStatusDraft("planning");
       setProjectProgressDraft("0");
+      setProjectStartDateDraft("");
+      setProjectDueDateDraft("");
       setProjectSummaryDraft("");
       setIsProjectSnapshotModalOpen(false);
       return;
@@ -1189,6 +1373,8 @@ export default function PortalPage() {
 
     setProjectStatusDraft((selectedProject.status as ProjectStatus) || "planning");
     setProjectProgressDraft(String(selectedProject.progress));
+    setProjectStartDateDraft(selectedProject.start_date || "");
+    setProjectDueDateDraft(selectedProject.due_date || "");
     setProjectSummaryDraft(selectedProject.summary || "");
   }, [selectedProject]);
 
@@ -1508,6 +1694,8 @@ export default function PortalPage() {
     setReplyFilePreviewUrls({});
     setReplySubmittingByQuestionId({});
     setIsRecoveryMode(false);
+    setScheduleCallMessage("");
+    setScheduleCallError("");
     setPortalError("");
   }
 
@@ -1878,7 +2066,7 @@ export default function PortalPage() {
       return;
     }
 
-    const { error: assignError } = await supabase.rpc("assign_client_to_project", {
+    const { data: assignedUserId, error: assignError } = await supabase.rpc("assign_client_to_project", {
       project_uuid: projectRow.id,
       client_email: clientEmail,
       client_role: "client"
@@ -1908,9 +2096,218 @@ export default function PortalPage() {
     );
     const assignedClientLabel =
       matchedClient?.full_name ? `${matchedClient.full_name} (${clientEmail})` : clientEmail;
-    setAssignmentMessage(`Project created and assigned to ${assignedClientLabel}.`);
+    setAssignmentMessage(
+      assignedUserId
+        ? `Project created and assigned to ${assignedClientLabel}.`
+        : `Project created. ${assignedClientLabel} will be auto-assigned when they sign in with this email.`
+    );
     setIsManagerControlsOpen(false);
 
+    await loadProjects();
+    handleSelectProject(projectRow.id);
+    await loadProjectData(projectRow.id);
+  }
+
+  async function handleSubmitScheduleCall(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!supabase) {
+      return;
+    }
+
+    const fullName = scheduleCallFullName.trim();
+    const clientEmail = scheduleCallEmail.trim().toLowerCase();
+
+    if (!fullName || !clientEmail) {
+      setScheduleCallError("Name and email are required to schedule a call.");
+      return;
+    }
+
+    const services = scheduleCallServicesNeeded
+      .split(",")
+      .map((value) => value.trim())
+      .filter((value) => value.length > 0);
+
+    setIsSubmittingScheduleCall(true);
+    setScheduleCallError("");
+    setScheduleCallMessage("");
+
+    const { error } = await supabase.from("onboarding_leads").insert({
+      full_name: fullName,
+      email: clientEmail,
+      company_name: scheduleCallCompanyName.trim() || null,
+      phone: scheduleCallPhone.trim() || null,
+      services_needed: services,
+      budget_range: scheduleCallBudgetRange.trim() || null,
+      timeline_goal: scheduleCallTimelineGoal.trim() || null,
+      preferred_call_at: scheduleCallPreferredAt ? new Date(scheduleCallPreferredAt).toISOString() : null,
+      goals: scheduleCallGoals.trim() || null,
+      notes: scheduleCallNotes.trim() || null,
+      status: "call_scheduled",
+      created_by: session?.user.id || null
+    });
+
+    setIsSubmittingScheduleCall(false);
+
+    if (error) {
+      setScheduleCallError(error.message);
+      return;
+    }
+
+    setScheduleCallFullName("");
+    setScheduleCallEmail("");
+    setScheduleCallCompanyName("");
+    setScheduleCallPhone("");
+    setScheduleCallServicesNeeded("");
+    setScheduleCallBudgetRange("");
+    setScheduleCallTimelineGoal("");
+    setScheduleCallPreferredAt("");
+    setScheduleCallGoals("");
+    setScheduleCallNotes("");
+    setScheduleCallMessage("Call request submitted. We will contact you to confirm the schedule.");
+  }
+
+  function handleOnboardingDraftChange(
+    leadId: string,
+    field: keyof OnboardingLeadDraft,
+    value: string | OnboardingStatus
+  ) {
+    setOnboardingLeadDrafts((current) => {
+      const existing = current[leadId];
+      if (!existing) {
+        return current;
+      }
+
+      return {
+        ...current,
+        [leadId]: {
+          ...existing,
+          [field]: value
+        }
+      };
+    });
+  }
+
+  async function handleSaveOnboardingLead(leadId: string) {
+    if (!supabase || !session || !isBootstrapManager) {
+      return;
+    }
+
+    const draft = onboardingLeadDrafts[leadId];
+    if (!draft) {
+      return;
+    }
+
+    const quoted = draft.quoted_amount.trim();
+    const deposit = draft.deposit_amount.trim();
+    const quotedValue = quoted ? Number.parseFloat(quoted) : null;
+    const depositValue = deposit ? Number.parseFloat(deposit) : null;
+
+    if ((quoted && Number.isNaN(quotedValue as number)) || (deposit && Number.isNaN(depositValue as number))) {
+      setPortalError("Quoted and deposit amounts must be valid numbers.");
+      return;
+    }
+
+    setSavingOnboardingLeadById((current) => ({ ...current, [leadId]: true }));
+    setPortalError("");
+
+    const { error } = await supabase
+      .from("onboarding_leads")
+      .update({
+        status: draft.status,
+        manager_notes: draft.manager_notes.trim() || null,
+        proposed_project_name: draft.proposed_project_name.trim() || null,
+        quoted_amount: quotedValue,
+        deposit_amount: depositValue,
+        payment_reference: draft.payment_reference.trim() || null
+      })
+      .eq("id", leadId);
+
+    setSavingOnboardingLeadById((current) => ({ ...current, [leadId]: false }));
+
+    if (error) {
+      setPortalError(error.message);
+      return;
+    }
+
+    await loadOnboardingLeads();
+  }
+
+  async function handleConvertOnboardingLeadToProject(leadId: string) {
+    if (!supabase || !session || !isBootstrapManager) {
+      return;
+    }
+
+    const lead = onboardingLeads.find((entry) => entry.id === leadId);
+    const draft = onboardingLeadDrafts[leadId];
+    if (!lead || !draft) {
+      return;
+    }
+
+    if (draft.status !== "deposited") {
+      setPortalError("Set onboarding status to deposited before converting.");
+      return;
+    }
+
+    if (lead.converted_project_id) {
+      setPortalError("This onboarding lead is already converted to a project.");
+      return;
+    }
+
+    const projectName = draft.proposed_project_name.trim() || `${lead.company_name || lead.full_name} Project`;
+
+    setConvertingOnboardingLeadById((current) => ({ ...current, [leadId]: true }));
+    setPortalError("");
+
+    const { data: projectRow, error: createProjectError } = await supabase
+      .from("projects")
+      .insert({
+        name: projectName,
+        status: "planning",
+        progress: 0,
+        summary: lead.goals || null
+      })
+      .select("id")
+      .single();
+
+    if (createProjectError || !projectRow?.id) {
+      setConvertingOnboardingLeadById((current) => ({ ...current, [leadId]: false }));
+      setPortalError(createProjectError?.message || "Unable to create project from onboarding.");
+      return;
+    }
+
+    const { error: assignError } = await supabase.rpc("assign_client_to_project", {
+      project_uuid: projectRow.id,
+      client_email: lead.email,
+      client_role: "client"
+    });
+
+    if (assignError) {
+      setConvertingOnboardingLeadById((current) => ({ ...current, [leadId]: false }));
+      setPortalError(
+        `Project created, but client assignment failed: ${formatAssignmentError(assignError.message)}`
+      );
+      await loadProjects();
+      return;
+    }
+
+    const { error: updateLeadError } = await supabase
+      .from("onboarding_leads")
+      .update({
+        status: "project_started",
+        converted_project_id: projectRow.id,
+        converted_at: new Date().toISOString()
+      })
+      .eq("id", leadId);
+
+    setConvertingOnboardingLeadById((current) => ({ ...current, [leadId]: false }));
+
+    if (updateLeadError) {
+      setPortalError(updateLeadError.message);
+      return;
+    }
+
+    await loadOnboardingLeads();
     await loadProjects();
     handleSelectProject(projectRow.id);
     await loadProjectData(projectRow.id);
@@ -1943,6 +2340,8 @@ export default function PortalPage() {
         .update({
           status: projectStatusDraft,
           progress: nextProgress,
+          start_date: projectStartDateDraft || null,
+          due_date: projectDueDateDraft || null,
           summary: nextSummary || null
         })
         .eq("id", selectedProjectId);
@@ -2519,135 +2918,289 @@ export default function PortalPage() {
 
   if (!session) {
     return (
-      <main className="mx-auto w-full max-w-4xl px-4 py-10 sm:px-6">
-        <section className="rounded-2xl border-2 border-ink/80 bg-mist p-6 shadow-hard sm:p-8">
-          <h1 className="font-display text-3xl uppercase leading-none text-ink">Client Portal</h1>
-          <p className="mt-3 text-sm text-ink/85">
-            Clients can register and log in to track project progress, ask questions, and upload
-            files.
-          </p>
+      <main className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6">
+        <div className="grid gap-6 lg:grid-cols-2">
+          <section className="rounded-2xl border-2 border-ink/80 bg-mist p-6 shadow-hard sm:p-8">
+            <h1 className="font-display text-3xl uppercase leading-none text-ink">Client Portal</h1>
+            <p className="mt-3 text-sm text-ink/85">
+              Clients can register and log in to track project progress, ask questions, and upload
+              files.
+            </p>
 
-          <div className="mt-6 inline-flex rounded-full border border-ink/25 bg-white p-1">
-            <button
-              type="button"
-              onClick={() => setAuthMode("login")}
-              className={`rounded-full px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.12em] ${
-                authMode === "login" ? "bg-ink text-mist" : "text-ink/75"
-              }`}
-            >
-              Login
-            </button>
-            <button
-              type="button"
-              onClick={() => setAuthMode("register")}
-              className={`rounded-full px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.12em] ${
-                authMode === "register" ? "bg-ink text-mist" : "text-ink/75"
-              }`}
-            >
-              Register
-            </button>
-          </div>
+            <div className="mt-6 inline-flex rounded-full border border-ink/25 bg-white p-1">
+              <button
+                type="button"
+                onClick={() => setAuthMode("login")}
+                className={`rounded-full px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.12em] ${
+                  authMode === "login" ? "bg-ink text-mist" : "text-ink/75"
+                }`}
+              >
+                Login
+              </button>
+              <button
+                type="button"
+                onClick={() => setAuthMode("register")}
+                className={`rounded-full px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.12em] ${
+                  authMode === "register" ? "bg-ink text-mist" : "text-ink/75"
+                }`}
+              >
+                Register
+              </button>
+            </div>
 
-          <form onSubmit={handleAuthSubmit} className="mt-4 space-y-3">
-            {authMode === "register" ? (
-              <>
-                <label
-                  htmlFor="portal-full-name"
-                  className="block text-xs font-semibold uppercase tracking-[0.14em] text-ink/70"
+            <form onSubmit={handleAuthSubmit} className="mt-4 space-y-3">
+              {authMode === "register" ? (
+                <>
+                  <label
+                    htmlFor="portal-full-name"
+                    className="block text-xs font-semibold uppercase tracking-[0.14em] text-ink/70"
+                  >
+                    Full Name
+                  </label>
+                  <input
+                    id="portal-full-name"
+                    type="text"
+                    value={fullName}
+                    onChange={(event) => setFullName(event.target.value)}
+                    placeholder="Jane Doe"
+                    className="w-full rounded-lg border border-ink/25 bg-white px-3 py-2.5 text-sm text-ink outline-none focus:border-ink/60"
+                    required
+                  />
+                </>
+              ) : null}
+              <label
+                htmlFor="portal-email"
+                className="block text-xs font-semibold uppercase tracking-[0.14em] text-ink/70"
+              >
+                Work Email
+              </label>
+              <input
+                id="portal-email"
+                type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="you@company.com"
+                className="w-full rounded-lg border border-ink/25 bg-white px-3 py-2.5 text-sm text-ink outline-none focus:border-ink/60"
+                required
+              />
+              <label
+                htmlFor="portal-password"
+                className="block text-xs font-semibold uppercase tracking-[0.14em] text-ink/70"
+              >
+                Password
+              </label>
+              <input
+                id="portal-password"
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder="••••••••"
+                className="w-full rounded-lg border border-ink/25 bg-white px-3 py-2.5 text-sm text-ink outline-none focus:border-ink/60"
+                minLength={8}
+                required
+              />
+              {authMode === "login" ? (
+                <button
+                  type="button"
+                  onClick={() => void handleForgotPassword()}
+                  disabled={isSendingResetEmail}
+                  className="text-xs font-semibold uppercase tracking-[0.1em] text-ink/70 hover:underline disabled:cursor-not-allowed disabled:opacity-70"
                 >
+                  {isSendingResetEmail ? "Sending reset..." : "Forgot Password?"}
+                </button>
+              ) : null}
+              {authMode === "register" ? (
+                <>
+                  <label
+                    htmlFor="portal-confirm-password"
+                    className="block text-xs font-semibold uppercase tracking-[0.14em] text-ink/70"
+                  >
+                    Confirm Password
+                  </label>
+                  <input
+                    id="portal-confirm-password"
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(event) => setConfirmPassword(event.target.value)}
+                    placeholder="••••••••"
+                    className="w-full rounded-lg border border-ink/25 bg-white px-3 py-2.5 text-sm text-ink outline-none focus:border-ink/60"
+                    minLength={8}
+                    required
+                  />
+                </>
+              ) : null}
+              <button
+                type="submit"
+                disabled={isSubmittingAuth}
+                className="inline-flex items-center rounded-full border-2 border-ink bg-ink px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-mist transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {isSubmittingAuth
+                  ? "Processing..."
+                  : authMode === "register"
+                    ? "Create Account"
+                    : "Login"}
+              </button>
+            </form>
+
+            {authMessage ? (
+              <p className="mt-4 rounded-lg border border-ink/20 bg-white px-3 py-2 text-sm text-ink/80">
+                {authMessage}
+              </p>
+            ) : null}
+          </section>
+
+          <section className="rounded-2xl border-2 border-ink/80 bg-mist p-6 shadow-hard sm:p-8">
+            <h2 className="font-display text-2xl uppercase leading-none text-ink">Schedule a Call</h2>
+            <p className="mt-3 text-sm text-ink/80">
+              Start onboarding now. Your request goes to the manager pipeline until proposal, contract,
+              invoice, and deposit are complete.
+            </p>
+
+            <form onSubmit={handleSubmitScheduleCall} className="mt-4 grid gap-3 sm:grid-cols-2">
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-semibold uppercase tracking-[0.14em] text-ink/70">
                   Full Name
                 </label>
                 <input
-                  id="portal-full-name"
                   type="text"
-                  value={fullName}
-                  onChange={(event) => setFullName(event.target.value)}
+                  value={scheduleCallFullName}
+                  onChange={(event) => setScheduleCallFullName(event.target.value)}
                   placeholder="Jane Doe"
-                  className="w-full rounded-lg border border-ink/25 bg-white px-3 py-2.5 text-sm text-ink outline-none focus:border-ink/60"
+                  className="mt-1 w-full rounded-lg border border-ink/25 bg-white px-3 py-2.5 text-sm text-ink outline-none focus:border-ink/60"
                   required
                 />
-              </>
-            ) : null}
-            <label
-              htmlFor="portal-email"
-              className="block text-xs font-semibold uppercase tracking-[0.14em] text-ink/70"
-            >
-              Work Email
-            </label>
-            <input
-              id="portal-email"
-              type="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              placeholder="you@company.com"
-              className="w-full rounded-lg border border-ink/25 bg-white px-3 py-2.5 text-sm text-ink outline-none focus:border-ink/60"
-              required
-            />
-            <label
-              htmlFor="portal-password"
-              className="block text-xs font-semibold uppercase tracking-[0.14em] text-ink/70"
-            >
-              Password
-            </label>
-            <input
-              id="portal-password"
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              placeholder="••••••••"
-              className="w-full rounded-lg border border-ink/25 bg-white px-3 py-2.5 text-sm text-ink outline-none focus:border-ink/60"
-              minLength={8}
-              required
-            />
-            {authMode === "login" ? (
-              <button
-                type="button"
-                onClick={() => void handleForgotPassword()}
-                disabled={isSendingResetEmail}
-                className="text-xs font-semibold uppercase tracking-[0.1em] text-ink/70 hover:underline disabled:cursor-not-allowed disabled:opacity-70"
-              >
-                {isSendingResetEmail ? "Sending reset..." : "Forgot Password?"}
-              </button>
-            ) : null}
-            {authMode === "register" ? (
-              <>
-                <label
-                  htmlFor="portal-confirm-password"
-                  className="block text-xs font-semibold uppercase tracking-[0.14em] text-ink/70"
-                >
-                  Confirm Password
+              </div>
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-semibold uppercase tracking-[0.14em] text-ink/70">
+                  Email
                 </label>
                 <input
-                  id="portal-confirm-password"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(event) => setConfirmPassword(event.target.value)}
-                  placeholder="••••••••"
-                  className="w-full rounded-lg border border-ink/25 bg-white px-3 py-2.5 text-sm text-ink outline-none focus:border-ink/60"
-                  minLength={8}
+                  type="email"
+                  value={scheduleCallEmail}
+                  onChange={(event) => setScheduleCallEmail(event.target.value)}
+                  placeholder="you@company.com"
+                  className="mt-1 w-full rounded-lg border border-ink/25 bg-white px-3 py-2.5 text-sm text-ink outline-none focus:border-ink/60"
                   required
                 />
-              </>
-            ) : null}
-            <button
-              type="submit"
-              disabled={isSubmittingAuth}
-              className="inline-flex items-center rounded-full border-2 border-ink bg-ink px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-mist transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-70"
-            >
-              {isSubmittingAuth
-                ? "Processing..."
-                : authMode === "register"
-                  ? "Create Account"
-                  : "Login"}
-            </button>
-          </form>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-[0.14em] text-ink/70">
+                  Company
+                </label>
+                <input
+                  type="text"
+                  value={scheduleCallCompanyName}
+                  onChange={(event) => setScheduleCallCompanyName(event.target.value)}
+                  placeholder="Company name"
+                  className="mt-1 w-full rounded-lg border border-ink/25 bg-white px-3 py-2.5 text-sm text-ink outline-none focus:border-ink/60"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-[0.14em] text-ink/70">
+                  Phone
+                </label>
+                <input
+                  type="text"
+                  value={scheduleCallPhone}
+                  onChange={(event) => setScheduleCallPhone(event.target.value)}
+                  placeholder="+1 555 000 0000"
+                  className="mt-1 w-full rounded-lg border border-ink/25 bg-white px-3 py-2.5 text-sm text-ink outline-none focus:border-ink/60"
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-semibold uppercase tracking-[0.14em] text-ink/70">
+                  Services Needed
+                </label>
+                <input
+                  type="text"
+                  value={scheduleCallServicesNeeded}
+                  onChange={(event) => setScheduleCallServicesNeeded(event.target.value)}
+                  placeholder="seo, web_design, web_development"
+                  className="mt-1 w-full rounded-lg border border-ink/25 bg-white px-3 py-2.5 text-sm text-ink outline-none focus:border-ink/60"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-[0.14em] text-ink/70">
+                  Budget
+                </label>
+                <input
+                  type="text"
+                  value={scheduleCallBudgetRange}
+                  onChange={(event) => setScheduleCallBudgetRange(event.target.value)}
+                  placeholder="$2,000 - $5,000"
+                  className="mt-1 w-full rounded-lg border border-ink/25 bg-white px-3 py-2.5 text-sm text-ink outline-none focus:border-ink/60"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-[0.14em] text-ink/70">
+                  Timeline Goal
+                </label>
+                <input
+                  type="text"
+                  value={scheduleCallTimelineGoal}
+                  onChange={(event) => setScheduleCallTimelineGoal(event.target.value)}
+                  placeholder="Launch in 6 weeks"
+                  className="mt-1 w-full rounded-lg border border-ink/25 bg-white px-3 py-2.5 text-sm text-ink outline-none focus:border-ink/60"
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-semibold uppercase tracking-[0.14em] text-ink/70">
+                  Preferred Call Time
+                </label>
+                <input
+                  type="datetime-local"
+                  value={scheduleCallPreferredAt}
+                  onChange={(event) => setScheduleCallPreferredAt(event.target.value)}
+                  className="mt-1 w-full rounded-lg border border-ink/25 bg-white px-3 py-2.5 text-sm text-ink outline-none focus:border-ink/60"
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-semibold uppercase tracking-[0.14em] text-ink/70">
+                  Project Goals
+                </label>
+                <textarea
+                  rows={3}
+                  value={scheduleCallGoals}
+                  onChange={(event) => setScheduleCallGoals(event.target.value)}
+                  placeholder="What do you want this project to achieve?"
+                  className="mt-1 w-full rounded-lg border border-ink/25 bg-white px-3 py-2.5 text-sm text-ink outline-none focus:border-ink/60"
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-semibold uppercase tracking-[0.14em] text-ink/70">
+                  Additional Notes
+                </label>
+                <textarea
+                  rows={3}
+                  value={scheduleCallNotes}
+                  onChange={(event) => setScheduleCallNotes(event.target.value)}
+                  placeholder="Anything else the manager should know before the call?"
+                  className="mt-1 w-full rounded-lg border border-ink/25 bg-white px-3 py-2.5 text-sm text-ink outline-none focus:border-ink/60"
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <button
+                  type="submit"
+                  disabled={isSubmittingScheduleCall}
+                  className="inline-flex items-center rounded-full border-2 border-[#9a5300] bg-[#cc6d00] px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white transition hover:-translate-y-0.5 hover:bg-[#b85f00] disabled:cursor-not-allowed disabled:opacity-70"
+                >
+                  {isSubmittingScheduleCall ? "Submitting..." : "Submit Call Request"}
+                </button>
+              </div>
+            </form>
 
-          {authMessage ? (
-            <p className="mt-4 rounded-lg border border-ink/20 bg-white px-3 py-2 text-sm text-ink/80">
-              {authMessage}
-            </p>
-          ) : null}
-        </section>
+            {scheduleCallError ? (
+              <p className="mt-4 rounded-lg border border-[#d88] bg-[#fff1f1] px-3 py-2 text-sm text-[#7a1f1f]">
+                {scheduleCallError}
+              </p>
+            ) : null}
+            {scheduleCallMessage ? (
+              <p className="mt-3 rounded-lg border border-[#84b98d] bg-[#e9f9ec] px-3 py-2 text-sm text-[#1f5c28]">
+                {scheduleCallMessage}
+              </p>
+            ) : null}
+          </section>
+        </div>
       </main>
     );
   }
@@ -2679,130 +3232,145 @@ export default function PortalPage() {
 
       <section className="mt-6 grid gap-6 lg:grid-cols-[320px_1fr]">
         <aside className="rounded-2xl border-2 border-ink/80 bg-mist p-4 shadow-hard">
-          <div className="mb-3 flex items-center justify-between">
+          <div className="mb-3 flex items-center justify-between gap-3">
             <h2 className="font-display text-xl uppercase text-ink">
-              {isProjectAdmin ? "Active Projects" : "Your Projects"}
+              {isProjectAdmin ? "Manager Projects" : "Your Projects"}
             </h2>
-            <button
-              type="button"
-              onClick={() => void loadProjects()}
-              className="text-xs font-semibold uppercase tracking-[0.12em] text-ink/70 hover:underline"
-            >
-              Refresh
-            </button>
-          </div>
-
-          {isLoadingProjects ? <p className="text-sm text-ink/75">Loading projects...</p> : null}
-
-          <div className="mt-3 grid gap-2">
-            <input
-              type="text"
-              value={projectSearchDraft}
-              onChange={(event) => setProjectSearchDraft(event.target.value)}
-              placeholder="Search projects..."
-              className="w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm text-ink outline-none focus:border-ink/60"
-            />
-            <select
-              value={projectStatusFilter}
-              onChange={(event) => setProjectStatusFilter(event.target.value as "all" | ProjectStatus)}
-              className="w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm text-ink outline-none focus:border-ink/60"
-            >
-              <option value="all">All statuses</option>
-              {projectStatuses.map((status) => (
-                <option key={status} value={status}>
-                  {status.replace("_", " ")}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {!isLoadingProjects && filteredSidebarProjects.length === 0 ? (
-            <p className="rounded-lg border border-ink/20 bg-white px-3 py-2 text-sm text-ink/75">
-              {sidebarProjects.length === 0
-                ? isProjectAdmin
-                  ? "No active projects right now."
-                  : "No projects are assigned to this account yet."
-                : "No projects match your current search/filter."}
-            </p>
-          ) : null}
-
-          <div className="mt-3 space-y-3">
-            {filteredSidebarProjects.map((project) => {
-              const isSelected = project.id === selectedProjectId;
-
-              return (
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => void loadProjects()}
+                className="text-xs font-semibold uppercase tracking-[0.12em] text-ink/70 hover:underline"
+              >
+                Refresh
+              </button>
+              {isProjectAdmin ? (
                 <button
                   type="button"
-                  key={project.id}
-                  onClick={() => handleSelectProject(project.id)}
-                  className={`w-full rounded-xl border p-3 text-left transition ${
-                    isSelected
-                      ? "border-ink/80 bg-white shadow-[4px_4px_0_#111]"
-                      : "border-ink/20 bg-white/75 hover:border-ink/40"
-                  }`}
+                  onClick={() => setIsManagerProjectsDrawerOpen((current) => !current)}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border-2 border-ink bg-white text-lg font-semibold leading-none text-ink transition hover:-translate-y-0.5"
+                  aria-label={isManagerProjectsDrawerOpen ? "Hide manager projects" : "Show manager projects"}
                 >
-                  <p className="text-sm font-semibold text-ink">{project.name}</p>
-                  <div className="mt-2 flex items-center justify-between">
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-[0.62rem] font-semibold uppercase tracking-[0.12em] ${
-                        statusStyles[project.status] || "bg-fog text-ink/70"
-                      }`}
-                    >
-                      {project.status.replace("_", " ")}
-                    </span>
-                    <span className="text-xs font-semibold text-ink/70">{project.progress}%</span>
-                  </div>
+                  {isManagerProjectsDrawerOpen ? "−" : "+"}
                 </button>
-              );
-            })}
+              ) : null}
+            </div>
           </div>
 
-          {isProjectAdmin ? (
-            <div className="mt-5 border-t border-ink/20 pt-4">
-              <div className="mb-2 flex items-center justify-between">
-                <h3 className="text-xs font-semibold uppercase tracking-[0.12em] text-ink/70">
-                  Completed Projects
-                </h3>
-                <span className="text-xs font-semibold text-ink/65">{completedProjects.length}</span>
+          {!isProjectAdmin || isManagerProjectsDrawerOpen ? (
+            <>
+              {isLoadingProjects ? <p className="text-sm text-ink/75">Loading projects...</p> : null}
+
+              <div className="mt-3 grid gap-2">
+                <input
+                  type="text"
+                  value={projectSearchDraft}
+                  onChange={(event) => setProjectSearchDraft(event.target.value)}
+                  placeholder="Search projects..."
+                  className="w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm text-ink outline-none focus:border-ink/60"
+                />
+                <select
+                  value={projectStatusFilter}
+                  onChange={(event) => setProjectStatusFilter(event.target.value as "all" | ProjectStatus)}
+                  className="w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm text-ink outline-none focus:border-ink/60"
+                >
+                  <option value="all">All statuses</option>
+                  {projectStatuses.map((status) => (
+                    <option key={status} value={status}>
+                      {status.replace("_", " ")}
+                    </option>
+                  ))}
+                </select>
               </div>
 
-              {completedProjects.length === 0 ? (
-                <p className="rounded-lg border border-ink/20 bg-white px-3 py-2 text-xs text-ink/70">
-                  No completed projects yet.
+              {!isLoadingProjects && filteredSidebarProjects.length === 0 ? (
+                <p className="rounded-lg border border-ink/20 bg-white px-3 py-2 text-sm text-ink/75">
+                  {sidebarProjects.length === 0
+                    ? isProjectAdmin
+                      ? "No active projects right now."
+                      : "No projects are assigned to this account yet."
+                    : "No projects match your current search/filter."}
                 </p>
-              ) : (
-                <div className="space-y-2">
-                  {completedProjects.map((project) => (
-                    <Link
+              ) : null}
+
+              <div className="mt-3 space-y-3">
+                {filteredSidebarProjects.map((project) => {
+                  const isSelected = project.id === selectedProjectId;
+
+                  return (
+                    <button
+                      type="button"
                       key={project.id}
-                      href={`/portal/completed/${project.id}`}
-                      className="block rounded-lg border border-ink/20 bg-white px-3 py-2 text-sm transition hover:border-ink/45"
+                      onClick={() => handleSelectProject(project.id)}
+                      className={`w-full rounded-xl border p-3 text-left transition ${
+                        isSelected
+                          ? "border-ink/80 bg-white shadow-[4px_4px_0_#111]"
+                          : "border-ink/20 bg-white/75 hover:border-ink/40"
+                      }`}
                     >
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="font-semibold text-ink">{project.name}</span>
-                        <span className="text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-[#0b6a40]">
-                          Open
+                      <p className="text-sm font-semibold text-ink">{project.name}</p>
+                      <div className="mt-2 flex items-center justify-between">
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-[0.62rem] font-semibold uppercase tracking-[0.12em] ${
+                            statusStyles[project.status] || "bg-fog text-ink/70"
+                          }`}
+                        >
+                          {project.status.replace("_", " ")}
                         </span>
+                        <span className="text-xs font-semibold text-ink/70">{project.progress}%</span>
                       </div>
-                      <p className="mt-1 text-xs text-ink/65">View completed project details</p>
-                    </Link>
-                  ))}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {isProjectAdmin ? (
+                <div className="mt-5 border-t border-ink/20 pt-4">
+                  <div className="mb-2 flex items-center justify-between">
+                    <h3 className="text-xs font-semibold uppercase tracking-[0.12em] text-ink/70">
+                      Completed Projects
+                    </h3>
+                    <span className="text-xs font-semibold text-ink/65">{completedProjects.length}</span>
+                  </div>
+
+                  {completedProjects.length === 0 ? (
+                    <p className="rounded-lg border border-ink/20 bg-white px-3 py-2 text-xs text-ink/70">
+                      No completed projects yet.
+                    </p>
+                  ) : (
+                    <div className="space-y-2">
+                      {completedProjects.map((project) => (
+                        <Link
+                          key={project.id}
+                          href={`/portal/completed/${project.id}`}
+                          className="block rounded-lg border border-ink/20 bg-white px-3 py-2 text-sm transition hover:border-ink/45"
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="font-semibold text-ink">{project.name}</span>
+                            <span className="text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-[#0b6a40]">
+                              Open
+                            </span>
+                          </div>
+                          <p className="mt-1 text-xs text-ink/65">View completed project details</p>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          ) : null}
+              ) : null}
+            </>
+          ) : (
+            <p className="rounded-lg border border-ink/20 bg-white px-3 py-2 text-sm text-ink/70">
+              Manager projects drawer is collapsed.
+            </p>
+          )}
         </aside>
 
         <div className="space-y-6">
           {isBootstrapManager ? (
             <section className="rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6">
               <div className="flex items-center justify-between gap-3">
-                <div>
-                  <h2 className="font-display text-xl uppercase text-ink">Manager Controls</h2>
-                  <p className="mt-2 text-sm text-ink/75">
-                    You are the bootstrap manager. Create projects and assign clients by email.
-                  </p>
-                </div>
+                <h2 className="font-display text-xl uppercase text-ink">Manager Controls</h2>
                 <button
                   type="button"
                   onClick={() => setIsManagerControlsOpen((current) => !current)}
@@ -2813,14 +3381,19 @@ export default function PortalPage() {
                 </button>
               </div>
 
-              {assignmentMessage ? (
-                <p className="mt-3 rounded-lg border border-[#84b98d] bg-[#e9f9ec] px-3 py-2 text-sm text-[#1f5c28]">
-                  {assignmentMessage}
-                </p>
-              ) : null}
-
               {isManagerControlsOpen ? (
-                <div className="mt-4">
+                <>
+                  <p className="mt-3 text-sm text-ink/75">
+                    You are the bootstrap manager. Create projects and assign clients by email.
+                  </p>
+
+                  {assignmentMessage ? (
+                    <p className="mt-3 rounded-lg border border-[#84b98d] bg-[#e9f9ec] px-3 py-2 text-sm text-[#1f5c28]">
+                      {assignmentMessage}
+                    </p>
+                  ) : null}
+
+                  <div className="mt-4">
                   <form
                     onSubmit={handleCreateProjectAndAssign}
                     className="rounded-lg border border-ink/20 bg-white p-3.5"
@@ -2955,15 +3528,43 @@ export default function PortalPage() {
                       </button>
                     </div>
                   </form>
-                </div>
-              ) : null}
+                  </div>
+                </>
+              ) : (
+                <p className="mt-3 rounded-lg border border-ink/20 bg-white px-3 py-2 text-sm text-ink/70">
+                  Manager controls drawer is collapsed.
+                </p>
+              )}
 
+            </section>
+          ) : null}
+
+          {isBootstrapManager ? (
+            <section className="rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6">
+              <h2 className="font-display text-xl uppercase text-ink">Onboarding Pipeline</h2>
+              <p className="mt-2 text-sm text-ink/75">
+                Use the dedicated onboarding workspace to manage call scheduled, qualified, deposited,
+                and project started stages.
+              </p>
+              <div className="mt-4">
+                <Link
+                  href="/portal/onboarding"
+                  className="inline-flex items-center rounded-full border-2 border-[#0f7663] bg-[#16a085] px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white transition hover:-translate-y-0.5 hover:bg-[#0f8d74]"
+                >
+                  Open Onboarding Pipeline
+                </Link>
+              </div>
             </section>
           ) : null}
 
           {!selectedProject ? (
             <section className="rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard">
               <p className="text-sm text-ink/80">Select a project to view details.</p>
+              {isProjectAdmin ? (
+                <p className="mt-2 text-xs text-ink/65">
+                  Archive action appears in Project Snapshot after selecting an active project.
+                </p>
+              ) : null}
             </section>
           ) : (
             <>
@@ -3101,6 +3702,27 @@ export default function PortalPage() {
                             className="w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm text-ink outline-none focus:border-ink/60"
                             required
                           />
+
+                          <div className="grid gap-3 sm:grid-cols-2">
+                            <label className="block text-xs font-semibold uppercase tracking-[0.1em] text-ink/65">
+                              Start Date
+                              <input
+                                type="date"
+                                value={projectStartDateDraft}
+                                onChange={(event) => setProjectStartDateDraft(event.target.value)}
+                                className="mt-1 w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm normal-case tracking-normal text-ink outline-none focus:border-ink/60"
+                              />
+                            </label>
+                            <label className="block text-xs font-semibold uppercase tracking-[0.1em] text-ink/65">
+                              Due Date
+                              <input
+                                type="date"
+                                value={projectDueDateDraft}
+                                onChange={(event) => setProjectDueDateDraft(event.target.value)}
+                                className="mt-1 w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm normal-case tracking-normal text-ink outline-none focus:border-ink/60"
+                              />
+                            </label>
+                          </div>
                         </>
                       ) : null}
 
