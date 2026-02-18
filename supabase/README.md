@@ -23,6 +23,8 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=...
 - That user can create projects and assign clients by email from the portal admin workspace.
 - If a client email is not found during assignment, have that client sign in to `/portal` once first.
 
+
+//
 ## Admin usage
 
 - Sign in with a `manager` or `owner` project membership.
