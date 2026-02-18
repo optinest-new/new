@@ -1,3 +1,5 @@
+import { ScheduleCallModal } from "@/components/schedule-call-modal";
+
 const seoSchema = {
   "@context": "https://schema.org",
   "@graph": [
@@ -56,25 +58,6 @@ type IconProps = {
   className?: string;
 };
 
-const scheduleCallSubject = "Schedule a Call - New Project Inquiry";
-const scheduleCallBody = [
-  "Hi Optinest Digital,",
-  "",
-  "I would like to schedule a call about my project.",
-  "",
-  "Name:",
-  "Company:",
-  "Website:",
-  "Service Needed (Web Design / SEO / Both):",
-  "Estimated Budget:",
-  "Timeline:",
-  "Main Goals:",
-  "Additional Details:",
-  "Best Contact Number:",
-  "Preferred Call Time:"
-].join("\n");
-const scheduleCallMailto = `mailto:optinestdigital@gmail.com?subject=${encodeURIComponent(scheduleCallSubject)}&body=${encodeURIComponent(scheduleCallBody)}`;
-
 function FacebookIcon({ className = "h-9 w-9" }: IconProps) {
   return (
     <svg
@@ -127,15 +110,14 @@ export default function Home() {
             We build fast, SEO-friendly websites that help growing brands attract qualified traffic and turn visits into leads.
           </p>
           <section aria-label="Primary call to action" className="mt-10 md:mt-12">
-            <a
-              href={scheduleCallMailto}
+            <ScheduleCallModal
+              label="Schedule a Call"
               className="inline-flex items-center gap-3 rounded-full border-2 border-ink bg-ink px-6 py-3.5 font-mono text-xs uppercase tracking-[0.2em] text-mist transition hover:-translate-y-1 hover:shadow-hard focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-4 sm:gap-4 sm:px-8 sm:py-4 sm:text-sm"
             >
-              Schedule a Call
               <span aria-hidden="true" className="text-2xl leading-none">
                 →
               </span>
-            </a>
+            </ScheduleCallModal>
           </section>
 
           <nav aria-label="Social links" className="mt-14 flex items-center gap-5 sm:mt-16 sm:gap-7">

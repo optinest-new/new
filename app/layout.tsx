@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import Link from "next/link";
+import { ScheduleCallModal } from "@/components/schedule-call-modal";
 import "./globals.css";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://optinestdigital.com";
@@ -100,12 +101,13 @@ export default function RootLayout({
               <Link href="/" className="hover:underline">
                 Home
               </Link>
+              <Link href="/clients" className="hover:underline">
+                Clients
+              </Link>
               <Link href="/blog" className="hover:underline">
                 Blog
               </Link>
-              <a href="mailto:optinestdigital@gmail.com" className="hover:underline">
-                Schedule a Call
-              </a>
+              <ScheduleCallModal label="Schedule a Call" className="hover:underline" />
             </nav>
           </div>
         </header>
@@ -118,6 +120,9 @@ export default function RootLayout({
             <nav aria-label="Footer" className="flex flex-wrap items-center gap-4">
               <Link href="/" className="hover:underline">
                 Home
+              </Link>
+              <Link href="/clients" className="hover:underline">
+                Clients
               </Link>
               <Link href="/blog" className="hover:underline">
                 Blog

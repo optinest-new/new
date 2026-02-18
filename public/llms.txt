@@ -1,0 +1,18 @@
+# Optinest Digital
+> Small web design and SEO agency focused on technical SEO, content systems, and conversion-focused websites.
+
+Canonical site: https://optinestdigital.com
+
+## Primary URLs
+- https://optinestdigital.com/
+- https://optinestdigital.com/clients
+- https://optinestdigital.com/blog
+- https://optinestdigital.com/sitemap.xml
+- https://optinestdigital.com/robots.txt
+
+## Scope
+- Service-focused web design and SEO content.
+- Blog articles with practical implementation guidance.
+
+## Contact
+- mailto:optinestdigital@gmail.com
