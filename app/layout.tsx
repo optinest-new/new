@@ -89,7 +89,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="bg-[#f5f6ef] text-ink">
-        <header className="border-b-2 border-ink/70 bg-mist/90 backdrop-blur">
+        <header className="sticky top-0 z-50 border-b-2 border-ink/70 bg-mist/90 backdrop-blur">
           <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-between gap-3 px-4 py-4 sm:flex-row sm:gap-0 sm:px-6">
             <Link
               href="/"

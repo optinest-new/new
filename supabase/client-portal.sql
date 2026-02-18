@@ -1014,6 +1014,32 @@ begin
 end;
 $$;
 
+drop function if exists public.delete_project_permanently(uuid);
+
+create function public.delete_project_permanently(project_uuid uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if project_uuid is null then
+    raise exception 'project_required';
+  end if;
+
+  if not public.is_project_admin(project_uuid) then
+    raise exception 'not_authorized';
+  end if;
+
+  delete from public.projects
+  where id = project_uuid;
+
+  if not found then
+    raise exception 'project_not_found';
+  end if;
+end;
+$$;
+
 drop function if exists public.search_project_user_emails(uuid, text, integer);
 
 create function public.search_project_user_emails(
@@ -1093,6 +1119,9 @@ grant execute on function public.create_user_notification(uuid, uuid, text, text
 
 revoke all on function public.update_project_summary(uuid, text) from public;
 grant execute on function public.update_project_summary(uuid, text) to authenticated;
+
+revoke all on function public.delete_project_permanently(uuid) from public;
+grant execute on function public.delete_project_permanently(uuid) to authenticated;
 
 revoke all on function public.search_project_user_emails(uuid, text, integer) from public;
 grant execute on function public.search_project_user_emails(uuid, text, integer) to authenticated;
@@ -1431,4 +1460,15 @@ with check (
   bucket_id = 'project-files'
   and public.storage_project_id(name) is not null
   and public.is_project_member(public.storage_project_id(name))
+);
+
+drop policy if exists "Managers can delete storage files" on storage.objects;
+create policy "Managers can delete storage files"
+on storage.objects
+for delete
+to authenticated
+using (
+  bucket_id = 'project-files'
+  and public.storage_project_id(name) is not null
+  and public.is_project_admin(public.storage_project_id(name))
 );

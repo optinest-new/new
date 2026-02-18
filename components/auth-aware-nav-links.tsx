@@ -92,9 +92,9 @@ export function AuthAwareNavLinks({ placement }: AuthAwareNavLinksProps) {
         <Link href="/portal" className="hover:underline">
           Go back to Portal
         </Link>
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-[#b48400]/35 bg-[#fff1c5] px-2.5 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.06em] text-[#6f4a00]">
+        <span className="inline-flex max-w-[14rem] items-center gap-1.5 rounded-full border border-[#b48400]/35 bg-[#fff1c5] px-2.5 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.06em] text-[#6f4a00] sm:max-w-none">
           Signed in as
-          <span className="rounded-full bg-[#ffd76a] px-1.5 py-0.5 text-[0.62rem] font-bold tracking-[0.02em] text-[#503400]">
+          <span className="max-w-[7.5rem] truncate rounded-full bg-[#ffd76a] px-1.5 py-0.5 text-[0.62rem] font-bold normal-case tracking-[0.02em] text-[#503400] sm:max-w-[11rem]">
             {displayName}
           </span>
         </span>

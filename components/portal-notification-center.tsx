@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { createSupabaseBrowserClient, hasSupabasePublicEnv } from "@/lib/supabase-browser";
 
@@ -42,6 +42,8 @@ export function PortalNotificationCenter({ session, onProjectSelect }: PortalNot
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [mobilePanelTop, setMobilePanelTop] = useState<number | null>(null);
+  const triggerButtonRef = useRef<HTMLButtonElement | null>(null);
 
   const unreadCount = useMemo(
     () => notifications.reduce((count, item) => count + (item.is_read ? 0 : 1), 0),
@@ -91,6 +93,37 @@ export function PortalNotificationCenter({ session, onProjectSelect }: PortalNot
     };
   }, [loadNotifications, session, supabase]);
 
+  useEffect(() => {
+    if (!isOpen) {
+      setMobilePanelTop(null);
+      return;
+    }
+
+    const updateMobilePosition = () => {
+      if (typeof window === "undefined" || window.innerWidth >= 640) {
+        setMobilePanelTop(null);
+        return;
+      }
+
+      const rect = triggerButtonRef.current?.getBoundingClientRect();
+      if (!rect) {
+        setMobilePanelTop(null);
+        return;
+      }
+
+      setMobilePanelTop(rect.bottom + 8);
+    };
+
+    updateMobilePosition();
+    window.addEventListener("resize", updateMobilePosition);
+    window.addEventListener("scroll", updateMobilePosition, true);
+
+    return () => {
+      window.removeEventListener("resize", updateMobilePosition);
+      window.removeEventListener("scroll", updateMobilePosition, true);
+    };
+  }, [isOpen]);
+
   async function handleMarkAsRead(notificationId: string) {
     if (!supabase || !session) {
       return;
@@ -138,6 +171,7 @@ export function PortalNotificationCenter({ session, onProjectSelect }: PortalNot
   return (
     <div className="relative">
       <button
+        ref={triggerButtonRef}
         type="button"
         onClick={() => setIsOpen((current) => !current)}
         className="inline-flex items-center gap-2 rounded-full border-2 border-ink bg-white px-3 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-ink transition hover:-translate-y-0.5"
@@ -151,7 +185,10 @@ export function PortalNotificationCenter({ session, onProjectSelect }: PortalNot
       </button>
 
       {isOpen ? (
-        <div className="absolute right-0 z-50 mt-2 w-[min(92vw,24rem)] rounded-xl border-2 border-ink/80 bg-white p-3 shadow-hard">
+        <div
+          style={mobilePanelTop !== null ? { top: `${mobilePanelTop}px` } : undefined}
+          className="fixed left-1/2 z-50 w-[min(92vw,24rem)] -translate-x-1/2 rounded-xl border-2 border-ink/80 bg-white p-3 shadow-hard sm:absolute sm:right-0 sm:mt-2 sm:translate-x-0"
+        >
           <div className="flex items-center justify-between gap-2">
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-ink/70">Notifications</p>
             <button

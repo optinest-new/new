@@ -195,6 +195,22 @@ function renderProjectSummaryContent(value: string | null): string {
   return sanitizeProjectSummaryHtml(html);
 }
 
+function formatDeleteProjectError(message: string): string {
+  if (message.includes("not_authorized")) {
+    return "You do not have permission to delete this project.";
+  }
+
+  if (message.includes("project_not_found")) {
+    return "This project was not found. It may have already been deleted.";
+  }
+
+  if (message.includes("project_required")) {
+    return "Project id is missing.";
+  }
+
+  return message;
+}
+
 export default function CompletedProjectPage() {
   const params = useParams<{ projectId: string }>();
   const projectId = typeof params?.projectId === "string" ? params.projectId : "";
@@ -216,6 +232,7 @@ export default function CompletedProjectPage() {
   const [projectFiles, setProjectFiles] = useState<ProjectFile[]>([]);
   const [canManageProject, setCanManageProject] = useState(false);
   const [isReactivatingProject, setIsReactivatingProject] = useState(false);
+  const [isDeletingProject, setIsDeletingProject] = useState(false);
 
   useEffect(() => {
     if (!supabase) {
@@ -372,6 +389,91 @@ export default function CompletedProjectPage() {
     router.push(`/portal?project=${project.id}`);
   }
 
+  async function removeProjectStorageFiles(targetProjectId: string): Promise<string | null> {
+    if (!supabase) {
+      return "Supabase is not configured.";
+    }
+
+    const [projectFilesResult, questionMessageFilesResult] = await Promise.all([
+      supabase.from("project_files").select("file_path").eq("project_id", targetProjectId),
+      supabase
+        .from("project_question_messages")
+        .select("attachment_file_path")
+        .eq("project_id", targetProjectId)
+    ]);
+
+    if (projectFilesResult.error) {
+      return projectFilesResult.error.message;
+    }
+
+    if (questionMessageFilesResult.error) {
+      return questionMessageFilesResult.error.message;
+    }
+
+    const filePaths = ((projectFilesResult.data ?? []) as Array<{ file_path: string | null }>)
+      .map((entry) => entry.file_path)
+      .filter((value): value is string => Boolean(value));
+    const attachmentPaths = (
+      (questionMessageFilesResult.data ?? []) as Array<{ attachment_file_path: string | null }>
+    )
+      .map((entry) => entry.attachment_file_path)
+      .filter((value): value is string => Boolean(value));
+    const uniquePaths = Array.from(new Set([...filePaths, ...attachmentPaths]));
+
+    if (uniquePaths.length === 0) {
+      return null;
+    }
+
+    const batchSize = 100;
+    for (let index = 0; index < uniquePaths.length; index += batchSize) {
+      const batch = uniquePaths.slice(index, index + batchSize);
+      const { error } = await supabase.storage.from("project-files").remove(batch);
+      if (error) {
+        return error.message;
+      }
+    }
+
+    return null;
+  }
+
+  async function handleDeleteProjectPermanently() {
+    if (!supabase || !project || !canManageProject || isDeletingProject) {
+      return;
+    }
+
+    if (
+      typeof window !== "undefined" &&
+      !window.confirm(
+        `Permanently delete "${project.name}"? This removes all updates, files, messages, milestones, approvals, and project data. This cannot be undone.`
+      )
+    ) {
+      return;
+    }
+
+    setIsDeletingProject(true);
+    setPortalError("");
+
+    const storageError = await removeProjectStorageFiles(project.id);
+    if (storageError) {
+      setIsDeletingProject(false);
+      setPortalError(storageError);
+      return;
+    }
+
+    const { error } = await supabase.rpc("delete_project_permanently", {
+      project_uuid: project.id
+    });
+
+    setIsDeletingProject(false);
+
+    if (error) {
+      setPortalError(formatDeleteProjectError(error.message));
+      return;
+    }
+
+    router.push("/portal");
+  }
+
   async function handleSignOut() {
     if (!supabase) {
       return;
@@ -485,10 +587,20 @@ export default function CompletedProjectPage() {
                       <button
                         type="button"
                         onClick={() => void handleReactivateProject()}
-                        disabled={isReactivatingProject}
+                        disabled={isReactivatingProject || isDeletingProject}
                         className="inline-flex items-center rounded-full border-2 border-[#1f56c2] bg-[#2d6cdf] px-4 py-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-white transition hover:-translate-y-0.5 hover:bg-[#245cc3] disabled:cursor-not-allowed disabled:opacity-70"
                       >
                         {isReactivatingProject ? "Reactivating..." : "Set Active Again"}
+                      </button>
+                    ) : null}
+                    {canManageProject ? (
+                      <button
+                        type="button"
+                        onClick={() => void handleDeleteProjectPermanently()}
+                        disabled={isReactivatingProject || isDeletingProject}
+                        className="inline-flex items-center rounded-full border-2 border-[#7f1010] bg-[#a51616] px-4 py-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-white transition hover:-translate-y-0.5 hover:bg-[#8d1414] disabled:cursor-not-allowed disabled:opacity-70"
+                      >
+                        {isDeletingProject ? "Deleting..." : "Delete Permanently"}
                       </button>
                     ) : null}
                   </div>

@@ -595,6 +595,22 @@ function formatAssignmentError(message: string): string {
   return message;
 }
 
+function formatDeleteProjectError(message: string): string {
+  if (message.includes("not_authorized")) {
+    return "You do not have permission to delete this project.";
+  }
+
+  if (message.includes("project_not_found")) {
+    return "This project was not found. It may have already been deleted.";
+  }
+
+  if (message.includes("project_required")) {
+    return "Select a project first.";
+  }
+
+  return message;
+}
+
 export default function PortalPage() {
   const isSupabaseConfigured = hasSupabasePublicEnv();
   const supabase = useMemo(
@@ -649,6 +665,7 @@ export default function PortalPage() {
   const [projectSummaryDraft, setProjectSummaryDraft] = useState("");
   const [isSavingProject, setIsSavingProject] = useState(false);
   const [isArchivingProject, setIsArchivingProject] = useState(false);
+  const [isDeletingProject, setIsDeletingProject] = useState(false);
   const [isProjectSnapshotModalOpen, setIsProjectSnapshotModalOpen] = useState(false);
   const [updateTitleDraft, setUpdateTitleDraft] = useState("");
   const [updateBodyDraft, setUpdateBodyDraft] = useState("");
@@ -1207,6 +1224,7 @@ export default function PortalPage() {
       setIsSavingClientIntake(false);
       setIsGeneratingAccessChecklist(false);
       setIsArchivingProject(false);
+      setIsDeletingProject(false);
       setIsClientIntakeOpen(false);
       setIsAccessChecklistOpen(false);
       setIsProjectSnapshotModalOpen(false);
@@ -1285,6 +1303,7 @@ export default function PortalPage() {
       setIntakeNotesDraft("");
       setIntakeServiceNeedsDraft([]);
       setIsArchivingProject(false);
+      setIsDeletingProject(false);
       setIsClientIntakeOpen(false);
       setIsAccessChecklistOpen(false);
       setIsProjectSnapshotModalOpen(false);
@@ -2397,6 +2416,101 @@ export default function PortalPage() {
 
     if (error) {
       setPortalError(error.message);
+      return;
+    }
+
+    setIsProjectSnapshotModalOpen(false);
+    setSelectedProjectId(null);
+
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("project");
+      window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+    }
+
+    await loadProjects();
+  }
+
+  async function removeProjectStorageFiles(projectId: string): Promise<string | null> {
+    if (!supabase) {
+      return "Supabase is not configured.";
+    }
+
+    const [projectFilesResult, questionMessageFilesResult] = await Promise.all([
+      supabase.from("project_files").select("file_path").eq("project_id", projectId),
+      supabase
+        .from("project_question_messages")
+        .select("attachment_file_path")
+        .eq("project_id", projectId)
+    ]);
+
+    if (projectFilesResult.error) {
+      return projectFilesResult.error.message;
+    }
+
+    if (questionMessageFilesResult.error) {
+      return questionMessageFilesResult.error.message;
+    }
+
+    const filePaths = ((projectFilesResult.data ?? []) as Array<{ file_path: string | null }>)
+      .map((entry) => entry.file_path)
+      .filter((value): value is string => Boolean(value));
+    const attachmentPaths = (
+      (questionMessageFilesResult.data ?? []) as Array<{ attachment_file_path: string | null }>
+    )
+      .map((entry) => entry.attachment_file_path)
+      .filter((value): value is string => Boolean(value));
+    const uniquePaths = Array.from(new Set([...filePaths, ...attachmentPaths]));
+
+    if (uniquePaths.length === 0) {
+      return null;
+    }
+
+    const batchSize = 100;
+    for (let index = 0; index < uniquePaths.length; index += batchSize) {
+      const batch = uniquePaths.slice(index, index + batchSize);
+      const { error } = await supabase.storage.from("project-files").remove(batch);
+      if (error) {
+        return error.message;
+      }
+    }
+
+    return null;
+  }
+
+  async function handleDeleteProjectPermanently() {
+    if (!supabase || !session || !selectedProjectId || !isProjectAdmin || isDeletingProject) {
+      return;
+    }
+
+    const projectName = selectedProject?.name?.trim() || "this project";
+    if (
+      typeof window !== "undefined" &&
+      !window.confirm(
+        `Permanently delete "${projectName}"? This removes all updates, files, messages, milestones, approvals, and project data. This cannot be undone.`
+      )
+    ) {
+      return;
+    }
+
+    setIsDeletingProject(true);
+    setPortalError("");
+
+    const storageError = await removeProjectStorageFiles(selectedProjectId);
+    if (storageError) {
+      setIsDeletingProject(false);
+      setPortalError(storageError);
+      return;
+    }
+
+    const { error } = await supabase.rpc("delete_project_permanently", {
+      project_uuid: selectedProjectId
+    });
+
+    setIsDeletingProject(false);
+
+    if (error) {
+      setPortalError(formatDeleteProjectError(error.message));
       return;
     }
 
@@ -3566,7 +3680,7 @@ export default function PortalPage() {
               <p className="text-sm text-ink/80">Select a project to view details.</p>
               {isProjectAdmin ? (
                 <p className="mt-2 text-xs text-ink/65">
-                  Archive action appears in Project Snapshot after selecting an active project.
+                  Archive and permanent delete actions appear in Project Snapshot after selecting a project.
                 </p>
               ) : null}
             </section>
@@ -3612,10 +3726,20 @@ export default function PortalPage() {
                         <button
                           type="button"
                           onClick={() => void handleArchiveProject()}
-                          disabled={isArchivingProject}
+                          disabled={isArchivingProject || isDeletingProject}
                           className="inline-flex items-center rounded-full border border-[#9b1c1c] bg-[#d44444] px-3 py-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-white transition hover:bg-[#bb3636] disabled:cursor-not-allowed disabled:opacity-70"
                         >
                           {isArchivingProject ? "Archiving..." : "Archive Project"}
+                        </button>
+                      ) : null}
+                      {isProjectAdmin ? (
+                        <button
+                          type="button"
+                          onClick={() => void handleDeleteProjectPermanently()}
+                          disabled={isArchivingProject || isDeletingProject}
+                          className="inline-flex items-center rounded-full border border-[#7f1010] bg-[#a51616] px-3 py-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-white transition hover:bg-[#8d1414] disabled:cursor-not-allowed disabled:opacity-70"
+                        >
+                          {isDeletingProject ? "Deleting..." : "Delete Permanently"}
                         </button>
                       ) : null}
                     </div>
