@@ -42,7 +42,7 @@ $$;
 create table if not exists public.projects (
   id uuid primary key default gen_random_uuid(),
   name text not null,
-  status text not null default 'planning' check (status in ('planning', 'in_progress', 'review', 'completed')),
+  status text not null default 'planning' check (status in ('planning', 'in_progress', 'review', 'completed', 'archived')),
   progress integer not null default 0 check (progress >= 0 and progress <= 100),
   summary text,
   start_date date,
@@ -50,6 +50,11 @@ create table if not exists public.projects (
   created_at timestamptz not null default timezone('utc', now()),
   updated_at timestamptz not null default timezone('utc', now())
 );
+
+alter table public.projects drop constraint if exists projects_status_check;
+alter table public.projects
+add constraint projects_status_check
+check (status in ('planning', 'in_progress', 'review', 'completed', 'archived'));
 
 create table if not exists public.project_members (
   project_id uuid not null references public.projects(id) on delete cascade,
@@ -355,6 +360,28 @@ begin
 end;
 $$;
 
+drop function if exists public.update_project_summary(uuid, text);
+
+create function public.update_project_summary(
+  project_uuid uuid,
+  summary_text text
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not public.is_project_member(project_uuid) then
+    raise exception 'not_authorized';
+  end if;
+
+  update public.projects
+  set summary = nullif(trim(summary_text), '')
+  where id = project_uuid;
+end;
+$$;
+
 drop function if exists public.search_project_user_emails(uuid, text, integer);
 
 create function public.search_project_user_emails(
@@ -422,6 +449,9 @@ grant execute on function public.is_bootstrap_manager() to authenticated;
 
 revoke all on function public.assign_client_to_project(uuid, text, text) from public;
 grant execute on function public.assign_client_to_project(uuid, text, text) to authenticated;
+
+revoke all on function public.update_project_summary(uuid, text) from public;
+grant execute on function public.update_project_summary(uuid, text) to authenticated;
 
 revoke all on function public.search_project_user_emails(uuid, text, integer) from public;
 grant execute on function public.search_project_user_emails(uuid, text, integer) to authenticated;

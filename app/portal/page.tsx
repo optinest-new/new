@@ -118,6 +118,15 @@ type AccessItemDraft = {
   notes: string;
 };
 
+type AccessItemVisibilityField =
+  | "login_url"
+  | "account_email"
+  | "username"
+  | "secret_value"
+  | "secure_link";
+
+type AccessItemVisibilityState = Record<AccessItemVisibilityField, boolean>;
+
 type QuestionMessage = {
   id: string;
   question_id: string;
@@ -149,7 +158,7 @@ type UploadThreadAttachmentResult =
     };
 
 type MemberRole = "client" | "manager" | "owner";
-type ProjectStatus = "planning" | "in_progress" | "review" | "completed";
+type ProjectStatus = "planning" | "in_progress" | "review" | "completed" | "archived";
 type MilestoneStatus = "planned" | "in_progress" | "done";
 type ApprovalStatus = "pending" | "approved" | "changes_requested";
 
@@ -157,6 +166,13 @@ const projectStatuses: ProjectStatus[] = ["planning", "in_progress", "review", "
 const milestoneStatuses: MilestoneStatus[] = ["planned", "in_progress", "done"];
 const approvalStatuses: ApprovalStatus[] = ["pending", "approved", "changes_requested"];
 const accessItemStatuses: AccessItemStatus[] = ["missing", "submitted", "verified", "not_needed"];
+const defaultAccessItemVisibility: AccessItemVisibilityState = {
+  login_url: false,
+  account_email: false,
+  username: false,
+  secret_value: false,
+  secure_link: false
+};
 const clientServiceNeedOptions: Array<{ value: ClientServiceNeed; label: string }> = [
   { value: "seo", label: "SEO" },
   { value: "web_design", label: "Web Design" },
@@ -170,7 +186,8 @@ const statusStyles: Record<string, string> = {
   planning: "bg-[#d8ecff] text-[#134d7a]",
   in_progress: "bg-[#fff1c5] text-[#8a5a00]",
   review: "bg-[#e9dbff] text-[#4f2b88]",
-  completed: "bg-[#d5f4e2] text-[#0b6a40]"
+  completed: "bg-[#d5f4e2] text-[#0b6a40]",
+  archived: "bg-[#ececec] text-[#5f5f5f]"
 };
 
 const milestoneStatusStyles: Record<MilestoneStatus, string> = {
@@ -366,6 +383,123 @@ function normalizeExternalUrl(value: string): string | null {
   }
 }
 
+function sanitizeProjectSummaryHtml(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return "";
+  }
+
+  return trimmed
+    .replace(
+      /<\s*(script|style|iframe|object|embed|link|meta)[^>]*>[\s\S]*?<\s*\/\s*\1\s*>/gi,
+      ""
+    )
+    .replace(/<\s*(script|style|iframe|object|embed|link|meta)\b[^>]*\/?>/gi, "")
+    .replace(/\son\w+\s*=\s*(['"]).*?\1/gi, "")
+    .replace(/\son\w+\s*=\s*[^\s>]+/gi, "")
+    .replace(/\s(href|src)\s*=\s*(['"])\s*javascript:[\s\S]*?\2/gi, ' $1="#"')
+    .replace(/\s(href|src)\s*=\s*javascript:[^\s>]+/gi, ' $1="#"');
+}
+
+function escapeHtml(value: string): string {
+  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function renderMarkdownInline(value: string): string {
+  const withCode = value.replace(/`([^`]+)`/g, "<code>$1</code>");
+  const withBold = withCode.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+  const withItalic = withBold.replace(/\*([^*\n]+)\*/g, "<em>$1</em>");
+
+  return withItalic.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_match, label: string, href: string) => {
+    const normalizedUrl = normalizeExternalUrl(href);
+    if (!normalizedUrl) {
+      return label;
+    }
+
+    return `<a href="${normalizedUrl}" target="_blank" rel="noreferrer">${label}</a>`;
+  });
+}
+
+function renderMarkdownToHtml(value: string): string {
+  const normalized = value.replace(/\r\n/g, "\n");
+  const lines = normalized.split("\n");
+  const chunks: string[] = [];
+  let isInUnorderedList = false;
+  let isInOrderedList = false;
+
+  const closeLists = () => {
+    if (isInUnorderedList) {
+      chunks.push("</ul>");
+      isInUnorderedList = false;
+    }
+    if (isInOrderedList) {
+      chunks.push("</ol>");
+      isInOrderedList = false;
+    }
+  };
+
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+    if (!line) {
+      closeLists();
+      continue;
+    }
+
+    const headingMatch = line.match(/^(#{1,6})\s+(.+)$/);
+    if (headingMatch) {
+      closeLists();
+      const level = headingMatch[1].length;
+      chunks.push(`<h${level}>${renderMarkdownInline(escapeHtml(headingMatch[2]))}</h${level}>`);
+      continue;
+    }
+
+    const unorderedMatch = line.match(/^[-*+]\s+(.+)$/);
+    if (unorderedMatch) {
+      if (!isInUnorderedList) {
+        if (isInOrderedList) {
+          chunks.push("</ol>");
+          isInOrderedList = false;
+        }
+        chunks.push("<ul>");
+        isInUnorderedList = true;
+      }
+      chunks.push(`<li>${renderMarkdownInline(escapeHtml(unorderedMatch[1]))}</li>`);
+      continue;
+    }
+
+    const orderedMatch = line.match(/^\d+\.\s+(.+)$/);
+    if (orderedMatch) {
+      if (!isInOrderedList) {
+        if (isInUnorderedList) {
+          chunks.push("</ul>");
+          isInUnorderedList = false;
+        }
+        chunks.push("<ol>");
+        isInOrderedList = true;
+      }
+      chunks.push(`<li>${renderMarkdownInline(escapeHtml(orderedMatch[1]))}</li>`);
+      continue;
+    }
+
+    closeLists();
+    chunks.push(`<p>${renderMarkdownInline(escapeHtml(line))}</p>`);
+  }
+
+  closeLists();
+  return chunks.join("");
+}
+
+function renderProjectSummaryContent(value: string | null): string {
+  const trimmed = value?.trim() || "";
+  if (!trimmed) {
+    return "";
+  }
+
+  const looksLikeHtml = /<\/?[a-z][^>]*>/i.test(trimmed);
+  const html = looksLikeHtml ? trimmed : renderMarkdownToHtml(trimmed);
+  return sanitizeProjectSummaryHtml(html);
+}
+
 function clipThreadTitle(value: string): string {
   const normalized = value.trim().replace(/\s+/g, " ");
   if (normalized.length <= 80) {
@@ -442,6 +576,8 @@ export default function PortalPage() {
   const [projectProgressDraft, setProjectProgressDraft] = useState("0");
   const [projectSummaryDraft, setProjectSummaryDraft] = useState("");
   const [isSavingProject, setIsSavingProject] = useState(false);
+  const [isArchivingProject, setIsArchivingProject] = useState(false);
+  const [isProjectSnapshotModalOpen, setIsProjectSnapshotModalOpen] = useState(false);
   const [updateTitleDraft, setUpdateTitleDraft] = useState("");
   const [updateBodyDraft, setUpdateBodyDraft] = useState("");
   const [updateProgressDraft, setUpdateProgressDraft] = useState("");
@@ -492,6 +628,9 @@ export default function PortalPage() {
   const [intakeServiceNeedsDraft, setIntakeServiceNeedsDraft] = useState<ClientServiceNeed[]>([]);
   const [isSavingClientIntake, setIsSavingClientIntake] = useState(false);
   const [accessItemDrafts, setAccessItemDrafts] = useState<Record<string, AccessItemDraft>>({});
+  const [accessFieldVisibilityById, setAccessFieldVisibilityById] = useState<
+    Record<string, AccessItemVisibilityState>
+  >({});
   const [savingAccessItemById, setSavingAccessItemById] = useState<Record<string, boolean>>({});
   const [isGeneratingAccessChecklist, setIsGeneratingAccessChecklist] = useState(false);
   const [accessStatusFilter, setAccessStatusFilter] = useState<"all" | AccessItemStatus>("all");
@@ -503,7 +642,7 @@ export default function PortalPage() {
   const effectiveRole: MemberRole | null = isBootstrapManager ? "manager" : currentRole;
   const isProjectAdmin = isBootstrapManager || currentRole === "manager" || currentRole === "owner";
   const activeProjects = useMemo(
-    () => projects.filter((project) => project.status !== "completed"),
+    () => projects.filter((project) => project.status !== "completed" && project.status !== "archived"),
     [projects]
   );
   const completedProjects = useMemo(
@@ -873,6 +1012,7 @@ export default function PortalPage() {
       setApprovalResponseDrafts({});
       setApprovalSubmittingById({});
       setAccessItemDrafts({});
+      setAccessFieldVisibilityById({});
       setSavingAccessItemById({});
       setExpandedAccessItemIds({});
       setNewProjectEmailSuggestions([]);
@@ -889,8 +1029,10 @@ export default function PortalPage() {
       setIntakeServiceNeedsDraft([]);
       setIsSavingClientIntake(false);
       setIsGeneratingAccessChecklist(false);
+      setIsArchivingProject(false);
       setIsClientIntakeOpen(false);
       setIsAccessChecklistOpen(false);
+      setIsProjectSnapshotModalOpen(false);
       setAssignmentMessage("");
       setIsManagerControlsOpen(false);
       return;
@@ -946,6 +1088,7 @@ export default function PortalPage() {
       setApprovalResponseDrafts({});
       setApprovalSubmittingById({});
       setAccessItemDrafts({});
+      setAccessFieldVisibilityById({});
       setSavingAccessItemById({});
       setExpandedAccessItemIds({});
       setIntakeCompanyNameDraft("");
@@ -958,8 +1101,10 @@ export default function PortalPage() {
       setIntakeCmsPlatformDraft("");
       setIntakeNotesDraft("");
       setIntakeServiceNeedsDraft([]);
+      setIsArchivingProject(false);
       setIsClientIntakeOpen(false);
       setIsAccessChecklistOpen(false);
+      setIsProjectSnapshotModalOpen(false);
       return;
     }
 
@@ -1038,6 +1183,7 @@ export default function PortalPage() {
       setProjectStatusDraft("planning");
       setProjectProgressDraft("0");
       setProjectSummaryDraft("");
+      setIsProjectSnapshotModalOpen(false);
       return;
     }
 
@@ -1045,6 +1191,21 @@ export default function PortalPage() {
     setProjectProgressDraft(String(selectedProject.progress));
     setProjectSummaryDraft(selectedProject.summary || "");
   }, [selectedProject]);
+
+  useEffect(() => {
+    if (!isProjectSnapshotModalOpen) {
+      return;
+    }
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsProjectSnapshotModalOpen(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, [isProjectSnapshotModalOpen]);
 
   useEffect(() => {
     if (!projectClientIntake) {
@@ -1095,6 +1256,16 @@ export default function PortalPage() {
       const next: Record<string, boolean> = {};
       for (const item of projectAccessItems) {
         next[item.id] = current[item.id] ?? false;
+      }
+      return next;
+    });
+  }, [projectAccessItems]);
+
+  useEffect(() => {
+    setAccessFieldVisibilityById((current) => {
+      const next: Record<string, AccessItemVisibilityState> = {};
+      for (const item of projectAccessItems) {
+        next[item.id] = current[item.id] ?? { ...defaultAccessItemVisibility };
       }
       return next;
     });
@@ -1667,6 +1838,7 @@ export default function PortalPage() {
     const projectName = newProjectName.trim();
     const clientEmail = newProjectClientEmail.trim();
     const progress = parseProgress(newProjectProgress);
+    const nextProjectSummary = newProjectSummary.trim();
 
     if (!projectName) {
       setPortalError("Project name is required.");
@@ -1693,7 +1865,7 @@ export default function PortalPage() {
         name: projectName,
         status: newProjectStatus,
         progress,
-        summary: newProjectSummary.trim() || null,
+        summary: nextProjectSummary || null,
         start_date: newProjectStartDate || null,
         due_date: newProjectDueDate || null
       })
@@ -1747,27 +1919,43 @@ export default function PortalPage() {
   async function handleSaveProjectSnapshot(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!supabase || !session || !selectedProjectId || !isProjectAdmin) {
+    if (!supabase || !session || !selectedProjectId) {
       return;
     }
 
-    const nextProgress = parseProgress(projectProgressDraft);
-    if (nextProgress === null) {
-      setPortalError("Progress must be a number between 0 and 100.");
-      return;
-    }
+    const nextSummary = projectSummaryDraft.trim();
 
     setIsSavingProject(true);
     setPortalError("");
 
-    const { error } = await supabase
-      .from("projects")
-      .update({
-        status: projectStatusDraft,
-        progress: nextProgress,
-        summary: projectSummaryDraft.trim() || null
-      })
-      .eq("id", selectedProjectId);
+    let error: { message: string } | null = null;
+
+    if (isProjectAdmin) {
+      const nextProgress = parseProgress(projectProgressDraft);
+      if (nextProgress === null) {
+        setIsSavingProject(false);
+        setPortalError("Progress must be a number between 0 and 100.");
+        return;
+      }
+
+      const updateResult = await supabase
+        .from("projects")
+        .update({
+          status: projectStatusDraft,
+          progress: nextProgress,
+          summary: nextSummary || null
+        })
+        .eq("id", selectedProjectId);
+
+      error = updateResult.error;
+    } else {
+      const summaryUpdateResult = await supabase.rpc("update_project_summary", {
+        project_uuid: selectedProjectId,
+        summary_text: nextSummary
+      });
+
+      error = summaryUpdateResult.error;
+    }
 
     setIsSavingProject(false);
 
@@ -1776,8 +1964,52 @@ export default function PortalPage() {
       return;
     }
 
+    setIsProjectSnapshotModalOpen(false);
     await loadProjects();
     await loadProjectData(selectedProjectId);
+  }
+
+  async function handleArchiveProject() {
+    if (!supabase || !session || !selectedProjectId || !isProjectAdmin || isArchivingProject) {
+      return;
+    }
+
+    if (selectedProject?.status === "archived") {
+      return;
+    }
+
+    if (
+      typeof window !== "undefined" &&
+      !window.confirm("Archive this project? It will be removed from active and completed lists.")
+    ) {
+      return;
+    }
+
+    setIsArchivingProject(true);
+    setPortalError("");
+
+    const { error } = await supabase
+      .from("projects")
+      .update({ status: "archived" })
+      .eq("id", selectedProjectId);
+
+    setIsArchivingProject(false);
+
+    if (error) {
+      setPortalError(error.message);
+      return;
+    }
+
+    setIsProjectSnapshotModalOpen(false);
+    setSelectedProjectId(null);
+
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("project");
+      window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+    }
+
+    await loadProjects();
   }
 
   async function handlePostProgressUpdate(event: FormEvent<HTMLFormElement>) {
@@ -1948,6 +2180,19 @@ export default function PortalPage() {
       ...current,
       [itemId]: !current[itemId]
     }));
+  }
+
+  function handleToggleAccessFieldVisibility(itemId: string, field: AccessItemVisibilityField) {
+    setAccessFieldVisibilityById((current) => {
+      const existing = current[itemId] ?? { ...defaultAccessItemVisibility };
+      return {
+        ...current,
+        [itemId]: {
+          ...existing,
+          [field]: !existing[field]
+        }
+      };
+    });
   }
 
   function handleAccessDraftChange(
@@ -2692,14 +2937,14 @@ export default function PortalPage() {
                         </div>
                       </div>
                       <label className="block text-xs font-semibold uppercase tracking-[0.1em] text-ink/65">
-                        Project Summary
+                        Project Summary (HTML / Markdown)
                       </label>
                       <textarea
                         rows={3}
                         value={newProjectSummary}
                         onChange={(event) => setNewProjectSummary(event.target.value)}
                         className="w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm text-ink outline-none focus:border-ink/60"
-                        placeholder="Short summary clients will see in the portal."
+                        placeholder="Use HTML or Markdown, e.g. ## Launch prep or <p>Launch prep</p>"
                       />
                       <button
                         type="submit"
@@ -2745,27 +2990,151 @@ export default function PortalPage() {
                   </span>
                 </div>
 
-                {selectedProject.summary ? (
-                  <p className="mt-4 rounded-lg border border-ink/20 bg-white p-3 text-sm text-ink/80">
-                    {selectedProject.summary}
-                  </p>
-                ) : null}
-
                 <div className="mt-4 rounded-lg border border-ink/20 bg-white p-3">
-                  <div className="mb-2 flex items-center justify-between">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
                     <p className="text-xs font-semibold uppercase tracking-[0.12em] text-ink/70">
-                      Project Progress
+                      Project Snapshot
                     </p>
-                    <p className="text-sm font-semibold text-ink">{selectedProject.progress}%</p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setIsProjectSnapshotModalOpen(true)}
+                        className="inline-flex items-center rounded-full border border-[#475569] bg-[#64748b] px-3 py-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-white transition hover:bg-[#55657c]"
+                      >
+                        {isProjectAdmin ? "Edit Snapshot" : "Edit Summary"}
+                      </button>
+                      {isProjectAdmin && selectedProject.status !== "archived" ? (
+                        <button
+                          type="button"
+                          onClick={() => void handleArchiveProject()}
+                          disabled={isArchivingProject}
+                          className="inline-flex items-center rounded-full border border-[#9b1c1c] bg-[#d44444] px-3 py-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-white transition hover:bg-[#bb3636] disabled:cursor-not-allowed disabled:opacity-70"
+                        >
+                          {isArchivingProject ? "Archiving..." : "Archive Project"}
+                        </button>
+                      ) : null}
+                    </div>
                   </div>
-                  <div className="h-3 overflow-hidden rounded-full border border-ink/20 bg-fog">
-                    <div
-                      className="h-full bg-[#4a83ff] transition-all"
-                      style={{ width: `${Math.max(0, Math.min(100, selectedProject.progress))}%` }}
-                    />
+
+                  <p className="mt-2 text-sm text-ink/75">
+                    Status: <span className="font-semibold text-ink">{selectedProject.status.replace("_", " ")}</span>
+                  </p>
+                  <div className="mt-2">
+                    <div className="mb-2 flex items-center justify-between">
+                      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-ink/70">
+                        Project Progress
+                      </p>
+                      <p className="text-sm font-semibold text-ink">{selectedProject.progress}%</p>
+                    </div>
+                    <div className="h-3 overflow-hidden rounded-full border border-ink/20 bg-fog">
+                      <div
+                        className="h-full bg-[#4a83ff] transition-all"
+                        style={{ width: `${Math.max(0, Math.min(100, selectedProject.progress))}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-3 border-t border-ink/15 pt-3">
+                    {selectedProject.summary ? (
+                      <div
+                        className="text-sm text-ink/80 [&_a]:text-[#2d5bd1] [&_a]:underline [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_h1]:text-xl [&_h1]:font-semibold [&_h2]:text-lg [&_h2]:font-semibold [&_h3]:font-semibold"
+                        dangerouslySetInnerHTML={{
+                          __html: renderProjectSummaryContent(selectedProject.summary)
+                        }}
+                      />
+                    ) : (
+                      <p className="text-sm text-ink/65">No summary added yet.</p>
+                    )}
                   </div>
                 </div>
               </section>
+
+              {isProjectSnapshotModalOpen ? (
+                <div
+                  className="fixed inset-0 z-50 flex items-center justify-center bg-ink/55 px-4 py-6"
+                  role="dialog"
+                  aria-modal="true"
+                  aria-labelledby="project-snapshot-modal-title"
+                >
+                  <div className="w-full max-w-2xl rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6">
+                    <div className="flex items-center justify-between gap-3">
+                      <h3 id="project-snapshot-modal-title" className="font-display text-xl uppercase text-ink">
+                        {isProjectAdmin ? "Edit Project Snapshot" : "Edit Project Summary"}
+                      </h3>
+                      <button
+                        type="button"
+                        onClick={() => setIsProjectSnapshotModalOpen(false)}
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-ink/35 bg-white text-lg font-semibold text-ink"
+                        aria-label="Close snapshot editor"
+                      >
+                        x
+                      </button>
+                    </div>
+
+                    <form onSubmit={handleSaveProjectSnapshot} className="mt-4 space-y-3">
+                      {isProjectAdmin ? (
+                        <>
+                          <label className="block text-xs font-semibold uppercase tracking-[0.1em] text-ink/65">
+                            Status
+                          </label>
+                          <select
+                            value={projectStatusDraft}
+                            onChange={(event) => setProjectStatusDraft(event.target.value as ProjectStatus)}
+                            className="w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm text-ink outline-none focus:border-ink/60"
+                          >
+                            {projectStatuses.map((status) => (
+                              <option key={status} value={status}>
+                                {status.replace("_", " ")}
+                              </option>
+                            ))}
+                          </select>
+
+                          <label className="block text-xs font-semibold uppercase tracking-[0.1em] text-ink/65">
+                            Progress (0-100)
+                          </label>
+                          <input
+                            type="number"
+                            min={0}
+                            max={100}
+                            value={projectProgressDraft}
+                            onChange={(event) => setProjectProgressDraft(event.target.value)}
+                            className="w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm text-ink outline-none focus:border-ink/60"
+                            required
+                          />
+                        </>
+                      ) : null}
+
+                      <label className="block text-xs font-semibold uppercase tracking-[0.1em] text-ink/65">
+                        Summary (HTML / Markdown)
+                      </label>
+                      <textarea
+                        rows={5}
+                        value={projectSummaryDraft}
+                        onChange={(event) => setProjectSummaryDraft(event.target.value)}
+                        className="w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm text-ink outline-none focus:border-ink/60"
+                        placeholder="Use HTML or Markdown, e.g. ## What changed"
+                      />
+
+                      <div className="flex flex-wrap items-center justify-end gap-2 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => setIsProjectSnapshotModalOpen(false)}
+                          className="inline-flex items-center rounded-full border border-ink/35 bg-white px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.1em] text-ink"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          disabled={isSavingProject}
+                          className="inline-flex items-center rounded-full border-2 border-[#475569] bg-[#64748b] px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.12em] text-white transition hover:bg-[#55657c] disabled:cursor-not-allowed disabled:opacity-70"
+                        >
+                          {isSavingProject ? "Saving..." : isProjectAdmin ? "Save Snapshot" : "Save Summary"}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              ) : null}
 
               <section className="rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6">
                 <h3 className="font-display text-xl uppercase text-ink">Search & Filters</h3>
@@ -2833,14 +3202,17 @@ export default function PortalPage() {
 
               <section className="rounded-2xl border-2 border-ink/80 bg-mist p-4 shadow-hard sm:p-5">
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  <h3 className="font-display text-xl uppercase text-ink">Client Intake & Access</h3>
+                  <h3 className="font-display text-xl uppercase text-ink">
+                    {isProjectAdmin ? "Access & Credentials Checklist" : "Client Intake & Access"}
+                  </h3>
                   <span className="text-xs font-semibold uppercase tracking-[0.1em] text-ink/65">
-                    Compact workspace
+                    {isProjectAdmin ? "Manager view" : "Compact workspace"}
                   </span>
                 </div>
 
-                <div className="mt-3 grid gap-3 xl:grid-cols-2">
-                  <article className="rounded-lg border border-ink/20 bg-white p-3">
+                <div className={isProjectAdmin ? "mt-3 grid gap-3" : "mt-3 grid gap-3 xl:grid-cols-2"}>
+                  {!isProjectAdmin ? (
+                    <article className="rounded-lg border border-ink/20 bg-white p-3">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div>
                         <p className="text-xs font-semibold uppercase tracking-[0.1em] text-ink/65">
@@ -3000,7 +3372,8 @@ export default function PortalPage() {
                         </div>
                       </form>
                     )}
-                  </article>
+                    </article>
+                  ) : null}
 
                   <article className="rounded-lg border border-ink/20 bg-white p-3">
                     <div className="flex flex-wrap items-center justify-between gap-2">
@@ -3059,10 +3432,13 @@ export default function PortalPage() {
                         {filteredProjectAccessItems.map((item) => {
                           const draft = accessItemDrafts[item.id];
                           const isItemOpen = Boolean(expandedAccessItemIds[item.id]);
+                          const accessFieldVisibility =
+                            accessFieldVisibilityById[item.id] ?? defaultAccessItemVisibility;
                           const savedFields = [
                             draft?.login_url.trim() ? "URL" : null,
                             draft?.account_email.trim() ? "Email" : null,
                             draft?.username.trim() ? "Username" : null,
+                            draft?.secret_value.trim() ? "Password/token" : null,
                             draft?.secure_link.trim() ? "Secure link" : null
                           ].filter((value): value is string => Boolean(value));
                           if (!draft) {
@@ -3127,50 +3503,187 @@ export default function PortalPage() {
                                       ))}
                                     </select>
                                     <input
-                                      type="text"
+                                      type={accessFieldVisibility.login_url ? "text" : "password"}
                                       value={draft.login_url}
                                       onChange={(event) =>
                                         handleAccessDraftChange(item.id, "login_url", event.target.value)
                                       }
                                       placeholder="Login URL"
-                                      className="w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm text-ink outline-none focus:border-ink/60"
+                                      autoComplete="new-password"
+                                      className="w-full rounded-lg border border-ink/25 bg-white px-3 py-2 pr-10 text-sm text-ink outline-none focus:border-ink/60"
                                     />
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        handleToggleAccessFieldVisibility(item.id, "login_url")
+                                      }
+                                      className="absolute right-2 top-1/2 inline-flex -translate-y-1/2 items-center justify-center rounded border border-ink/20 bg-white px-1.5 py-1 text-[0.62rem] text-ink/75"
+                                      aria-label={
+                                        accessFieldVisibility.login_url ? "Hide login URL" : "Show login URL"
+                                      }
+                                      title={accessFieldVisibility.login_url ? "Hide" : "Show"}
+                                    >
+                                      {accessFieldVisibility.login_url ? (
+                                        <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+                                          <path d="M3 3l18 18" />
+                                          <path d="M9.9 5.1A10.9 10.9 0 0112 5c4.5 0 8.3 2.9 9.5 7a11 11 0 01-4.2 5.4" />
+                                          <path d="M6.6 6.6A11.1 11.1 0 002.5 12 11.1 11.1 0 007.6 18" />
+                                        </svg>
+                                      ) : (
+                                        <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+                                          <path d="M2.5 12S6.3 5 12 5s9.5 7 9.5 7-3.8 7-9.5 7S2.5 12 2.5 12z" />
+                                          <circle cx="12" cy="12" r="3" />
+                                        </svg>
+                                      )}
+                                    </button>
+                                  </div>
+                                  <div className="relative">
                                     <input
-                                      type="email"
+                                      type={accessFieldVisibility.account_email ? "text" : "password"}
                                       value={draft.account_email}
                                       onChange={(event) =>
                                         handleAccessDraftChange(item.id, "account_email", event.target.value)
                                       }
                                       placeholder="Account email"
-                                      className="w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm text-ink outline-none focus:border-ink/60"
+                                      autoComplete="new-password"
+                                      className="w-full rounded-lg border border-ink/25 bg-white px-3 py-2 pr-10 text-sm text-ink outline-none focus:border-ink/60"
                                     />
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        handleToggleAccessFieldVisibility(item.id, "account_email")
+                                      }
+                                      className="absolute right-2 top-1/2 inline-flex -translate-y-1/2 items-center justify-center rounded border border-ink/20 bg-white px-1.5 py-1 text-[0.62rem] text-ink/75"
+                                      aria-label={
+                                        accessFieldVisibility.account_email
+                                          ? "Hide account email"
+                                          : "Show account email"
+                                      }
+                                      title={accessFieldVisibility.account_email ? "Hide" : "Show"}
+                                    >
+                                      {accessFieldVisibility.account_email ? (
+                                        <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+                                          <path d="M3 3l18 18" />
+                                          <path d="M9.9 5.1A10.9 10.9 0 0112 5c4.5 0 8.3 2.9 9.5 7a11 11 0 01-4.2 5.4" />
+                                          <path d="M6.6 6.6A11.1 11.1 0 002.5 12 11.1 11.1 0 007.6 18" />
+                                        </svg>
+                                      ) : (
+                                        <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+                                          <path d="M2.5 12S6.3 5 12 5s9.5 7 9.5 7-3.8 7-9.5 7S2.5 12 2.5 12z" />
+                                          <circle cx="12" cy="12" r="3" />
+                                        </svg>
+                                      )}
+                                    </button>
+                                  </div>
+                                  <div className="relative">
                                     <input
-                                      type="text"
+                                      type={accessFieldVisibility.username ? "text" : "password"}
                                       value={draft.username}
                                       onChange={(event) =>
                                         handleAccessDraftChange(item.id, "username", event.target.value)
                                       }
                                       placeholder="Username"
-                                      className="w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm text-ink outline-none focus:border-ink/60"
+                                      autoComplete="new-password"
+                                      className="w-full rounded-lg border border-ink/25 bg-white px-3 py-2 pr-10 text-sm text-ink outline-none focus:border-ink/60"
                                     />
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        handleToggleAccessFieldVisibility(item.id, "username")
+                                      }
+                                      className="absolute right-2 top-1/2 inline-flex -translate-y-1/2 items-center justify-center rounded border border-ink/20 bg-white px-1.5 py-1 text-[0.62rem] text-ink/75"
+                                      aria-label={accessFieldVisibility.username ? "Hide username" : "Show username"}
+                                      title={accessFieldVisibility.username ? "Hide" : "Show"}
+                                    >
+                                      {accessFieldVisibility.username ? (
+                                        <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+                                          <path d="M3 3l18 18" />
+                                          <path d="M9.9 5.1A10.9 10.9 0 0112 5c4.5 0 8.3 2.9 9.5 7a11 11 0 01-4.2 5.4" />
+                                          <path d="M6.6 6.6A11.1 11.1 0 002.5 12 11.1 11.1 0 007.6 18" />
+                                        </svg>
+                                      ) : (
+                                        <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+                                          <path d="M2.5 12S6.3 5 12 5s9.5 7 9.5 7-3.8 7-9.5 7S2.5 12 2.5 12z" />
+                                          <circle cx="12" cy="12" r="3" />
+                                        </svg>
+                                      )}
+                                    </button>
+                                  </div>
+                                  <div className="relative">
                                     <input
-                                      type="password"
+                                      type={accessFieldVisibility.secret_value ? "text" : "password"}
                                       value={draft.secret_value}
                                       onChange={(event) =>
                                         handleAccessDraftChange(item.id, "secret_value", event.target.value)
                                       }
                                       placeholder="Password / token"
-                                      className="w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm text-ink outline-none focus:border-ink/60"
+                                      autoComplete="new-password"
+                                      className="w-full rounded-lg border border-ink/25 bg-white px-3 py-2 pr-10 text-sm text-ink outline-none focus:border-ink/60"
                                     />
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        handleToggleAccessFieldVisibility(item.id, "secret_value")
+                                      }
+                                      className="absolute right-2 top-1/2 inline-flex -translate-y-1/2 items-center justify-center rounded border border-ink/20 bg-white px-1.5 py-1 text-[0.62rem] text-ink/75"
+                                      aria-label={
+                                        accessFieldVisibility.secret_value
+                                          ? "Hide password or token"
+                                          : "Show password or token"
+                                      }
+                                      title={accessFieldVisibility.secret_value ? "Hide" : "Show"}
+                                    >
+                                      {accessFieldVisibility.secret_value ? (
+                                        <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+                                          <path d="M3 3l18 18" />
+                                          <path d="M9.9 5.1A10.9 10.9 0 0112 5c4.5 0 8.3 2.9 9.5 7a11 11 0 01-4.2 5.4" />
+                                          <path d="M6.6 6.6A11.1 11.1 0 002.5 12 11.1 11.1 0 007.6 18" />
+                                        </svg>
+                                      ) : (
+                                        <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+                                          <path d="M2.5 12S6.3 5 12 5s9.5 7 9.5 7-3.8 7-9.5 7S2.5 12 2.5 12z" />
+                                          <circle cx="12" cy="12" r="3" />
+                                        </svg>
+                                      )}
+                                    </button>
+                                  </div>
+                                  <div className="relative">
                                     <input
-                                      type="text"
+                                      type={accessFieldVisibility.secure_link ? "text" : "password"}
                                       value={draft.secure_link}
                                       onChange={(event) =>
                                         handleAccessDraftChange(item.id, "secure_link", event.target.value)
                                       }
                                       placeholder="Secure share link"
-                                      className="w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm text-ink outline-none focus:border-ink/60"
+                                      autoComplete="new-password"
+                                      className="w-full rounded-lg border border-ink/25 bg-white px-3 py-2 pr-10 text-sm text-ink outline-none focus:border-ink/60"
                                     />
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        handleToggleAccessFieldVisibility(item.id, "secure_link")
+                                      }
+                                      className="absolute right-2 top-1/2 inline-flex -translate-y-1/2 items-center justify-center rounded border border-ink/20 bg-white px-1.5 py-1 text-[0.62rem] text-ink/75"
+                                      aria-label={
+                                        accessFieldVisibility.secure_link
+                                          ? "Hide secure share link"
+                                          : "Show secure share link"
+                                      }
+                                      title={accessFieldVisibility.secure_link ? "Hide" : "Show"}
+                                    >
+                                      {accessFieldVisibility.secure_link ? (
+                                        <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+                                          <path d="M3 3l18 18" />
+                                          <path d="M9.9 5.1A10.9 10.9 0 0112 5c4.5 0 8.3 2.9 9.5 7a11 11 0 01-4.2 5.4" />
+                                          <path d="M6.6 6.6A11.1 11.1 0 002.5 12 11.1 11.1 0 007.6 18" />
+                                        </svg>
+                                      ) : (
+                                        <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+                                          <path d="M2.5 12S6.3 5 12 5s9.5 7 9.5 7-3.8 7-9.5 7S2.5 12 2.5 12z" />
+                                          <circle cx="12" cy="12" r="3" />
+                                        </svg>
+                                      )}
+                                    </button>
                                   </div>
                                   <textarea
                                     rows={2}
@@ -3213,65 +3726,10 @@ export default function PortalPage() {
                 <section className="rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6">
                   <h3 className="font-display text-xl uppercase text-ink">Admin Workspace</h3>
                   <p className="mt-2 text-sm text-ink/75">
-                    Manager tools for project snapshot updates, timeline communication, and
-                    replying to client questions.
+                    Manager tools for timeline communication and replying to client questions.
                   </p>
 
-                  <div className="mt-4 grid gap-4 xl:grid-cols-2">
-                    <form
-                      onSubmit={handleSaveProjectSnapshot}
-                      className="rounded-lg border border-ink/20 bg-white p-3.5"
-                    >
-                      <h4 className="text-sm font-semibold text-ink">Project Snapshot</h4>
-                      <div className="mt-3 space-y-3">
-                        <label className="block text-xs font-semibold uppercase tracking-[0.1em] text-ink/65">
-                          Status
-                        </label>
-                        <select
-                          value={projectStatusDraft}
-                          onChange={(event) =>
-                            setProjectStatusDraft(event.target.value as ProjectStatus)
-                          }
-                          className="w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm text-ink outline-none focus:border-ink/60"
-                        >
-                          {projectStatuses.map((status) => (
-                            <option key={status} value={status}>
-                              {status.replace("_", " ")}
-                            </option>
-                          ))}
-                        </select>
-                        <label className="block text-xs font-semibold uppercase tracking-[0.1em] text-ink/65">
-                          Progress (0-100)
-                        </label>
-                        <input
-                          type="number"
-                          min={0}
-                          max={100}
-                          value={projectProgressDraft}
-                          onChange={(event) => setProjectProgressDraft(event.target.value)}
-                          className="w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm text-ink outline-none focus:border-ink/60"
-                          required
-                        />
-                        <label className="block text-xs font-semibold uppercase tracking-[0.1em] text-ink/65">
-                          Summary
-                        </label>
-                        <textarea
-                          rows={4}
-                          value={projectSummaryDraft}
-                          onChange={(event) => setProjectSummaryDraft(event.target.value)}
-                          className="w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm text-ink outline-none focus:border-ink/60"
-                          placeholder="Latest project summary for the client view."
-                        />
-                        <button
-                          type="submit"
-                          disabled={isSavingProject}
-                          className="inline-flex items-center rounded-full border-2 border-[#475569] bg-[#64748b] px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white transition hover:-translate-y-0.5 hover:bg-[#55657c] disabled:cursor-not-allowed disabled:opacity-70"
-                        >
-                          {isSavingProject ? "Saving..." : "Save Snapshot"}
-                        </button>
-                      </div>
-                    </form>
-
+                  <div className="mt-4">
                     <form
                       onSubmit={handlePostProgressUpdate}
                       className="rounded-lg border border-ink/20 bg-white p-3.5"

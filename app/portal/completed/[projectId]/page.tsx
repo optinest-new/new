@@ -73,6 +73,127 @@ function formatBytes(sizeBytes: number): string {
   return `${(sizeBytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+function sanitizeProjectSummaryHtml(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return "";
+  }
+
+  return trimmed
+    .replace(
+      /<\s*(script|style|iframe|object|embed|link|meta)[^>]*>[\s\S]*?<\s*\/\s*\1\s*>/gi,
+      ""
+    )
+    .replace(/<\s*(script|style|iframe|object|embed|link|meta)\b[^>]*\/?>/gi, "")
+    .replace(/\son\w+\s*=\s*(['"]).*?\1/gi, "")
+    .replace(/\son\w+\s*=\s*[^\s>]+/gi, "")
+    .replace(/\s(href|src)\s*=\s*(['"])\s*javascript:[\s\S]*?\2/gi, ' $1="#"')
+    .replace(/\s(href|src)\s*=\s*javascript:[^\s>]+/gi, ' $1="#"');
+}
+
+function escapeHtml(value: string): string {
+  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function renderMarkdownInline(value: string): string {
+  const withCode = value.replace(/`([^`]+)`/g, "<code>$1</code>");
+  const withBold = withCode.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+  const withItalic = withBold.replace(/\*([^*\n]+)\*/g, "<em>$1</em>");
+
+  return withItalic.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_match, label: string, href: string) => {
+    const normalizedUrl = /^https?:\/\//i.test(href) ? href : `https://${href}`;
+    try {
+      const url = new URL(normalizedUrl);
+      if (url.protocol !== "http:" && url.protocol !== "https:") {
+        return label;
+      }
+      return `<a href="${url.toString()}" target="_blank" rel="noreferrer">${label}</a>`;
+    } catch {
+      return label;
+    }
+  });
+}
+
+function renderMarkdownToHtml(value: string): string {
+  const normalized = value.replace(/\r\n/g, "\n");
+  const lines = normalized.split("\n");
+  const chunks: string[] = [];
+  let isInUnorderedList = false;
+  let isInOrderedList = false;
+
+  const closeLists = () => {
+    if (isInUnorderedList) {
+      chunks.push("</ul>");
+      isInUnorderedList = false;
+    }
+    if (isInOrderedList) {
+      chunks.push("</ol>");
+      isInOrderedList = false;
+    }
+  };
+
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+    if (!line) {
+      closeLists();
+      continue;
+    }
+
+    const headingMatch = line.match(/^(#{1,6})\s+(.+)$/);
+    if (headingMatch) {
+      closeLists();
+      const level = headingMatch[1].length;
+      chunks.push(`<h${level}>${renderMarkdownInline(escapeHtml(headingMatch[2]))}</h${level}>`);
+      continue;
+    }
+
+    const unorderedMatch = line.match(/^[-*+]\s+(.+)$/);
+    if (unorderedMatch) {
+      if (!isInUnorderedList) {
+        if (isInOrderedList) {
+          chunks.push("</ol>");
+          isInOrderedList = false;
+        }
+        chunks.push("<ul>");
+        isInUnorderedList = true;
+      }
+      chunks.push(`<li>${renderMarkdownInline(escapeHtml(unorderedMatch[1]))}</li>`);
+      continue;
+    }
+
+    const orderedMatch = line.match(/^\d+\.\s+(.+)$/);
+    if (orderedMatch) {
+      if (!isInOrderedList) {
+        if (isInUnorderedList) {
+          chunks.push("</ul>");
+          isInUnorderedList = false;
+        }
+        chunks.push("<ol>");
+        isInOrderedList = true;
+      }
+      chunks.push(`<li>${renderMarkdownInline(escapeHtml(orderedMatch[1]))}</li>`);
+      continue;
+    }
+
+    closeLists();
+    chunks.push(`<p>${renderMarkdownInline(escapeHtml(line))}</p>`);
+  }
+
+  closeLists();
+  return chunks.join("");
+}
+
+function renderProjectSummaryContent(value: string | null): string {
+  const trimmed = value?.trim() || "";
+  if (!trimmed) {
+    return "";
+  }
+
+  const looksLikeHtml = /<\/?[a-z][^>]*>/i.test(trimmed);
+  const html = looksLikeHtml ? trimmed : renderMarkdownToHtml(trimmed);
+  return sanitizeProjectSummaryHtml(html);
+}
+
 export default function CompletedProjectPage() {
   const params = useParams<{ projectId: string }>();
   const projectId = typeof params?.projectId === "string" ? params.projectId : "";
@@ -378,9 +499,14 @@ export default function CompletedProjectPage() {
                 ) : null}
 
                 {project.summary ? (
-                  <p className="mt-4 rounded-lg border border-ink/20 bg-white p-3 text-sm text-ink/80">
-                    {project.summary}
-                  </p>
+                  <div className="mt-4 rounded-lg border border-ink/20 bg-white p-3">
+                    <div
+                      className="text-sm text-ink/80 [&_a]:text-[#2d5bd1] [&_a]:underline [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_h1]:text-xl [&_h1]:font-semibold [&_h2]:text-lg [&_h2]:font-semibold [&_h3]:font-semibold"
+                      dangerouslySetInnerHTML={{
+                        __html: renderProjectSummaryContent(project.summary)
+                      }}
+                    />
+                  </div>
                 ) : null}
 
                 <div className="mt-4 rounded-lg border border-ink/20 bg-white p-3">
