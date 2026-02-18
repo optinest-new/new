@@ -4,6 +4,7 @@ import { ChangeEvent, FormEvent, useCallback, useEffect, useMemo, useState } fro
 import Link from "next/link";
 import type { Session } from "@supabase/supabase-js";
 import { createSupabaseBrowserClient, hasSupabasePublicEnv } from "@/lib/supabase-browser";
+import { PortalNotificationCenter } from "@/components/portal-notification-center";
 
 type PortalProject = {
   id: string;
@@ -3215,13 +3216,16 @@ export default function PortalPage() {
               Signed in as <span className="font-semibold">{session.user.email}</span>
             </p>
           </div>
-          <button
-            type="button"
-            onClick={handleSignOut}
-            className="inline-flex items-center rounded-full border-2 border-ink bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-ink transition hover:-translate-y-0.5"
-          >
-            Sign Out
-          </button>
+          <div className="flex items-center gap-2">
+            <PortalNotificationCenter session={session} onProjectSelect={handleSelectProject} />
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="inline-flex items-center rounded-full border-2 border-ink bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-ink transition hover:-translate-y-0.5"
+            >
+              Sign Out
+            </button>
+          </div>
         </div>
         {portalError ? (
           <p className="mt-4 rounded-lg border border-[#d88] bg-[#fff1f1] px-3 py-2 text-sm text-[#7a1f1f]">
@@ -3304,7 +3308,7 @@ export default function PortalPage() {
                       onClick={() => handleSelectProject(project.id)}
                       className={`w-full rounded-xl border p-3 text-left transition ${
                         isSelected
-                          ? "border-ink/80 bg-white shadow-[4px_4px_0_#111]"
+                          ? "border-[#a87700] bg-[#ffe8a3] shadow-[4px_4px_0_#a87700]"
                           : "border-ink/20 bg-white/75 hover:border-ink/40"
                       }`}
                     >

@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import Link from "next/link";
-import { ScheduleCallModal } from "@/components/schedule-call-modal";
+import { AuthAwareNavLinks } from "@/components/auth-aware-nav-links";
 import "./globals.css";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://optinestdigital.com";
@@ -107,7 +107,7 @@ export default function RootLayout({
               <Link href="/blog" className="hover:underline">
                 Blog
               </Link>
-              <ScheduleCallModal label="Schedule a Call" className="hover:underline" />
+              <AuthAwareNavLinks placement="header" />
             </nav>
           </div>
         </header>
@@ -121,9 +121,7 @@ export default function RootLayout({
               <Link href="/" className="hover:underline">
                 Home
               </Link>
-              <Link href="/portal" className="hover:underline">
-                Portal
-              </Link>
+              <AuthAwareNavLinks placement="footer" />
               <Link href="/clients" className="hover:underline">
                 Clients
               </Link>

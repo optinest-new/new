@@ -287,6 +287,33 @@ create table if not exists public.project_approval_tasks (
   created_at timestamptz not null default timezone('utc', now())
 );
 
+create table if not exists public.portal_notifications (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  project_id uuid references public.projects(id) on delete cascade,
+  event_type text not null,
+  title text not null,
+  message text,
+  link_path text,
+  is_read boolean not null default false,
+  created_at timestamptz not null default timezone('utc', now())
+);
+
+alter table public.portal_notifications
+  add column if not exists user_id uuid references auth.users(id) on delete cascade,
+  add column if not exists project_id uuid references public.projects(id) on delete cascade,
+  add column if not exists event_type text,
+  add column if not exists title text,
+  add column if not exists message text,
+  add column if not exists link_path text,
+  add column if not exists is_read boolean not null default false,
+  add column if not exists created_at timestamptz not null default timezone('utc', now());
+
+alter table public.portal_notifications
+  alter column user_id set not null,
+  alter column event_type set not null,
+  alter column title set not null;
+
 create table if not exists public.onboarding_leads (
   id uuid primary key default gen_random_uuid(),
   full_name text not null,
@@ -381,6 +408,8 @@ create index if not exists idx_project_approval_tasks_project_id_created_at on p
 create index if not exists idx_onboarding_leads_created_at on public.onboarding_leads(created_at desc);
 create index if not exists idx_onboarding_leads_status on public.onboarding_leads(status);
 create index if not exists idx_onboarding_leads_email on public.onboarding_leads(lower(email));
+create index if not exists idx_portal_notifications_user_created_at on public.portal_notifications(user_id, created_at desc);
+create index if not exists idx_portal_notifications_user_read on public.portal_notifications(user_id, is_read);
 
 create or replace function public.set_updated_at()
 returns trigger
@@ -411,6 +440,424 @@ drop trigger if exists onboarding_leads_set_updated_at on public.onboarding_lead
 create trigger onboarding_leads_set_updated_at
 before update on public.onboarding_leads
 for each row execute function public.set_updated_at();
+
+create or replace function public.create_user_notification(
+  target_user_uuid uuid,
+  project_uuid uuid,
+  event_key text,
+  title_text text,
+  message_text text default null,
+  link_text text default null
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  project_name text := null;
+  normalized_title text := coalesce(nullif(trim(title_text), ''), 'Portal Update');
+begin
+  if target_user_uuid is null then
+    return;
+  end if;
+
+  if project_uuid is not null then
+    select nullif(trim(p.name), '')
+    into project_name
+    from public.projects p
+    where p.id = project_uuid;
+  end if;
+
+  insert into public.portal_notifications (
+    user_id,
+    project_id,
+    event_type,
+    title,
+    message,
+    link_path
+  )
+  values (
+    target_user_uuid,
+    project_uuid,
+    coalesce(nullif(trim(event_key), ''), 'project_event'),
+    case
+      when project_name is null then normalized_title
+      else project_name || ': ' || normalized_title
+    end,
+    nullif(trim(coalesce(message_text, '')), ''),
+    nullif(trim(coalesce(link_text, '')), '')
+  );
+end;
+$$;
+
+create or replace function public.create_project_notification(
+  project_uuid uuid,
+  event_key text,
+  title_text text,
+  message_text text default null,
+  link_text text default null,
+  exclude_user_uuid uuid default null
+)
+returns integer
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+  inserted_count integer := 0;
+  project_name text := null;
+  normalized_title text := coalesce(nullif(trim(title_text), ''), 'Portal Update');
+begin
+  if project_uuid is null then
+    return 0;
+  end if;
+
+  select nullif(trim(p.name), '')
+  into project_name
+  from public.projects p
+  where p.id = project_uuid;
+
+  with recipient_users as (
+    select pm.user_id as user_id
+    from public.project_members pm
+    where pm.project_id = project_uuid
+    union
+    select u.id as user_id
+    from public.project_member_emails pme
+    join auth.users u on lower(coalesce(u.email, '')) = lower(pme.email)
+    where pme.project_id = project_uuid
+    union
+    select bm.id as user_id
+    from (
+      select u.id
+      from auth.users u
+      order by u.created_at asc
+      limit 1
+    ) bm
+  )
+  insert into public.portal_notifications (
+    user_id,
+    project_id,
+    event_type,
+    title,
+    message,
+    link_path
+  )
+  select
+    ru.user_id,
+    project_uuid,
+    coalesce(nullif(trim(event_key), ''), 'project_event'),
+    case
+      when project_name is null then normalized_title
+      else project_name || ': ' || normalized_title
+    end,
+    nullif(trim(coalesce(message_text, '')), ''),
+    nullif(trim(coalesce(link_text, '')), '')
+  from recipient_users ru
+  where exclude_user_uuid is null or ru.user_id <> exclude_user_uuid;
+
+  get diagnostics inserted_count = row_count;
+  return inserted_count;
+end;
+$$;
+
+create or replace function public.handle_project_activity_notifications()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+  actor_id uuid := auth.uid();
+  project_name text;
+  link_to_project text;
+  update_title text;
+begin
+  if tg_table_name = 'project_updates' and tg_op = 'INSERT' then
+    perform public.create_project_notification(
+      new.project_id,
+      'project_update',
+      'New Project Update',
+      coalesce(new.title, 'A project update was posted.'),
+      '/portal?project=' || new.project_id::text,
+      new.created_by
+    );
+    return new;
+  end if;
+
+  if tg_table_name = 'project_questions' and tg_op = 'INSERT' then
+    perform public.create_project_notification(
+      new.project_id,
+      'question_thread',
+      'New Question Thread',
+      'A new client/manager question was posted.',
+      '/portal?project=' || new.project_id::text,
+      new.author_id
+    );
+    return new;
+  end if;
+
+  if tg_table_name = 'project_question_messages' and tg_op = 'INSERT' then
+    perform public.create_project_notification(
+      new.project_id,
+      'question_reply',
+      'New Thread Reply',
+      'A new reply was added to a question thread.',
+      '/portal?project=' || new.project_id::text,
+      new.author_id
+    );
+    return new;
+  end if;
+
+  if tg_table_name = 'project_files' and tg_op = 'INSERT' then
+    perform public.create_project_notification(
+      new.project_id,
+      'file_uploaded',
+      'New File Uploaded',
+      coalesce(new.file_name, 'A file was uploaded.'),
+      '/portal?project=' || new.project_id::text,
+      new.uploaded_by
+    );
+    return new;
+  end if;
+
+  if tg_table_name = 'project_milestones' and tg_op = 'INSERT' then
+    perform public.create_project_notification(
+      new.project_id,
+      'milestone_created',
+      'New Milestone Added',
+      coalesce(new.title, 'A milestone was added.'),
+      '/portal?project=' || new.project_id::text,
+      new.created_by
+    );
+    return new;
+  end if;
+
+  if tg_table_name = 'project_milestones' and tg_op = 'UPDATE' then
+    if
+      new.title is distinct from old.title
+      or new.details is distinct from old.details
+      or new.status is distinct from old.status
+      or new.due_date is distinct from old.due_date
+      or new.sort_order is distinct from old.sort_order
+    then
+      perform public.create_project_notification(
+        new.project_id,
+        'milestone_updated',
+        'Milestone Updated',
+        coalesce(new.title, 'A milestone was updated.'),
+        '/portal?project=' || new.project_id::text,
+        actor_id
+      );
+    end if;
+    return new;
+  end if;
+
+  if tg_table_name = 'project_approval_tasks' and tg_op = 'INSERT' then
+    perform public.create_project_notification(
+      new.project_id,
+      'approval_requested',
+      'Approval Requested',
+      coalesce(new.title, 'A new approval task needs review.'),
+      '/portal?project=' || new.project_id::text,
+      new.requested_by
+    );
+    return new;
+  end if;
+
+  if tg_table_name = 'project_approval_tasks' and tg_op = 'UPDATE' then
+    if new.status is distinct from old.status then
+      if new.status = 'approved' then
+        update_title := 'Task Approved';
+      elsif new.status = 'changes_requested' then
+        update_title := 'Changes Requested';
+      else
+        update_title := 'Approval Task Updated';
+      end if;
+
+      perform public.create_project_notification(
+        new.project_id,
+        'approval_status',
+        update_title,
+        coalesce(new.title, 'An approval task status changed.'),
+        '/portal?project=' || new.project_id::text,
+        actor_id
+      );
+    end if;
+    return new;
+  end if;
+
+  if tg_table_name = 'project_access_items' and tg_op = 'INSERT' then
+    perform public.create_project_notification(
+      new.project_id,
+      'access_item_added',
+      'Access Item Added',
+      coalesce(new.title, 'A new access checklist item was added.'),
+      '/portal?project=' || new.project_id::text,
+      new.created_by
+    );
+    return new;
+  end if;
+
+  if tg_table_name = 'project_access_items' and tg_op = 'UPDATE' then
+    if
+      new.status is distinct from old.status
+      or new.login_url is distinct from old.login_url
+      or new.account_email is distinct from old.account_email
+      or new.username is distinct from old.username
+      or new.secret_value is distinct from old.secret_value
+      or new.secure_link is distinct from old.secure_link
+      or new.notes is distinct from old.notes
+    then
+      perform public.create_project_notification(
+        new.project_id,
+        'access_item_updated',
+        'Access Checklist Updated',
+        coalesce(new.title, 'An access checklist item was updated.'),
+        '/portal?project=' || new.project_id::text,
+        new.updated_by
+      );
+    end if;
+    return new;
+  end if;
+
+  if tg_table_name = 'project_client_intake' and tg_op = 'INSERT' then
+    perform public.create_project_notification(
+      new.project_id,
+      'intake_submitted',
+      'Client Intake Submitted',
+      'Project intake information was submitted.',
+      '/portal?project=' || new.project_id::text,
+      new.updated_by
+    );
+    return new;
+  end if;
+
+  if tg_table_name = 'project_client_intake' and tg_op = 'UPDATE' then
+    perform public.create_project_notification(
+      new.project_id,
+      'intake_updated',
+      'Client Intake Updated',
+      'Project intake information was updated.',
+      '/portal?project=' || new.project_id::text,
+      new.updated_by
+    );
+    return new;
+  end if;
+
+  if tg_table_name = 'projects' and tg_op = 'UPDATE' then
+    if
+      new.status is distinct from old.status
+      or new.progress is distinct from old.progress
+      or new.summary is distinct from old.summary
+      or new.start_date is distinct from old.start_date
+      or new.due_date is distinct from old.due_date
+    then
+      project_name := coalesce(new.name, 'Project');
+      link_to_project := '/portal?project=' || new.id::text;
+      perform public.create_project_notification(
+        new.id,
+        'project_snapshot',
+        'Project Snapshot Updated',
+        project_name || ' has new project details.',
+        link_to_project,
+        actor_id
+      );
+    end if;
+    return new;
+  end if;
+
+  if tg_table_name = 'project_members' and tg_op = 'INSERT' then
+    select nullif(trim(p.name), '')
+    into project_name
+    from public.projects p
+    where p.id = new.project_id;
+
+    perform public.create_user_notification(
+      new.user_id,
+      new.project_id,
+      'project_assignment',
+      'Project Assigned',
+      coalesce(project_name, 'Project') || ' was assigned to your portal account.',
+      '/portal?project=' || new.project_id::text
+    );
+    return new;
+  end if;
+
+  return coalesce(new, old);
+end;
+$$;
+
+drop trigger if exists notify_project_updates on public.project_updates;
+create trigger notify_project_updates
+after insert on public.project_updates
+for each row execute function public.handle_project_activity_notifications();
+
+drop trigger if exists notify_project_questions on public.project_questions;
+create trigger notify_project_questions
+after insert on public.project_questions
+for each row execute function public.handle_project_activity_notifications();
+
+drop trigger if exists notify_project_question_messages on public.project_question_messages;
+create trigger notify_project_question_messages
+after insert on public.project_question_messages
+for each row execute function public.handle_project_activity_notifications();
+
+drop trigger if exists notify_project_files on public.project_files;
+create trigger notify_project_files
+after insert on public.project_files
+for each row execute function public.handle_project_activity_notifications();
+
+drop trigger if exists notify_project_milestones_insert on public.project_milestones;
+create trigger notify_project_milestones_insert
+after insert on public.project_milestones
+for each row execute function public.handle_project_activity_notifications();
+
+drop trigger if exists notify_project_milestones_update on public.project_milestones;
+create trigger notify_project_milestones_update
+after update on public.project_milestones
+for each row execute function public.handle_project_activity_notifications();
+
+drop trigger if exists notify_project_approval_tasks_insert on public.project_approval_tasks;
+create trigger notify_project_approval_tasks_insert
+after insert on public.project_approval_tasks
+for each row execute function public.handle_project_activity_notifications();
+
+drop trigger if exists notify_project_approval_tasks_update on public.project_approval_tasks;
+create trigger notify_project_approval_tasks_update
+after update on public.project_approval_tasks
+for each row execute function public.handle_project_activity_notifications();
+
+drop trigger if exists notify_project_access_items_insert on public.project_access_items;
+create trigger notify_project_access_items_insert
+after insert on public.project_access_items
+for each row execute function public.handle_project_activity_notifications();
+
+drop trigger if exists notify_project_access_items_update on public.project_access_items;
+create trigger notify_project_access_items_update
+after update on public.project_access_items
+for each row execute function public.handle_project_activity_notifications();
+
+drop trigger if exists notify_project_client_intake_insert on public.project_client_intake;
+create trigger notify_project_client_intake_insert
+after insert on public.project_client_intake
+for each row execute function public.handle_project_activity_notifications();
+
+drop trigger if exists notify_project_client_intake_update on public.project_client_intake;
+create trigger notify_project_client_intake_update
+after update on public.project_client_intake
+for each row execute function public.handle_project_activity_notifications();
+
+drop trigger if exists notify_projects_update on public.projects;
+create trigger notify_projects_update
+after update on public.projects
+for each row execute function public.handle_project_activity_notifications();
+
+drop trigger if exists notify_project_members_insert on public.project_members;
+create trigger notify_project_members_insert
+after insert on public.project_members
+for each row execute function public.handle_project_activity_notifications();
 
 create or replace function public.is_project_member(project_uuid uuid)
 returns boolean
@@ -638,6 +1085,12 @@ grant execute on function public.assign_client_to_project(uuid, text, text) to a
 revoke all on function public.claim_pending_project_memberships() from public;
 grant execute on function public.claim_pending_project_memberships() to authenticated;
 
+revoke all on function public.create_project_notification(uuid, text, text, text, text, uuid) from public;
+grant execute on function public.create_project_notification(uuid, text, text, text, text, uuid) to authenticated;
+
+revoke all on function public.create_user_notification(uuid, uuid, text, text, text, text) from public;
+grant execute on function public.create_user_notification(uuid, uuid, text, text, text, text) to authenticated;
+
 revoke all on function public.update_project_summary(uuid, text) from public;
 grant execute on function public.update_project_summary(uuid, text) to authenticated;
 
@@ -646,6 +1099,7 @@ grant execute on function public.search_project_user_emails(uuid, text, integer)
 
 grant insert on table public.onboarding_leads to anon, authenticated;
 grant select, update on table public.onboarding_leads to authenticated;
+grant select, update on table public.portal_notifications to authenticated;
 
 alter table public.projects enable row level security;
 alter table public.project_members enable row level security;
@@ -658,6 +1112,7 @@ alter table public.project_access_items enable row level security;
 alter table public.project_milestones enable row level security;
 alter table public.project_approval_tasks enable row level security;
 alter table public.onboarding_leads enable row level security;
+alter table public.portal_notifications enable row level security;
 
 drop policy if exists "Members can view projects" on public.projects;
 create policy "Members can view projects"
@@ -915,6 +1370,21 @@ for update
 to authenticated
 using (public.is_bootstrap_manager())
 with check (public.is_bootstrap_manager());
+
+drop policy if exists "Users can view own notifications" on public.portal_notifications;
+create policy "Users can view own notifications"
+on public.portal_notifications
+for select
+to authenticated
+using (user_id = auth.uid());
+
+drop policy if exists "Users can update own notifications" on public.portal_notifications;
+create policy "Users can update own notifications"
+on public.portal_notifications
+for update
+to authenticated
+using (user_id = auth.uid())
+with check (user_id = auth.uid());
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values (

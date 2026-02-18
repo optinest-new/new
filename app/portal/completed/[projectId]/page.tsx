@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import type { Session } from "@supabase/supabase-js";
 import { createSupabaseBrowserClient, hasSupabasePublicEnv } from "@/lib/supabase-browser";
+import { PortalNotificationCenter } from "@/components/portal-notification-center";
 
 type PortalProject = {
   id: string;
@@ -410,6 +411,7 @@ export default function CompletedProjectPage() {
           </div>
 
           <div className="flex items-center gap-2">
+            <PortalNotificationCenter session={session} />
             <Link
               href="/portal"
               className="inline-flex items-center rounded-full border-2 border-ink bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-ink transition hover:-translate-y-0.5"

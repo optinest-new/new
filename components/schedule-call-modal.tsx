@@ -1,17 +1,18 @@
 "use client";
 
-import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { createSupabaseBrowserClient, hasSupabasePublicEnv } from "@/lib/supabase-browser";
 
 type ScheduleCallModalProps = {
   label?: string;
   className?: string;
-  email?: string;
   children?: ReactNode;
 };
 
 type ScheduleFormValues = {
   name: string;
+  email: string;
   company: string;
   website: string;
   serviceNeeded: string;
@@ -23,55 +24,37 @@ type ScheduleFormValues = {
   preferredCallTime: string;
 };
 
-const defaultEmail = "optinestdigital@gmail.com";
-
-function formatPreferredCallTime(value: string) {
-  if (!value) {
-    return "";
+function mapServiceSelection(value: string): string[] {
+  if (value === "Web Design") {
+    return ["web_design"];
   }
 
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return value;
+  if (value === "SEO") {
+    return ["seo"];
   }
 
-  return date.toLocaleString("en-US", {
-    dateStyle: "long",
-    timeStyle: "short"
-  });
-}
+  if (value === "Both") {
+    return ["web_design", "seo"];
+  }
 
-function createMailtoUrl(values: ScheduleFormValues, email: string) {
-  const subject = `Schedule a Call - ${values.name || "New Project Inquiry"}`;
-  const bodyLines = [
-    "Hi Optinest Digital,",
-    "",
-    "I would like to schedule a call about my project.",
-    "",
-    `Name: ${values.name}`,
-    `Company: ${values.company}`,
-    `Website: ${values.website}`,
-    `Service Needed (Web Design / SEO / Both): ${values.serviceNeeded}`,
-    `Estimated Budget: ${values.estimatedBudget}`,
-    `Timeline: ${values.timeline}`,
-    `Main Goals: ${values.mainGoals}`,
-    `Additional Details: ${values.additionalDetails}`,
-    `Best Contact Number: ${values.contactNumber}`,
-    `Preferred Call Time: ${formatPreferredCallTime(values.preferredCallTime)}`
-  ];
-  return `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(
-    bodyLines.join("\n")
-  )}`;
+  return [];
 }
 
 export function ScheduleCallModal({
   label = "Schedule a Call",
   className,
-  email = defaultEmail,
   children
 }: ScheduleCallModalProps) {
+  const isSupabaseConfigured = hasSupabasePublicEnv();
+  const supabase = useMemo(
+    () => (isSupabaseConfigured ? createSupabaseBrowserClient() : null),
+    [isSupabaseConfigured]
+  );
   const [isOpen, setIsOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitMessage, setSubmitMessage] = useState("");
+  const [submitError, setSubmitError] = useState("");
 
   useEffect(() => {
     setIsMounted(true);
@@ -97,13 +80,14 @@ export function ScheduleCallModal({
     };
   }, [isOpen]);
 
-  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const form = event.currentTarget;
     const data = new FormData(form);
 
     const values: ScheduleFormValues = {
       name: String(data.get("name") ?? "").trim(),
+      email: String(data.get("email") ?? "").trim().toLowerCase(),
       company: String(data.get("company") ?? "").trim(),
       website: String(data.get("website") ?? "").trim(),
       serviceNeeded: String(data.get("serviceNeeded") ?? "").trim(),
@@ -115,9 +99,63 @@ export function ScheduleCallModal({
       preferredCallTime: String(data.get("preferredCallTime") ?? "").trim()
     };
 
-    const mailtoUrl = createMailtoUrl(values, email);
-    window.location.href = mailtoUrl;
-    setIsOpen(false);
+    if (!values.name || !values.email) {
+      setSubmitError("Name and email are required.");
+      return;
+    }
+
+    if (!supabase) {
+      setSubmitError("Portal is not configured yet. Please try again later.");
+      return;
+    }
+
+    let preferredCallAt: string | null = null;
+    if (values.preferredCallTime) {
+      const parsed = new Date(values.preferredCallTime);
+      if (Number.isNaN(parsed.getTime())) {
+        setSubmitError("Preferred call time is invalid.");
+        return;
+      }
+      preferredCallAt = parsed.toISOString();
+    }
+
+    const noteParts: string[] = [];
+    if (values.website) {
+      noteParts.push(`Website: ${values.website}`);
+    }
+    if (values.additionalDetails) {
+      noteParts.push(`Additional details: ${values.additionalDetails}`);
+    }
+
+    const { data: userResult } = await supabase.auth.getUser();
+
+    setIsSubmitting(true);
+    setSubmitError("");
+    setSubmitMessage("");
+
+    const { error } = await supabase.from("onboarding_leads").insert({
+      full_name: values.name,
+      email: values.email,
+      company_name: values.company || null,
+      phone: values.contactNumber || null,
+      services_needed: mapServiceSelection(values.serviceNeeded),
+      budget_range: values.estimatedBudget || null,
+      timeline_goal: values.timeline || null,
+      preferred_call_at: preferredCallAt,
+      goals: values.mainGoals || null,
+      notes: noteParts.length > 0 ? noteParts.join("\n\n") : null,
+      status: "call_scheduled",
+      created_by: userResult.user?.id || null
+    });
+
+    setIsSubmitting(false);
+
+    if (error) {
+      setSubmitError(error.message);
+      return;
+    }
+
+    setSubmitMessage("Call request submitted. We will contact you to confirm the schedule.");
     form.reset();
   };
 
@@ -167,6 +205,16 @@ export function ScheduleCallModal({
                 Name
                 <input
                   name="name"
+                  required
+                  className="rounded-md border border-ink/35 bg-white px-3 py-2 text-base text-ink outline-none ring-0 focus:border-ink sm:text-sm"
+                />
+              </label>
+
+              <label className="grid gap-1 text-sm font-semibold text-ink">
+                Email
+                <input
+                  name="email"
+                  type="email"
                   required
                   className="rounded-md border border-ink/35 bg-white px-3 py-2 text-base text-ink outline-none ring-0 focus:border-ink sm:text-sm"
                 />
@@ -274,11 +322,23 @@ export function ScheduleCallModal({
                 </button>
                 <button
                   type="submit"
-                  className="rounded-full border-2 border-ink bg-ink px-5 py-2 text-xs font-bold uppercase tracking-[0.12em] text-mist hover:-translate-y-0.5"
+                  disabled={isSubmitting}
+                  className="rounded-full border-2 border-ink bg-ink px-5 py-2 text-xs font-bold uppercase tracking-[0.12em] text-mist hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-70"
                 >
-                  Send Via Email
+                  {isSubmitting ? "Submitting..." : "Submit Call Request"}
                 </button>
               </div>
+
+              {submitError ? (
+                <p className="sm:col-span-2 rounded-md border border-[#d88] bg-[#fff1f1] px-3 py-2 text-sm text-[#7a1f1f]">
+                  {submitError}
+                </p>
+              ) : null}
+              {submitMessage ? (
+                <p className="sm:col-span-2 rounded-md border border-[#84b98d] bg-[#e9f9ec] px-3 py-2 text-sm text-[#1f5c28]">
+                  {submitMessage}
+                </p>
+              ) : null}
             </form>
           </section>
         </div>

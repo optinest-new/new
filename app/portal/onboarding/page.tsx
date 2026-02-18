@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { createSupabaseBrowserClient, hasSupabasePublicEnv } from "@/lib/supabase-browser";
+import { PortalNotificationCenter } from "@/components/portal-notification-center";
 
 type OnboardingStatus = "call_scheduled" | "qualified" | "deposited" | "project_started";
 
@@ -118,6 +119,7 @@ export default function OnboardingPipelinePage() {
     Record<string, boolean>
   >({});
   const [expandedLeadIds, setExpandedLeadIds] = useState<Record<string, boolean>>({});
+  const hasResolvedManagerStatusRef = useRef(false);
 
   const filteredOnboardingLeads = useMemo(() => {
     const normalizedSearch = onboardingSearchDraft.trim().toLowerCase();
@@ -164,10 +166,12 @@ export default function OnboardingPipelinePage() {
 
     const {
       data: { subscription }
-    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+    } = supabase.auth.onAuthStateChange((event, nextSession) => {
       setSession(nextSession);
-      setPortalError("");
-      setPipelineMessage("");
+      if (event === "SIGNED_IN" || event === "SIGNED_OUT") {
+        setPortalError("");
+        setPipelineMessage("");
+      }
     });
 
     return () => {
@@ -179,17 +183,22 @@ export default function OnboardingPipelinePage() {
   useEffect(() => {
     if (!supabase || !session) {
       setIsBootstrapManager(false);
+      setIsLoadingManagerStatus(false);
+      hasResolvedManagerStatusRef.current = false;
       return;
     }
 
     let cancelled = false;
-    setIsLoadingManagerStatus(true);
+    if (!hasResolvedManagerStatusRef.current) {
+      setIsLoadingManagerStatus(true);
+    }
 
     supabase.rpc("is_bootstrap_manager").then(({ data, error }) => {
       if (cancelled) {
         return;
       }
       setIsLoadingManagerStatus(false);
+      hasResolvedManagerStatusRef.current = true;
       if (error) {
         setPortalError(error.message);
         return;
@@ -506,6 +515,7 @@ export default function OnboardingPipelinePage() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
+            <PortalNotificationCenter session={session} />
             <Link
               href="/portal"
               className="inline-flex items-center rounded-full border-2 border-ink bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-ink transition hover:-translate-y-0.5"
