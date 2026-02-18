@@ -5,9 +5,10 @@ import { useEffect, useState } from "react";
 type FloatingShareProps = {
   title: string;
   url: string;
+  label?: string;
 };
 
-export function FloatingShare({ title, url }: FloatingShareProps) {
+export function FloatingShare({ title, url, label = "Share this article" }: FloatingShareProps) {
   const [copied, setCopied] = useState(false);
   const [canNativeShare, setCanNativeShare] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -58,11 +59,11 @@ export function FloatingShare({ title, url }: FloatingShareProps) {
       </button>
 
       <aside
-        aria-label="Share this article"
+        aria-label={label}
         className={`${mobileOpen ? "mt-2 block" : "hidden"} w-36 rounded-xl border-2 border-ink/80 bg-mist/95 p-2 shadow-hard backdrop-blur sm:mt-0 sm:block sm:w-44 sm:rounded-2xl sm:p-3`}
       >
         <p className="font-mono text-[0.6rem] uppercase tracking-[0.12em] text-ink/75 sm:text-[0.65rem]">
-          Share this article
+          {label}
         </p>
         <div className="mt-2 grid grid-cols-1 gap-1.5 sm:grid-cols-1 sm:gap-2">
           <a

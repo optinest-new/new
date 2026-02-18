@@ -6,6 +6,16 @@ Canonical site: https://optinestdigital.com
 ## Primary URLs
 - https://optinestdigital.com/
 - https://optinestdigital.com/clients
+- https://optinestdigital.com/tools
+- https://optinestdigital.com/tools/serp-snippet-preview
+- https://optinestdigital.com/tools/meta-tag-generator
+- https://optinestdigital.com/tools/schema-markup-generator
+- https://optinestdigital.com/tools/robots-meta-tester
+- https://optinestdigital.com/tools/redirect-checker
+- https://optinestdigital.com/tools/internal-link-opportunities
+- https://optinestdigital.com/tools/seo-content-brief-generator
+- https://optinestdigital.com/tools/mailto-generator
+- https://optinestdigital.com/tools/grid-flexbox-generator
 - https://optinestdigital.com/blog
 - https://optinestdigital.com/sitemap.xml
 - https://optinestdigital.com/robots.txt

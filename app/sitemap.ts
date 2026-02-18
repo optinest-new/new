@@ -39,6 +39,66 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "monthly",
       priority: 0.8
     },
+    {
+      url: `${siteUrl}/tools`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.8
+    },
+    {
+      url: `${siteUrl}/tools/meta-tag-generator`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.7
+    },
+    {
+      url: `${siteUrl}/tools/serp-snippet-preview`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.7
+    },
+    {
+      url: `${siteUrl}/tools/schema-markup-generator`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.7
+    },
+    {
+      url: `${siteUrl}/tools/robots-meta-tester`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.7
+    },
+    {
+      url: `${siteUrl}/tools/redirect-checker`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.7
+    },
+    {
+      url: `${siteUrl}/tools/internal-link-opportunities`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.7
+    },
+    {
+      url: `${siteUrl}/tools/seo-content-brief-generator`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.7
+    },
+    {
+      url: `${siteUrl}/tools/mailto-generator`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.7
+    },
+    {
+      url: `${siteUrl}/tools/grid-flexbox-generator`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.7
+    },
     ...paginatedUrls,
     ...postUrls
   ];

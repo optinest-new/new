@@ -124,6 +124,9 @@ export default function RootLayout({
               <Link href="/clients" className="hover:underline">
                 Clients
               </Link>
+              <Link href="/tools" className="hover:underline">
+                Tools
+              </Link>
               <Link href="/blog" className="hover:underline">
                 Blog
               </Link>
