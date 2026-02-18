@@ -26,8 +26,8 @@ export const metadata: Metadata = {
     shortcut: "/icon.svg",
     apple: "/icon.svg"
   },
-  authors: [{ name: "Jeff Gab", url: siteUrl }],
-  creator: "Jeff Gab",
+  authors: [{ name: "Optinest Digital", url: siteUrl }],
+  creator: "Optinest Digital",
   publisher: "Optinest Digital",
   alternates: {
     canonical: "/"

@@ -13,7 +13,7 @@ const seoSchema = {
         "Optinest Digital is a small web design and SEO agency focused on technical SEO and modern web development.",
       founder: {
         "@type": "Person",
-        name: "Jeff Gab",
+        name: "Optinest Digital",
         jobTitle: "Senior SEO Specialist and Web Developer"
       },
       areaServed: "Worldwide",
