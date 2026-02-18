@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ScheduleCallModal } from "@/components/schedule-call-modal";
 
 const seoSchema = {
@@ -118,6 +119,32 @@ export default function Home() {
                 →
               </span>
             </ScheduleCallModal>
+          </section>
+
+          <section aria-label="Service quick links" className="mt-6 w-full max-w-4xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-ink/65 sm:text-sm">
+              Explore Services
+            </p>
+            <div className="mt-3 grid gap-2 sm:grid-cols-3">
+              <Link
+                href="/services/seo"
+                className="inline-flex items-center justify-center rounded-full border-2 border-[#1d4ea5] bg-[#edf4ff] px-4 py-2 text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-[#123a86] transition hover:-translate-y-0.5 hover:bg-[#dce9ff] sm:text-xs"
+              >
+                SEO Growth
+              </Link>
+              <Link
+                href="/services/web-design"
+                className="inline-flex items-center justify-center rounded-full border-2 border-[#8a5a00] bg-[#fff1c5] px-4 py-2 text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-[#7a4f00] transition hover:-translate-y-0.5 hover:bg-[#ffe9ab] sm:text-xs"
+              >
+                Web Design
+              </Link>
+              <Link
+                href="/services/web-development"
+                className="inline-flex items-center justify-center rounded-full border-2 border-[#1f5c28] bg-[#e9f9ec] px-4 py-2 text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-[#174f22] transition hover:-translate-y-0.5 hover:bg-[#d8f3de] sm:text-xs"
+              >
+                Web Development
+              </Link>
+            </div>
           </section>
 
           <nav aria-label="Social links" className="mt-14 flex items-center gap-5 sm:mt-16 sm:gap-7">

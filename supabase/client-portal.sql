@@ -346,6 +346,16 @@ create table if not exists public.onboarding_leads (
   updated_at timestamptz not null default timezone('utc', now())
 );
 
+create table if not exists public.lead_magnet_submissions (
+  id uuid primary key default gen_random_uuid(),
+  email text not null,
+  post_slug text,
+  post_title text,
+  magnet_title text not null,
+  page_path text,
+  created_at timestamptz not null default timezone('utc', now())
+);
+
 alter table public.onboarding_leads
   add column if not exists full_name text,
   add column if not exists email text,
@@ -394,6 +404,18 @@ check (
   )
 );
 
+alter table public.lead_magnet_submissions
+  add column if not exists email text,
+  add column if not exists post_slug text,
+  add column if not exists post_title text,
+  add column if not exists magnet_title text,
+  add column if not exists page_path text,
+  add column if not exists created_at timestamptz not null default timezone('utc', now());
+
+alter table public.lead_magnet_submissions
+  alter column email set not null,
+  alter column magnet_title set not null;
+
 create index if not exists idx_project_members_user_id on public.project_members(user_id);
 create index if not exists idx_project_member_emails_email on public.project_member_emails(lower(email));
 create index if not exists idx_project_updates_project_id_created_at on public.project_updates(project_id, created_at desc);
@@ -408,6 +430,8 @@ create index if not exists idx_project_approval_tasks_project_id_created_at on p
 create index if not exists idx_onboarding_leads_created_at on public.onboarding_leads(created_at desc);
 create index if not exists idx_onboarding_leads_status on public.onboarding_leads(status);
 create index if not exists idx_onboarding_leads_email on public.onboarding_leads(lower(email));
+create index if not exists idx_lead_magnet_submissions_created_at on public.lead_magnet_submissions(created_at desc);
+create index if not exists idx_lead_magnet_submissions_email on public.lead_magnet_submissions(lower(email));
 create index if not exists idx_portal_notifications_user_created_at on public.portal_notifications(user_id, created_at desc);
 create index if not exists idx_portal_notifications_user_read on public.portal_notifications(user_id, is_read);
 
@@ -1128,6 +1152,8 @@ grant execute on function public.search_project_user_emails(uuid, text, integer)
 
 grant insert on table public.onboarding_leads to anon, authenticated;
 grant select, update on table public.onboarding_leads to authenticated;
+grant insert on table public.lead_magnet_submissions to anon, authenticated;
+grant select on table public.lead_magnet_submissions to authenticated;
 grant select, update on table public.portal_notifications to authenticated;
 
 alter table public.projects enable row level security;
@@ -1141,6 +1167,7 @@ alter table public.project_access_items enable row level security;
 alter table public.project_milestones enable row level security;
 alter table public.project_approval_tasks enable row level security;
 alter table public.onboarding_leads enable row level security;
+alter table public.lead_magnet_submissions enable row level security;
 alter table public.portal_notifications enable row level security;
 
 drop policy if exists "Members can view projects" on public.projects;
@@ -1399,6 +1426,20 @@ for update
 to authenticated
 using (public.is_bootstrap_manager())
 with check (public.is_bootstrap_manager());
+
+drop policy if exists "Anyone can submit lead magnet captures" on public.lead_magnet_submissions;
+create policy "Anyone can submit lead magnet captures"
+on public.lead_magnet_submissions
+for insert
+to anon, authenticated
+with check (true);
+
+drop policy if exists "Managers can view lead magnet captures" on public.lead_magnet_submissions;
+create policy "Managers can view lead magnet captures"
+on public.lead_magnet_submissions
+for select
+to authenticated
+using (public.is_bootstrap_manager());
 
 drop policy if exists "Users can view own notifications" on public.portal_notifications;
 create policy "Users can view own notifications"

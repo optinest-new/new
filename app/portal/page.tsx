@@ -3330,7 +3330,23 @@ export default function PortalPage() {
               Signed in as <span className="font-semibold">{session.user.email}</span>
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            {isBootstrapManager ? (
+              <>
+                <Link
+                  href="/portal/onboarding"
+                  className="inline-flex items-center rounded-full border-2 border-[#0f7663] bg-[#16a085] px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white transition hover:-translate-y-0.5 hover:bg-[#0f8d74]"
+                >
+                  Onboarding Pipeline
+                </Link>
+                <Link
+                  href="/portal/leads"
+                  className="inline-flex items-center rounded-full border-2 border-[#1d4ea5] bg-[#2967d8] px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white transition hover:-translate-y-0.5 hover:bg-[#2059bf]"
+                >
+                  Lead Magnets
+                </Link>
+              </>
+            ) : null}
             <PortalNotificationCenter session={session} onProjectSelect={handleSelectProject} />
             <button
               type="button"
@@ -3654,24 +3670,6 @@ export default function PortalPage() {
                 </p>
               )}
 
-            </section>
-          ) : null}
-
-          {isBootstrapManager ? (
-            <section className="rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6">
-              <h2 className="font-display text-xl uppercase text-ink">Onboarding Pipeline</h2>
-              <p className="mt-2 text-sm text-ink/75">
-                Use the dedicated onboarding workspace to manage call scheduled, qualified, deposited,
-                and project started stages.
-              </p>
-              <div className="mt-4">
-                <Link
-                  href="/portal/onboarding"
-                  className="inline-flex items-center rounded-full border-2 border-[#0f7663] bg-[#16a085] px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white transition hover:-translate-y-0.5 hover:bg-[#0f8d74]"
-                >
-                  Open Onboarding Pipeline
-                </Link>
-              </div>
             </section>
           ) : null}
 

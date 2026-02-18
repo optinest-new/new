@@ -107,6 +107,9 @@ export default function RootLayout({
               <Link href="/blog" className="hover:underline">
                 Blog
               </Link>
+              <Link href="/services" className="hover:underline">
+                Services
+              </Link>
               <AuthAwareNavLinks placement="header" />
             </nav>
           </div>
@@ -130,6 +133,9 @@ export default function RootLayout({
               </Link>
               <Link href="/blog" className="hover:underline">
                 Blog
+              </Link>
+              <Link href="/services" className="hover:underline">
+                Services
               </Link>
               <a href="https://facebook.com/optinestdigital" target="_blank" rel="noopener noreferrer" className="hover:underline">
                 Facebook

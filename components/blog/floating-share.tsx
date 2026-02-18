@@ -42,13 +42,13 @@ export function FloatingShare({ title, url, label = "Share this article" }: Floa
   }
 
   return (
-    <div className="fixed right-3 top-1/2 z-50 -translate-y-1/2 sm:right-6">
+    <div className="fixed bottom-4 right-3 z-50 2xl:bottom-auto 2xl:right-6 2xl:top-1/2 2xl:-translate-y-1/2">
       <button
         type="button"
         onClick={() => setMobileOpen((prev) => !prev)}
         aria-label="Toggle share options"
         aria-expanded={mobileOpen}
-        className="inline-flex h-10 w-10 items-center justify-center rounded-full border-2 border-ink/80 bg-mist text-ink shadow-hard sm:hidden"
+        className="inline-flex h-10 w-10 items-center justify-center rounded-full border-2 border-ink/80 bg-mist text-ink shadow-hard 2xl:hidden"
       >
         <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
           <circle cx="18" cy="5" r="2.2" />
@@ -60,7 +60,7 @@ export function FloatingShare({ title, url, label = "Share this article" }: Floa
 
       <aside
         aria-label={label}
-        className={`${mobileOpen ? "mt-2 block" : "hidden"} w-36 rounded-xl border-2 border-ink/80 bg-mist/95 p-2 shadow-hard backdrop-blur sm:mt-0 sm:block sm:w-44 sm:rounded-2xl sm:p-3`}
+        className={`${mobileOpen ? "mt-2 block" : "hidden"} w-36 rounded-xl border-2 border-ink/80 bg-mist/95 p-2 shadow-hard backdrop-blur 2xl:mt-0 2xl:block 2xl:w-44 2xl:rounded-2xl 2xl:p-3`}
       >
         <p className="font-mono text-[0.6rem] uppercase tracking-[0.12em] text-ink/75 sm:text-[0.65rem]">
           {label}

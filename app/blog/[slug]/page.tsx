@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { FloatingShare } from "@/components/blog/floating-share";
+import { LeadMagnetCard } from "@/components/blog/lead-magnet-card";
+import { getBlogLeadMagnet } from "@/lib/blog-lead-magnet";
 import { getAllBlogSlugs, getAllPostsMeta, getPostBySlug } from "@/lib/blog";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://optinestdigital.com";
@@ -9,6 +11,75 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://optinestdigital.com
 type BlogPostPageProps = {
   params: Promise<{ slug: string }>;
 };
+
+const RESOURCE_TITLE_ACRONYMS = new Set([
+  "AI",
+  "SEO",
+  "UX",
+  "UI",
+  "CRO",
+  "SERP",
+  "CMS",
+  "DNS",
+  "FAQ",
+  "SaaS".toUpperCase(),
+  "B2B",
+  "HVAC",
+  "PPC",
+  "API"
+]);
+
+function toResourceTitleCase(value: string): string {
+  return value
+    .split(/\s+/)
+    .map((token) => {
+      if (!token) {
+        return token;
+      }
+
+      const parts = token.split("-");
+      const normalizedParts = parts.map((part) => {
+        const cleaned = part.replace(/^[^a-z0-9]+|[^a-z0-9]+$/gi, "");
+        if (!cleaned) {
+          return part;
+        }
+
+        const upper = cleaned.toUpperCase();
+        if (RESOURCE_TITLE_ACRONYMS.has(upper)) {
+          return part.replace(cleaned, upper);
+        }
+
+        return part.replace(cleaned, cleaned.charAt(0).toUpperCase() + cleaned.slice(1));
+      });
+
+      return normalizedParts.join("-");
+    })
+    .join(" ");
+}
+
+function normalizeLowercaseListLinkTitles(html: string): string {
+  return html.replace(/<li>([\s\S]*?)<\/li>/g, (listItemMatch, listItemBody: string) => {
+    const updatedListItemBody = listItemBody.replace(
+      /<a([^>]*)>([^<]+)<\/a>/g,
+      (anchorMatch, attrs: string, anchorText: string) => {
+        const trimmed = anchorText.trim();
+        if (!trimmed) {
+          return anchorMatch;
+        }
+
+        const isMostlyLowercase =
+          trimmed === trimmed.toLowerCase() && /^[a-z0-9\s\-&/().,'":]+$/.test(trimmed);
+        if (!isMostlyLowercase) {
+          return anchorMatch;
+        }
+
+        return `<a${attrs}>${toResourceTitleCase(trimmed)}</a>`;
+      }
+    );
+
+    return `<li>${updatedListItemBody}</li>`;
+  });
+}
 
 export function generateStaticParams() {
   return getAllBlogSlugs().map((slug) => ({ slug }));
@@ -120,9 +191,15 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     "@context": "https://schema.org",
     "@graph": faqSchema ? [blogPostingSchema, faqSchema] : [blogPostingSchema]
   };
+  const normalizedContentHtml = normalizeLowercaseListLinkTitles(post.contentHtml);
+  const leadMagnet = getBlogLeadMagnet({
+    title: post.title,
+    category: post.category,
+    tags: post.tags
+  });
 
   return (
-    <main className="mx-auto w-full max-w-4xl px-4 py-10 pb-28 sm:px-6 sm:py-12 md:py-16 md:pb-20">
+    <main className="mx-auto w-full max-w-7xl px-4 py-10 pb-28 sm:px-6 md:py-16 md:pb-20">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
 
       <nav aria-label="Breadcrumb" className="mb-7 text-xs text-ink/70 sm:mb-8 sm:text-sm">
@@ -136,8 +213,8 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         / <span aria-current="page" className="break-words">{post.title}</span>
       </nav>
 
-      <article className="rounded-2xl border-2 border-ink/80 bg-mist px-4 py-6 shadow-hard sm:px-8 sm:py-7">
-        <header>
+      <article className="w-full rounded-2xl border-2 border-ink/80 bg-mist px-4 py-6 shadow-hard sm:px-8 sm:py-7 lg:px-10">
+        <header className="mx-auto w-full max-w-[78ch]">
           <p className="font-mono text-xs uppercase tracking-[0.14em] text-ink/70">{post.category}</p>
           <h1 className="mt-2 text-balance font-display text-3xl uppercase leading-[0.95] text-ink sm:text-4xl md:text-5xl">
             {post.title}
@@ -161,23 +238,33 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         </figure>
 
         <section
-          className="blog-prose mt-8"
-          dangerouslySetInnerHTML={{ __html: post.contentHtml }}
+          className="blog-prose mx-auto mt-8 w-full max-w-[78ch]"
+          dangerouslySetInnerHTML={{ __html: normalizedContentHtml }}
           aria-label="Blog article content"
         />
 
-        <aside className="mt-10 border-t-2 border-ink/20 pt-7" aria-label="Related articles">
-          <h2 className="font-display text-2xl uppercase leading-[0.95] text-ink sm:text-3xl">Related Articles</h2>
+        <LeadMagnetCard magnet={leadMagnet} postTitle={post.title} postSlug={post.slug} />
+
+        <aside className="mx-auto mt-10 w-full max-w-[78ch] border-t-2 border-ink/20 pt-7" aria-label="Related articles">
+          <h2 className="font-display text-2xl leading-[0.95] text-ink sm:text-3xl">Related Resources</h2>
           <p className="mt-2 text-xs text-ink/75 sm:text-sm">
             Keep exploring this topic with related guides from the blog.
           </p>
           <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {relatedPosts.map((related) => (
-              <li key={related.slug} className="rounded-lg border-2 border-ink/20 bg-white p-4">
-                <Link href={`/blog/${related.slug}`} className="text-sm font-semibold text-ink hover:underline">
-                  {related.title}
+              <li key={related.slug} className="overflow-hidden rounded-lg border-2 border-ink/20 bg-white">
+                <Link href={`/blog/${related.slug}`} className="block">
+                  <img
+                    src={related.featureImage}
+                    alt={`Feature image for ${related.title}`}
+                    loading="lazy"
+                    className="h-32 w-full border-b-2 border-ink/15 bg-white object-cover"
+                  />
+                  <div className="p-4">
+                    <p className="text-sm font-semibold text-ink hover:underline">{related.title}</p>
+                    <p className="mt-1 text-xs text-ink/65">{related.primaryKeyword}</p>
+                  </div>
                 </Link>
-                <p className="mt-1 text-xs text-ink/65">{related.primaryKeyword}</p>
               </li>
             ))}
           </ul>

@@ -41,6 +41,11 @@ const tools = [
     description: "Generate practical SEO content briefs with outlines, FAQs, and internal link direction."
   },
   {
+    href: "/tools/roi-calculator",
+    title: "ROI Calculator",
+    description: "Estimate revenue opportunity from SEO and conversion improvements using your own traffic and deal metrics."
+  },
+  {
     href: "/tools/mailto-generator",
     title: "Mailto Generator",
     description: "Build clean mailto links with prefilled subject, body, cc, and bcc fields."
