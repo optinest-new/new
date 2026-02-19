@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { FloatingShare } from "@/components/blog/floating-share";
+import { buildToolsHubStructuredData } from "@/lib/tool-seo";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://optinestdigital.com";
 
@@ -76,8 +77,24 @@ export const metadata: Metadata = {
   title: "Web Developer Tools",
   description:
     "Use Optinest Digital web developer tools for SEO health scans, UTM tracking, sitemap validation, SERP previews, meta tags, schema markup, robots testing, internal links, content briefs, and layout CSS.",
+  keywords: [
+    "web developer tools",
+    "seo tools",
+    "serp snippet preview",
+    "meta tag generator",
+    "schema markup generator",
+    "robots meta tester",
+    "redirect checker",
+    "internal link finder",
+    "seo content brief generator",
+    "utm builder"
+  ],
   alternates: {
     canonical: "/tools"
+  },
+  robots: {
+    index: true,
+    follow: true
   },
   openGraph: {
     type: "website",
@@ -97,8 +114,15 @@ export const metadata: Metadata = {
 };
 
 export default function ToolsPage() {
+  const toolsHubStructuredData = buildToolsHubStructuredData();
+
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 sm:py-12">
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(toolsHubStructuredData) }}
+      />
+      <main className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 sm:py-12">
       <header className="mx-auto max-w-4xl text-center">
         <p className="eyebrow-pop mx-auto inline-block">Free Web Developer Tools</p>
         <h1 className="hero-title mt-5 text-balance font-display text-[clamp(2rem,7vw,4.4rem)] uppercase leading-[0.9] tracking-tight">
@@ -125,6 +149,7 @@ export default function ToolsPage() {
       </section>
 
       <FloatingShare title="Web Developer Tools by Optinest Digital" url={`${siteUrl}/tools`} label="Share this page" />
-    </main>
+      </main>
+    </>
   );
 }

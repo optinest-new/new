@@ -2,36 +2,32 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { GridFlexboxGeneratorTool } from "@/components/tools/grid-flexbox-generator-tool";
 import { FloatingShare } from "@/components/blog/floating-share";
+import { buildToolMetadata, buildToolStructuredData } from "@/lib/tool-seo";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://optinestdigital.com";
 
-export const metadata: Metadata = {
-  title: "Grid and Flexbox Generator Tool",
-  description:
-    "Generate responsive CSS for grid and flexbox layouts with a live preview and copy-ready code output.",
-  alternates: {
-    canonical: "/tools/grid-flexbox-generator"
-  },
-  openGraph: {
-    type: "website",
-    url: `${siteUrl}/tools/grid-flexbox-generator`,
-    title: "Grid / Flexbox Generator | Optinest Digital",
-    description:
-      "Build and preview CSS layout snippets for grid and flexbox in one tool.",
-    images: ["/og.png"]
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Grid / Flexbox Generator | Optinest Digital",
-    description:
-      "Build and preview CSS layout snippets for grid and flexbox in one tool.",
-    images: ["/og.png"]
-  }
-};
+const toolTitle = "Grid / Flexbox Generator";
+const toolDescription =
+  "Generate responsive CSS for grid and flexbox layouts with a live preview and copy-ready code output.";
+
+export const metadata: Metadata = buildToolMetadata({
+  slug: "grid-flexbox-generator",
+  title: toolTitle,
+  description: toolDescription,
+  keywords: ["css grid generator", "flexbox generator", "layout css tool"]
+});
 
 export default function GridFlexboxGeneratorPage() {
+  const structuredData = buildToolStructuredData({
+    slug: "grid-flexbox-generator",
+    title: toolTitle,
+    description: toolDescription
+  });
+
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 sm:py-12">
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
+      <main className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 sm:py-12">
       <nav aria-label="Breadcrumb" className="mb-6 text-xs text-ink/70 sm:text-sm">
         <Link href="/tools" className="hover:underline">
           Tools
@@ -54,6 +50,7 @@ export default function GridFlexboxGeneratorPage() {
         url={`${siteUrl}/tools/grid-flexbox-generator`}
         label="Share this tool"
       />
-    </main>
+      </main>
+    </>
   );
 }

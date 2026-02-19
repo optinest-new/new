@@ -2,36 +2,32 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { FloatingShare } from "@/components/blog/floating-share";
 import { RoiCalculatorTool } from "@/components/tools/roi-calculator-tool";
+import { buildToolMetadata, buildToolStructuredData } from "@/lib/tool-seo";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://optinestdigital.com";
 
-export const metadata: Metadata = {
-  title: "SEO ROI Calculator Tool",
-  description:
-    "Estimate monthly and projected revenue lift from SEO traffic and conversion improvements with this ROI calculator.",
-  alternates: {
-    canonical: "/tools/roi-calculator"
-  },
-  openGraph: {
-    type: "website",
-    url: `${siteUrl}/tools/roi-calculator`,
-    title: "SEO ROI Calculator | Optinest Digital",
-    description:
-      "Model organic growth impact using traffic, conversion, close rate, and deal value assumptions.",
-    images: ["/og.png"]
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "SEO ROI Calculator | Optinest Digital",
-    description:
-      "Model organic growth impact using traffic, conversion, close rate, and deal value assumptions.",
-    images: ["/og.png"]
-  }
-};
+const toolTitle = "ROI Calculator";
+const toolDescription =
+  "Estimate monthly and projected revenue lift from SEO traffic and conversion improvements with this ROI calculator.";
+
+export const metadata: Metadata = buildToolMetadata({
+  slug: "roi-calculator",
+  title: toolTitle,
+  description: toolDescription,
+  keywords: ["seo roi calculator", "website roi calculator", "lead value calculator"]
+});
 
 export default function RoiCalculatorPage() {
+  const structuredData = buildToolStructuredData({
+    slug: "roi-calculator",
+    title: toolTitle,
+    description: toolDescription
+  });
+
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 sm:py-12">
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
+      <main className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 sm:py-12">
       <nav aria-label="Breadcrumb" className="mb-6 text-xs text-ink/70 sm:text-sm">
         <Link href="/tools" className="hover:underline">
           Tools
@@ -54,6 +50,7 @@ export default function RoiCalculatorPage() {
         url={`${siteUrl}/tools/roi-calculator`}
         label="Share this tool"
       />
-    </main>
+      </main>
+    </>
   );
 }

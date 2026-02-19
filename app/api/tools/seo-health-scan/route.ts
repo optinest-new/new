@@ -9,6 +9,20 @@ type SeoHealthIssue = {
   message: string;
 };
 
+type HeadingEntry = {
+  level: 1 | 2 | 3;
+  text: string;
+};
+
+type ImageAltAudit = {
+  totalImages: number;
+  imagesWithAlt: number;
+  missingAlt: number;
+  emptyAlt: number;
+  descriptiveAlt: number;
+  sampleMissingAltSources: string[];
+};
+
 function stripTags(input: string) {
   return input
     .replace(/<script[\s\S]*?<\/script>/gi, " ")
@@ -54,6 +68,91 @@ function parseMetaContent(html: string, attrName: "name" | "property", attrValue
 function parseH1Texts(html: string) {
   const matches = [...html.matchAll(/<h1[^>]*>([\s\S]*?)<\/h1>/gi)];
   return matches.map((match) => decodeHtmlEntities(stripTags(match[1] || ""))).filter(Boolean);
+}
+
+function parseHeadings(html: string): HeadingEntry[] {
+  const matches = [...html.matchAll(/<(h[1-3])[^>]*>([\s\S]*?)<\/\1>/gi)];
+  return matches
+    .map((match) => {
+      const tag = (match[1] || "").toLowerCase();
+      const level = Number.parseInt(tag.replace("h", ""), 10);
+      if (![1, 2, 3].includes(level)) {
+        return null;
+      }
+
+      return {
+        level: level as 1 | 2 | 3,
+        text: decodeHtmlEntities(stripTags(match[2] || ""))
+      };
+    })
+    .filter((entry): entry is HeadingEntry => Boolean(entry));
+}
+
+function checkHeadingHierarchy(headings: HeadingEntry[]) {
+  const hierarchyIssues: string[] = [];
+
+  if (headings.length === 0) {
+    return hierarchyIssues;
+  }
+
+  if (headings[0].level !== 1) {
+    hierarchyIssues.push(`First heading is H${headings[0].level}; start with an H1.`);
+  }
+
+  for (let i = 1; i < headings.length; i += 1) {
+    const previousLevel = headings[i - 1].level;
+    const currentLevel = headings[i].level;
+    if (currentLevel - previousLevel > 1) {
+      hierarchyIssues.push(
+        `Heading level skips from H${previousLevel} to H${currentLevel} around "${headings[i].text || `Heading ${i + 1}`}".`
+      );
+    }
+  }
+
+  return hierarchyIssues;
+}
+
+function parseImageAltAudit(html: string): ImageAltAudit {
+  const imageTags = [...html.matchAll(/<img\b[^>]*>/gi)].map((match) => match[0] || "");
+  let imagesWithAlt = 0;
+  let missingAlt = 0;
+  let emptyAlt = 0;
+  let descriptiveAlt = 0;
+  const sampleMissingAltSources: string[] = [];
+
+  for (const tag of imageTags) {
+    const altQuoted = tag.match(/\balt\s*=\s*["']([\s\S]*?)["']/i);
+    const altUnquoted = tag.match(/\balt\s*=\s*([^\s"'>]+)/i);
+    const altRaw = altQuoted ? altQuoted[1] : altUnquoted ? altUnquoted[1] : null;
+
+    if (altRaw === null) {
+      missingAlt += 1;
+      const srcQuoted = tag.match(/\bsrc\s*=\s*["']([^"']+)["']/i);
+      const srcUnquoted = tag.match(/\bsrc\s*=\s*([^\s"'>]+)/i);
+      const src = srcQuoted ? srcQuoted[1] : srcUnquoted ? srcUnquoted[1] : "unknown-src";
+      if (sampleMissingAltSources.length < 8) {
+        sampleMissingAltSources.push(src);
+      }
+      continue;
+    }
+
+    imagesWithAlt += 1;
+    const normalizedAlt = decodeHtmlEntities(altRaw).trim();
+    if (!normalizedAlt) {
+      emptyAlt += 1;
+    } else {
+      descriptiveAlt += 1;
+    }
+  }
+
+  return {
+    totalImages: imageTags.length,
+    imagesWithAlt,
+    missingAlt,
+    emptyAlt,
+    descriptiveAlt,
+    sampleMissingAltSources
+  };
 }
 
 function normalizeUrlForCompare(input: string) {
@@ -113,6 +212,15 @@ function buildRecommendations(issues: SeoHealthIssue[]) {
     }
     if (issue.message.includes("H1")) {
       tips.push("Keep one strong H1 that matches search intent and page topic.");
+    }
+    if (issue.message.includes("H2") || issue.message.includes("H3")) {
+      tips.push("Use H2 and H3 headings to organize sections and make content scannable.");
+    }
+    if (issue.message.includes("Heading hierarchy")) {
+      tips.push("Avoid skipping heading levels; move step-by-step from H1 to H2 to H3.");
+    }
+    if (issue.message.includes("alt")) {
+      tips.push("Add descriptive alt text to meaningful images and keep decorative images with empty alt text only.");
     }
     if (issue.message.includes("HTTP status")) {
       tips.push("Resolve server/client errors and ensure the page returns a 200 status.");
@@ -184,6 +292,22 @@ export async function POST(request: Request) {
     const robotsMeta = parseMetaContent(html, "name", "robots");
     const googleBotMeta = parseMetaContent(html, "name", "googlebot");
     const h1Texts = parseH1Texts(html);
+    const headings = parseHeadings(html);
+    const headingCounts = headings.reduce(
+      (counts, heading) => {
+        if (heading.level === 1) {
+          counts.h1 += 1;
+        } else if (heading.level === 2) {
+          counts.h2 += 1;
+        } else {
+          counts.h3 += 1;
+        }
+        return counts;
+      },
+      { h1: 0, h2: 0, h3: 0 }
+    );
+    const headingHierarchyIssues = checkHeadingHierarchy(headings);
+    const imageAltAudit = parseImageAltAudit(html);
     const hasViewport = Boolean(parseMetaContent(html, "name", "viewport"));
 
     const robotsCombined = `${robotsMeta} ${googleBotMeta} ${xRobotsTag}`.toLowerCase();
@@ -226,6 +350,30 @@ export async function POST(request: Request) {
     if (h1Texts.length > 1) {
       issues.push({ severity: "low", message: "Multiple H1 headings detected." });
     }
+    if (headingCounts.h2 === 0) {
+      issues.push({ severity: "low", message: "No H2 headings detected." });
+    }
+    if (headingCounts.h3 > 0 && headingCounts.h2 === 0) {
+      issues.push({ severity: "medium", message: "H3 headings are present without H2 headings." });
+    }
+    if (headingHierarchyIssues.length > 0) {
+      issues.push({
+        severity: "medium",
+        message: "Heading hierarchy has skipped levels (for example H1 -> H3)."
+      });
+    }
+    if (imageAltAudit.totalImages > 0 && imageAltAudit.missingAlt > 0) {
+      issues.push({
+        severity: "medium",
+        message: `${imageAltAudit.missingAlt} image(s) are missing alt attributes.`
+      });
+    }
+    if (imageAltAudit.totalImages > 0 && imageAltAudit.emptyAlt > 0) {
+      issues.push({
+        severity: "low",
+        message: `${imageAltAudit.emptyAlt} image(s) have empty alt text.`
+      });
+    }
     if (hasNoindex) {
       issues.push({ severity: "high", message: "A noindex directive was found." });
     }
@@ -263,6 +411,10 @@ export async function POST(request: Request) {
       googleBotMeta,
       xRobotsTag,
       h1Texts,
+      headingCounts,
+      headingHierarchyIssues,
+      headings,
+      imageAltAudit,
       hasViewport,
       hasNoindex,
       issues,

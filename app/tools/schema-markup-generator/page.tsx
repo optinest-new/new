@@ -2,36 +2,32 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { FloatingShare } from "@/components/blog/floating-share";
 import { SchemaGeneratorValidatorTool } from "@/components/tools/schema-generator-validator-tool";
+import { buildToolMetadata, buildToolStructuredData } from "@/lib/tool-seo";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://optinestdigital.com";
 
-export const metadata: Metadata = {
-  title: "Schema Markup Generator and Validator",
-  description:
-    "Generate JSON-LD schema markup for Organization, FAQ, Service, and more, then validate required fields in one workflow.",
-  alternates: {
-    canonical: "/tools/schema-markup-generator"
-  },
-  openGraph: {
-    type: "website",
-    url: `${siteUrl}/tools/schema-markup-generator`,
-    title: "Schema Markup Generator | Optinest Digital",
-    description:
-      "Create and validate JSON-LD schema markup for richer search visibility and better structured data coverage.",
-    images: ["/og.png"]
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Schema Markup Generator | Optinest Digital",
-    description:
-      "Create and validate JSON-LD schema markup for richer search visibility and better structured data coverage.",
-    images: ["/og.png"]
-  }
-};
+const toolTitle = "Schema Markup Generator";
+const toolDescription =
+  "Generate JSON-LD schema markup for Organization, FAQ, Service, and more, then validate required fields in one workflow.";
+
+export const metadata: Metadata = buildToolMetadata({
+  slug: "schema-markup-generator",
+  title: toolTitle,
+  description: toolDescription,
+  keywords: ["schema markup generator", "json ld generator", "structured data validator"]
+});
 
 export default function SchemaMarkupGeneratorPage() {
+  const structuredData = buildToolStructuredData({
+    slug: "schema-markup-generator",
+    title: toolTitle,
+    description: toolDescription
+  });
+
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 sm:py-12">
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
+      <main className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 sm:py-12">
       <nav aria-label="Breadcrumb" className="mb-6 text-xs text-ink/70 sm:text-sm">
         <Link href="/tools" className="hover:underline">
           Tools
@@ -50,6 +46,7 @@ export default function SchemaMarkupGeneratorPage() {
 
       <SchemaGeneratorValidatorTool />
       <FloatingShare title="Schema Markup Generator Tool by Optinest Digital" url={`${siteUrl}/tools/schema-markup-generator`} label="Share this tool" />
-    </main>
+      </main>
+    </>
   );
 }

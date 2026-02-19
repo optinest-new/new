@@ -10,6 +10,20 @@ type SeoHealthIssue = {
   message: string;
 };
 
+type HeadingEntry = {
+  level: 1 | 2 | 3;
+  text: string;
+};
+
+type ImageAltAudit = {
+  totalImages: number;
+  imagesWithAlt: number;
+  missingAlt: number;
+  emptyAlt: number;
+  descriptiveAlt: number;
+  sampleMissingAltSources: string[];
+};
+
 type SeoHealthScanResult = {
   requestedUrl: string;
   finalUrl: string;
@@ -27,6 +41,14 @@ type SeoHealthScanResult = {
   googleBotMeta: string;
   xRobotsTag: string;
   h1Texts: string[];
+  headingCounts: {
+    h1: number;
+    h2: number;
+    h3: number;
+  };
+  headingHierarchyIssues: string[];
+  headings: HeadingEntry[];
+  imageAltAudit: ImageAltAudit;
   hasViewport: boolean;
   hasNoindex: boolean;
   issues: SeoHealthIssue[];
@@ -117,9 +139,30 @@ export function SeoHealthScannerTool() {
       `Canonical: ${result.canonical || "Not set"}`,
       `Canonical Matches Final URL: ${result.canonicalMatches ? "Yes" : "No"}`,
       `Noindex Detected: ${result.hasNoindex ? "Yes" : "No"}`,
-      `H1 Count: ${result.h1Texts.length}`,
+      `H1 / H2 / H3: ${result.headingCounts.h1} / ${result.headingCounts.h2} / ${result.headingCounts.h3}`,
+      `Heading Hierarchy Issues: ${result.headingHierarchyIssues.length}`,
+      `Images: ${result.imageAltAudit.totalImages}`,
+      `Images Missing Alt: ${result.imageAltAudit.missingAlt}`,
+      `Images With Empty Alt: ${result.imageAltAudit.emptyAlt}`,
+      `Images With Descriptive Alt: ${result.imageAltAudit.descriptiveAlt}`,
       ""
     ];
+
+    if (result.headingHierarchyIssues.length > 0) {
+      lines.push("Heading Hierarchy Details:");
+      for (const hierarchyIssue of result.headingHierarchyIssues) {
+        lines.push(`- ${hierarchyIssue}`);
+      }
+      lines.push("");
+    }
+
+    if (result.imageAltAudit.sampleMissingAltSources.length > 0) {
+      lines.push("Sample Images Missing Alt:");
+      for (const source of result.imageAltAudit.sampleMissingAltSources) {
+        lines.push(`- ${source}`);
+      }
+      lines.push("");
+    }
 
     lines.push("Issues:");
     if (result.issues.length === 0) {
@@ -163,7 +206,7 @@ export function SeoHealthScannerTool() {
       </div>
 
       <h2 className="mt-5 font-display text-2xl uppercase leading-none text-ink">Step 2: Review Results</h2>
-      <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-7">
         <article className="rounded-lg border border-ink/25 bg-white px-3 py-2">
           <p className="text-xs uppercase tracking-[0.1em] text-ink/60">Health Score</p>
           <p className={`text-sm font-bold ${result ? scoreTone(result.healthScore) : "text-ink"}`}>
@@ -181,6 +224,18 @@ export function SeoHealthScannerTool() {
         <article className="rounded-lg border border-ink/25 bg-white px-3 py-2">
           <p className="text-xs uppercase tracking-[0.1em] text-ink/60">H1 Count</p>
           <p className="text-sm font-bold text-ink">{result ? result.h1Texts.length : "-"}</p>
+        </article>
+        <article className="rounded-lg border border-ink/25 bg-white px-3 py-2">
+          <p className="text-xs uppercase tracking-[0.1em] text-ink/60">H2 Count</p>
+          <p className="text-sm font-bold text-ink">{result ? result.headingCounts.h2 : "-"}</p>
+        </article>
+        <article className="rounded-lg border border-ink/25 bg-white px-3 py-2">
+          <p className="text-xs uppercase tracking-[0.1em] text-ink/60">H3 Count</p>
+          <p className="text-sm font-bold text-ink">{result ? result.headingCounts.h3 : "-"}</p>
+        </article>
+        <article className="rounded-lg border border-ink/25 bg-white px-3 py-2">
+          <p className="text-xs uppercase tracking-[0.1em] text-ink/60">Images Missing Alt</p>
+          <p className="text-sm font-bold text-ink">{result ? result.imageAltAudit.missingAlt : "-"}</p>
         </article>
       </div>
 
@@ -240,6 +295,83 @@ export function SeoHealthScannerTool() {
           </>
         ) : (
           <p className="mt-2 text-sm text-ink/80">Recommendations appear after running a scan.</p>
+        )}
+      </div>
+
+      <div className="mt-5 rounded-xl border-2 border-ink/75 bg-white p-4">
+        <h3 className="font-display text-xl uppercase leading-none text-ink">Heading &amp; Image Alt Checks</h3>
+        {result ? (
+          <>
+            <div className="mt-3 grid gap-2 text-sm text-ink/90 sm:grid-cols-2">
+              <p>
+                <span className="font-semibold">Headings:</span> H1 {result.headingCounts.h1} · H2{" "}
+                {result.headingCounts.h2} · H3 {result.headingCounts.h3}
+              </p>
+              <p>
+                <span className="font-semibold">Image Alt Coverage:</span> {result.imageAltAudit.imagesWithAlt}/
+                {result.imageAltAudit.totalImages}
+              </p>
+              <p>
+                <span className="font-semibold">Missing Alt:</span> {result.imageAltAudit.missingAlt}
+              </p>
+              <p>
+                <span className="font-semibold">Empty Alt:</span> {result.imageAltAudit.emptyAlt}
+              </p>
+            </div>
+
+            {result.headingHierarchyIssues.length > 0 ? (
+              <div className="mt-3 rounded-md border border-[#d7a019] bg-[#fff8e8] px-3 py-2">
+                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#7e5400]">
+                  Heading Hierarchy Issues
+                </p>
+                <ul className="mt-1 list-disc space-y-1 pl-4 text-sm text-[#7e5400]">
+                  {result.headingHierarchyIssues.map((issue) => (
+                    <li key={issue}>{issue}</li>
+                  ))}
+                </ul>
+              </div>
+            ) : (
+              <p className="mt-3 text-sm text-[#0b6a40]">Heading hierarchy looks clean.</p>
+            )}
+
+            {result.headings.length > 0 ? (
+              <div className="mt-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-ink/65">
+                  Heading Outline (H1-H3)
+                </p>
+                <ul className="mt-2 space-y-1">
+                  {result.headings.slice(0, 14).map((heading, index) => (
+                    <li
+                      key={`${heading.level}-${heading.text}-${index}`}
+                      className="rounded-md border border-ink/15 bg-mist px-2.5 py-1.5 text-xs text-ink/85"
+                    >
+                      <span className="font-semibold">H{heading.level}</span>:{" "}
+                      {heading.text || `Heading ${index + 1}`}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+
+            {result.imageAltAudit.sampleMissingAltSources.length > 0 ? (
+              <div className="mt-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-ink/65">
+                  Sample Images Missing Alt
+                </p>
+                <ul className="mt-2 space-y-1">
+                  {result.imageAltAudit.sampleMissingAltSources.map((source) => (
+                    <li key={source} className="rounded-md border border-ink/15 bg-mist px-2.5 py-1.5 text-xs text-ink/85 break-all">
+                      {source}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+          </>
+        ) : (
+          <p className="mt-2 text-sm text-ink/80">
+            Run a scan to review H1/H2/H3 structure, hierarchy flow, and image alt coverage.
+          </p>
         )}
       </div>
 

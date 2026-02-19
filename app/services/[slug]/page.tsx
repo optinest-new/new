@@ -84,6 +84,18 @@ export function generateStaticParams() {
   return serviceDefinitions.map((service) => ({ slug: service.slug }));
 }
 
+function buildServiceMetaDescription(
+  summary: string,
+  timeline: string,
+  outcome: string
+) {
+  const composed = `${summary} ${outcome ? `Expected outcome: ${outcome}. ` : ""}Timeline: ${timeline}`;
+  if (composed.length <= 170) {
+    return composed;
+  }
+  return `${composed.slice(0, 167).trim()}...`;
+}
+
 export async function generateMetadata({ params }: ServicePageProps): Promise<Metadata> {
   const { slug } = await params;
   const service = getServiceBySlug(slug);
@@ -92,23 +104,42 @@ export async function generateMetadata({ params }: ServicePageProps): Promise<Me
   }
 
   const url = `${siteUrl}/services/${service.slug}`;
+  const title = `${service.title} Services`;
+  const description = buildServiceMetaDescription(
+    service.summary,
+    service.timeline,
+    service.outcomes[0] || ""
+  );
+  const keywords = [
+    `${service.shortLabel.toLowerCase()} services`,
+    `${service.shortLabel.toLowerCase()} agency`,
+    `${service.title.toLowerCase()}`,
+    "lead generation services",
+    "conversion-focused website services"
+  ];
+
   return {
-    title: service.title,
-    description: service.summary,
+    title,
+    description,
+    keywords,
     alternates: {
       canonical: `/services/${service.slug}`
+    },
+    robots: {
+      index: true,
+      follow: true
     },
     openGraph: {
       type: "website",
       url,
-      title: `${service.title} | Optinest Digital`,
-      description: service.summary,
+      title: `${title} | Optinest Digital`,
+      description,
       images: ["/og.png"]
     },
     twitter: {
       card: "summary_large_image",
-      title: `${service.title} | Optinest Digital`,
-      description: service.summary,
+      title: `${title} | Optinest Digital`,
+      description,
       images: ["/og.png"]
     }
   };
@@ -121,8 +152,77 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
     notFound();
   }
 
+  const serviceUrl = `${siteUrl}/services/${service.slug}`;
+  const serviceStructuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebPage",
+        "@id": `${serviceUrl}#webpage`,
+        url: serviceUrl,
+        name: `${service.title} Services | Optinest Digital`,
+        description: service.summary,
+        isPartOf: {
+          "@id": `${siteUrl}/#website`
+        }
+      },
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          {
+            "@type": "ListItem",
+            position: 1,
+            name: "Home",
+            item: siteUrl
+          },
+          {
+            "@type": "ListItem",
+            position: 2,
+            name: "Services",
+            item: `${siteUrl}/services`
+          },
+          {
+            "@type": "ListItem",
+            position: 3,
+            name: service.title,
+            item: serviceUrl
+          }
+        ]
+      },
+      {
+        "@type": "Service",
+        "@id": `${serviceUrl}#service`,
+        name: service.title,
+        serviceType: service.shortLabel,
+        description: service.intro,
+        areaServed: "Worldwide",
+        provider: {
+          "@type": "Organization",
+          name: "Optinest Digital",
+          url: siteUrl
+        },
+        offers: {
+          "@type": "Offer",
+          url: serviceUrl,
+          category: service.shortLabel,
+          availability: "https://schema.org/InStock",
+          priceSpecification: {
+            "@type": "PriceSpecification",
+            priceCurrency: "USD",
+            description: service.investment
+          }
+        }
+      }
+    ]
+  };
+
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 sm:py-12">
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceStructuredData) }}
+      />
+      <main className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 sm:py-12">
       <nav aria-label="Breadcrumb" className="mb-6 text-xs text-ink/70 sm:text-sm">
         <Link href="/services" className="hover:underline">
           Services
@@ -146,9 +246,9 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
         </div>
       </header>
 
-      <section className="mt-6 grid gap-6 lg:grid-cols-2">
-        <article className="rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6">
-          <h2 className="font-display text-2xl uppercase leading-[0.95] text-ink">Deliverables</h2>
+      <section className="mt-6 grid gap-6 lg:grid-cols-2" aria-label="Service scope and outcomes">
+        <article className="rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6" aria-labelledby="deliverables-heading">
+          <h2 id="deliverables-heading" className="font-display text-2xl uppercase leading-[0.95] text-ink">Deliverables</h2>
           <ul className="mt-3 space-y-2 text-sm text-ink/80">
             {service.deliverables.map((item) => (
               <li key={item} className="rounded-lg border border-ink/15 bg-white px-3 py-2">
@@ -158,8 +258,8 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
           </ul>
         </article>
 
-        <article className="rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6">
-          <h2 className="font-display text-2xl uppercase leading-[0.95] text-ink">Expected Outcomes</h2>
+        <article className="rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6" aria-labelledby="outcomes-heading">
+          <h2 id="outcomes-heading" className="font-display text-2xl uppercase leading-[0.95] text-ink">Expected Outcomes</h2>
           <ul className="mt-3 space-y-2 text-sm text-ink/80">
             {service.outcomes.map((item) => (
               <li key={item} className="rounded-lg border border-ink/15 bg-white px-3 py-2">
@@ -170,8 +270,8 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
         </article>
       </section>
 
-      <section className="mt-6 rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6">
-        <h2 className="font-display text-2xl uppercase leading-[0.95] text-ink">Implementation Flow</h2>
+      <section className="mt-6 rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6" aria-labelledby="implementation-flow-heading">
+        <h2 id="implementation-flow-heading" className="font-display text-2xl uppercase leading-[0.95] text-ink">Implementation Flow</h2>
         <ol className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
           {service.process.map((step, idx) => (
             <li key={step} className="rounded-xl border border-ink/20 bg-white p-3">
@@ -185,8 +285,8 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
         </ol>
       </section>
 
-      <section className="mt-6 rounded-2xl border-2 border-ink/80 bg-mist p-5 text-center shadow-hard sm:p-6">
-        <h2 className="font-display text-2xl uppercase leading-[0.95] text-ink">Start This Service</h2>
+      <section className="mt-6 rounded-2xl border-2 border-ink/80 bg-mist p-5 text-center shadow-hard sm:p-6" aria-labelledby="start-service-heading">
+        <h2 id="start-service-heading" className="font-display text-2xl uppercase leading-[0.95] text-ink">Start This Service</h2>
         <p className="mt-2 text-sm text-ink/80">
           Book a short call and we will confirm scope, timeline, and execution plan.
         </p>
@@ -209,6 +309,7 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
         url={`${siteUrl}/services/${service.slug}`}
         label="Share this page"
       />
-    </main>
+      </main>
+    </>
   );
 }

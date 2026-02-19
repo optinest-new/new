@@ -2,36 +2,32 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { FloatingShare } from "@/components/blog/floating-share";
 import { SeoContentBriefGeneratorTool } from "@/components/tools/seo-content-brief-generator-tool";
+import { buildToolMetadata, buildToolStructuredData } from "@/lib/tool-seo";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://optinestdigital.com";
 
-export const metadata: Metadata = {
-  title: "SEO Content Brief Generator",
-  description:
-    "Generate a complete SEO content brief with title ideas, outline structure, FAQs, schema suggestions, and internal links.",
-  alternates: {
-    canonical: "/tools/seo-content-brief-generator"
-  },
-  openGraph: {
-    type: "website",
-    url: `${siteUrl}/tools/seo-content-brief-generator`,
-    title: "SEO Content Brief Generator | Optinest Digital",
-    description:
-      "Build consistent, search-focused content briefs with keyword strategy, structure, and implementation guidance.",
-    images: ["/og.png"]
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "SEO Content Brief Generator | Optinest Digital",
-    description:
-      "Build consistent, search-focused content briefs with keyword strategy, structure, and implementation guidance.",
-    images: ["/og.png"]
-  }
-};
+const toolTitle = "SEO Content Brief Generator";
+const toolDescription =
+  "Generate a complete SEO content brief with title ideas, outline structure, FAQs, schema suggestions, and internal links.";
+
+export const metadata: Metadata = buildToolMetadata({
+  slug: "seo-content-brief-generator",
+  title: toolTitle,
+  description: toolDescription,
+  keywords: ["seo content brief", "content brief generator", "seo outline generator"]
+});
 
 export default function SeoContentBriefGeneratorPage() {
+  const structuredData = buildToolStructuredData({
+    slug: "seo-content-brief-generator",
+    title: toolTitle,
+    description: toolDescription
+  });
+
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 sm:py-12">
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
+      <main className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 sm:py-12">
       <nav aria-label="Breadcrumb" className="mb-6 text-xs text-ink/70 sm:text-sm">
         <Link href="/tools" className="hover:underline">
           Tools
@@ -50,6 +46,7 @@ export default function SeoContentBriefGeneratorPage() {
 
       <SeoContentBriefGeneratorTool />
       <FloatingShare title="SEO Content Brief Generator by Optinest Digital" url={`${siteUrl}/tools/seo-content-brief-generator`} label="Share this tool" />
-    </main>
+      </main>
+    </>
   );
 }

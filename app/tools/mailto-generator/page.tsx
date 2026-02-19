@@ -2,36 +2,32 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { MailtoGeneratorTool } from "@/components/tools/mailto-generator-tool";
 import { FloatingShare } from "@/components/blog/floating-share";
+import { buildToolMetadata, buildToolStructuredData } from "@/lib/tool-seo";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://optinestdigital.com";
 
-export const metadata: Metadata = {
-  title: "Mailto Generator Tool",
-  description:
-    "Generate mailto links with subject, body, cc, and bcc fields for contact buttons and email CTAs.",
-  alternates: {
-    canonical: "/tools/mailto-generator"
-  },
-  openGraph: {
-    type: "website",
-    url: `${siteUrl}/tools/mailto-generator`,
-    title: "Mailto Generator | Optinest Digital",
-    description:
-      "Create copy-ready mailto URLs and HTML anchor snippets for project inquiry and contact links.",
-    images: ["/og.png"]
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Mailto Generator | Optinest Digital",
-    description:
-      "Create copy-ready mailto URLs and HTML anchor snippets for project inquiry and contact links.",
-    images: ["/og.png"]
-  }
-};
+const toolTitle = "Mailto Generator";
+const toolDescription =
+  "Generate mailto links with subject, body, cc, and bcc fields for contact buttons and email CTAs.";
+
+export const metadata: Metadata = buildToolMetadata({
+  slug: "mailto-generator",
+  title: toolTitle,
+  description: toolDescription,
+  keywords: ["mailto generator", "email link generator", "mailto url builder"]
+});
 
 export default function MailtoGeneratorPage() {
+  const structuredData = buildToolStructuredData({
+    slug: "mailto-generator",
+    title: toolTitle,
+    description: toolDescription
+  });
+
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 sm:py-12">
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
+      <main className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 sm:py-12">
       <nav aria-label="Breadcrumb" className="mb-6 text-xs text-ink/70 sm:text-sm">
         <Link href="/tools" className="hover:underline">
           Tools
@@ -54,6 +50,7 @@ export default function MailtoGeneratorPage() {
         url={`${siteUrl}/tools/mailto-generator`}
         label="Share this tool"
       />
-    </main>
+      </main>
+    </>
   );
 }

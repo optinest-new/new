@@ -2,36 +2,32 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { FloatingShare } from "@/components/blog/floating-share";
 import { RedirectCheckerTool } from "@/components/tools/redirect-checker-tool";
+import { buildToolMetadata, buildToolStructuredData } from "@/lib/tool-seo";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://optinestdigital.com";
 
-export const metadata: Metadata = {
-  title: "301 Redirect Checker Tool",
-  description:
-    "Check URL redirect chains, verify 301 status codes, detect temporary redirects, and review final destination status.",
-  alternates: {
-    canonical: "/tools/redirect-checker"
-  },
-  openGraph: {
-    type: "website",
-    url: `${siteUrl}/tools/redirect-checker`,
-    title: "301 Redirect Checker | Optinest Digital",
-    description:
-      "Test redirects step by step, audit hop chains, and identify SEO issues in URL migrations.",
-    images: ["/og.png"]
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "301 Redirect Checker | Optinest Digital",
-    description:
-      "Test redirects step by step, audit hop chains, and identify SEO issues in URL migrations.",
-    images: ["/og.png"]
-  }
-};
+const toolTitle = "301 Redirect Checker";
+const toolDescription =
+  "Check URL redirect chains, verify 301 status codes, detect temporary redirects, and review final destination status.";
+
+export const metadata: Metadata = buildToolMetadata({
+  slug: "redirect-checker",
+  title: toolTitle,
+  description: toolDescription,
+  keywords: ["301 redirect checker", "redirect chain checker", "seo redirect audit"]
+});
 
 export default function RedirectCheckerPage() {
+  const structuredData = buildToolStructuredData({
+    slug: "redirect-checker",
+    title: toolTitle,
+    description: toolDescription
+  });
+
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 sm:py-12">
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
+      <main className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 sm:py-12">
       <nav aria-label="Breadcrumb" className="mb-6 text-xs text-ink/70 sm:text-sm">
         <Link href="/tools" className="hover:underline">
           Tools
@@ -50,6 +46,7 @@ export default function RedirectCheckerPage() {
 
       <RedirectCheckerTool />
       <FloatingShare title="301 Redirect Checker Tool by Optinest Digital" url={`${siteUrl}/tools/redirect-checker`} label="Share this tool" />
-    </main>
+      </main>
+    </>
   );
 }

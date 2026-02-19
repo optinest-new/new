@@ -5,6 +5,18 @@ import { ScheduleCallModal } from "@/components/schedule-call-modal";
 import { serviceDefinitions } from "@/lib/services";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://optinestdigital.com";
+const servicesPageTitle = "SEO, Web Design, and Web Development Services";
+const servicesPageDescription =
+  "Explore Optinest Digital services for SEO growth, web design, and web development with transparent scope, timeline, and investment options built for qualified lead generation.";
+const servicesPageKeywords = [
+  "seo services",
+  "web design services",
+  "web development services",
+  "conversion-focused web design",
+  "technical seo services",
+  "small business seo agency",
+  "website redesign services"
+];
 
 type StackItem = {
   category: StackCategory;
@@ -455,32 +467,83 @@ function stackIconBadgeClass(key: StackItem["key"]) {
 }
 
 export const metadata: Metadata = {
-  title: "Services",
-  description:
-    "Explore Optinest Digital services for SEO growth, web design, and web development with clear scope, timeline, and investment ranges.",
+  title: servicesPageTitle,
+  description: servicesPageDescription,
+  keywords: servicesPageKeywords,
   alternates: {
     canonical: "/services"
+  },
+  robots: {
+    index: true,
+    follow: true
   },
   openGraph: {
     type: "website",
     url: `${siteUrl}/services`,
-    title: "Services | Optinest Digital",
-    description:
-      "SEO, web design, and web development services focused on qualified traffic and conversion growth.",
+    title: `${servicesPageTitle} | Optinest Digital`,
+    description: servicesPageDescription,
     images: ["/og.png"]
   },
   twitter: {
     card: "summary_large_image",
-    title: "Services | Optinest Digital",
-    description:
-      "SEO, web design, and web development services focused on qualified traffic and conversion growth.",
+    title: `${servicesPageTitle} | Optinest Digital`,
+    description: servicesPageDescription,
     images: ["/og.png"]
   }
 };
 
 export default function ServicesPage() {
+  const servicesPageStructuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebPage",
+        "@id": `${siteUrl}/services#webpage`,
+        url: `${siteUrl}/services`,
+        name: servicesPageTitle,
+        description: servicesPageDescription,
+        isPartOf: {
+          "@id": `${siteUrl}/#website`
+        }
+      },
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          {
+            "@type": "ListItem",
+            position: 1,
+            name: "Home",
+            item: siteUrl
+          },
+          {
+            "@type": "ListItem",
+            position: 2,
+            name: "Services",
+            item: `${siteUrl}/services`
+          }
+        ]
+      },
+      {
+        "@type": "ItemList",
+        name: "Optinest Digital Services",
+        itemListElement: serviceDefinitions.map((service, index) => ({
+          "@type": "ListItem",
+          position: index + 1,
+          name: service.title,
+          url: `${siteUrl}/services/${service.slug}`,
+          description: service.summary
+        }))
+      }
+    ]
+  };
+
   return (
-    <main className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 md:py-16">
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(servicesPageStructuredData) }}
+      />
+      <main className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 md:py-16">
       <header className="mx-auto max-w-4xl text-center">
         <p className="eyebrow-pop mx-auto inline-block">Service Stack</p>
         <h1 className="hero-title mt-5 text-balance font-display text-[clamp(2rem,7vw,4.4rem)] uppercase leading-[0.9] tracking-tight">
@@ -561,6 +624,7 @@ export default function ServicesPage() {
       </section>
 
       <FloatingShare title="Services by Optinest Digital" url={`${siteUrl}/services`} label="Share this page" />
-    </main>
+      </main>
+    </>
   );
 }

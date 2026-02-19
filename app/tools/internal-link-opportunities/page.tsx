@@ -2,36 +2,32 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { FloatingShare } from "@/components/blog/floating-share";
 import { InternalLinkOpportunityTool } from "@/components/tools/internal-link-opportunity-tool";
+import { buildToolMetadata, buildToolStructuredData } from "@/lib/tool-seo";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://optinestdigital.com";
 
-export const metadata: Metadata = {
-  title: "Internal Link Opportunity Finder",
-  description:
-    "Find internal link opportunities with keyword-relevant source pages, suggested anchors, and practical placement hints.",
-  alternates: {
-    canonical: "/tools/internal-link-opportunities"
-  },
-  openGraph: {
-    type: "website",
-    url: `${siteUrl}/tools/internal-link-opportunities`,
-    title: "Internal Link Opportunity Finder | Optinest Digital",
-    description:
-      "Prioritize internal links that support rankings and user journeys using topic-based scoring and anchor suggestions.",
-    images: ["/og.png"]
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Internal Link Opportunity Finder | Optinest Digital",
-    description:
-      "Prioritize internal links that support rankings and user journeys using topic-based scoring and anchor suggestions.",
-    images: ["/og.png"]
-  }
-};
+const toolTitle = "Internal Link Opportunity Finder";
+const toolDescription =
+  "Find internal link opportunities with keyword-relevant source pages, suggested anchors, and practical placement hints.";
+
+export const metadata: Metadata = buildToolMetadata({
+  slug: "internal-link-opportunities",
+  title: toolTitle,
+  description: toolDescription,
+  keywords: ["internal link tool", "internal linking opportunities", "seo internal links"]
+});
 
 export default function InternalLinkOpportunitiesPage() {
+  const structuredData = buildToolStructuredData({
+    slug: "internal-link-opportunities",
+    title: toolTitle,
+    description: toolDescription
+  });
+
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 sm:py-12">
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
+      <main className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 sm:py-12">
       <nav aria-label="Breadcrumb" className="mb-6 text-xs text-ink/70 sm:text-sm">
         <Link href="/tools" className="hover:underline">
           Tools
@@ -50,6 +46,7 @@ export default function InternalLinkOpportunitiesPage() {
 
       <InternalLinkOpportunityTool />
       <FloatingShare title="Internal Link Opportunity Finder by Optinest Digital" url={`${siteUrl}/tools/internal-link-opportunities`} label="Share this tool" />
-    </main>
+      </main>
+    </>
   );
 }
