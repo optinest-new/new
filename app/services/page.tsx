@@ -7,17 +7,24 @@ import { serviceDefinitions } from "@/lib/services";
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://optinestdigital.com";
 
 type StackItem = {
+  category: StackCategory;
   key:
     | "nextjs"
     | "react"
     | "tailwind"
     | "supabase"
     | "ruby"
+    | "javascript"
+    | "php"
+    | "mysql"
+    | "firebase"
     | "jekyll"
     | "vercel"
     | "netlify"
+    | "github-pages"
     | "astro"
     | "headless-cms"
+    | "decap-cms"
     | "ga4"
     | "search-console"
     | "tag-manager"
@@ -26,76 +33,173 @@ type StackItem = {
   detail: string;
 };
 
+type StackCategory =
+  | "programming_language"
+  | "frontend_frameworks"
+  | "backend_server"
+  | "hosting_deployment"
+  | "cms_content"
+  | "analytics_seo";
+
+type StackCategoryBlock = {
+  id: StackCategory;
+  title: string;
+  description: string;
+};
+
+const stackCategoryBlocks: StackCategoryBlock[] = [
+  {
+    id: "programming_language",
+    title: "Programming Language",
+    description: "Foundation for automation and custom growth workflows."
+  },
+  {
+    id: "frontend_frameworks",
+    title: "Frontend & Static Frameworks",
+    description: "Tools we use to deliver fast, modern, conversion-ready websites."
+  },
+  {
+    id: "backend_server",
+    title: "Backend / Server & Data",
+    description: "Systems that power secure portal workflows and project operations."
+  },
+  {
+    id: "hosting_deployment",
+    title: "Hosting & Deployment",
+    description: "Publishing stack for reliable launches and fast production updates."
+  },
+  {
+    id: "cms_content",
+    title: "CMS & Content Operations",
+    description: "Content systems that keep your team agile after launch."
+  },
+  {
+    id: "analytics_seo",
+    title: "Analytics & SEO Measurement",
+    description: "Reporting tools that connect traffic to business results."
+  }
+];
+
 const stackItems: StackItem[] = [
   {
+    category: "frontend_frameworks",
     key: "nextjs",
     label: "Next.js",
-    detail: "Fast, SEO-friendly service and landing page builds."
+    detail: "Helps your site load faster so more visitors stay, engage, and convert."
   },
   {
+    category: "frontend_frameworks",
     key: "react",
     label: "React",
-    detail: "Reusable UI architecture for scalable client portals."
+    detail: "Keeps your website experience consistent and easier to improve as your business grows."
   },
   {
+    category: "frontend_frameworks",
     key: "tailwind",
     label: "Tailwind CSS",
-    detail: "Rapid design system delivery with consistent frontend quality."
+    detail: "Delivers clean, consistent design faster so updates go live with less delay."
   },
   {
+    category: "backend_server",
     key: "supabase",
     label: "Supabase",
-    detail: "Auth, database, and storage for portal workflows."
+    detail: "Supports secure client portals where projects, files, and updates are centralized."
   },
   {
+    category: "programming_language",
     key: "ruby",
     label: "Ruby",
-    detail: "Reliable scripting and content/data processing workflows."
+    detail: "Automates repetitive tasks so your team can focus on growth and delivery."
   },
   {
+    category: "programming_language",
+    key: "javascript",
+    label: "JavaScript",
+    detail: "Enables interactive experiences that keep visitors engaged and moving toward conversion."
+  },
+  {
+    category: "programming_language",
+    key: "php",
+    label: "PHP",
+    detail: "Supports reliable business websites and custom workflows for content and lead capture."
+  },
+  {
+    category: "backend_server",
+    key: "mysql",
+    label: "MySQL",
+    detail: "Organizes your core business data so reports, forms, and client records stay consistent."
+  },
+  {
+    category: "backend_server",
+    key: "firebase",
+    label: "Firebase",
+    detail: "Accelerates launch with managed backend services for authentication, data, and real-time updates."
+  },
+  {
+    category: "frontend_frameworks",
     key: "jekyll",
     label: "Jekyll",
-    detail: "Static site generation for lean JAMstack publishing."
+    detail: "Publishes lightweight pages that are easy to maintain and cost-efficient to run."
   },
   {
+    category: "hosting_deployment",
     key: "vercel",
     label: "Vercel",
-    detail: "Edge deployment and preview workflows for frontend teams."
+    detail: "Enables fast, reliable deployments so improvements reach your audience quickly."
   },
   {
+    category: "hosting_deployment",
     key: "netlify",
     label: "Netlify",
-    detail: "Static hosting, forms, and build pipelines for JAMstack sites."
+    detail: "Keeps your website stable and secure while simplifying launch and form workflows."
   },
   {
+    category: "hosting_deployment",
+    key: "github-pages",
+    label: "GitHub Pages",
+    detail: "Great for fast, dependable static site publishing with simple version-controlled updates."
+  },
+  {
+    category: "frontend_frameworks",
     key: "astro",
     label: "Astro",
-    detail: "Content-first static pages with strong performance defaults."
+    detail: "Creates high-performance content pages that improve user experience and SEO visibility."
   },
   {
+    category: "cms_content",
     key: "headless-cms",
     label: "Headless CMS",
-    detail: "Structured content management for scalable multi-channel sites."
+    detail: "Lets your team update content faster without relying on development for every change."
   },
   {
+    category: "cms_content",
+    key: "decap-cms",
+    label: "Decap CMS (Netlify CMS)",
+    detail: "Gives non-technical teams an easy editor while keeping content workflows structured."
+  },
+  {
+    category: "analytics_seo",
     key: "ga4",
     label: "Google Analytics 4",
-    detail: "Event-based reporting for lead and conversion tracking."
+    detail: "Shows which channels and pages drive real leads, not just traffic numbers."
   },
   {
+    category: "analytics_seo",
     key: "search-console",
     label: "Google Search Console",
-    detail: "Indexation, query visibility, and technical SEO monitoring."
+    detail: "Reveals how your site appears on Google and where ranking opportunities exist."
   },
   {
+    category: "analytics_seo",
     key: "tag-manager",
     label: "Google Tag Manager",
-    detail: "Flexible implementation of analytics and marketing tags."
+    detail: "Makes tracking and marketing updates faster without slowing down site releases."
   },
   {
+    category: "cms_content",
     key: "wordpress",
     label: "WordPress",
-    detail: "SEO and content operations for WordPress-based projects."
+    detail: "Supports easy content publishing and ongoing SEO updates for long-term growth."
   }
 ];
 
@@ -147,6 +251,46 @@ function renderStackIcon(key: StackItem["key"]) {
     );
   }
 
+  if (key === "javascript") {
+    return (
+      <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
+        <rect x="4" y="4" width="16" height="16" rx="2" />
+        <path d="M10 9v5a2 2 0 0 1-2 2H7" />
+        <path d="M13 15c.4.7 1.2 1 2 1s1.5-.4 1.5-1.1c0-1.8-3.5-.9-3.5-3 0-1 .9-1.9 2.3-1.9.9 0 1.6.3 2.1 1" />
+      </svg>
+    );
+  }
+
+  if (key === "php") {
+    return (
+      <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
+        <ellipse cx="12" cy="12" rx="8.5" ry="5.5" />
+        <path d="M8.5 14V10h1.8a1.6 1.6 0 1 1 0 3.2H8.5" />
+        <path d="M12.5 14V10h1.8a1.6 1.6 0 1 1 0 3.2h-1.8" />
+      </svg>
+    );
+  }
+
+  if (key === "mysql") {
+    return (
+      <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
+        <ellipse cx="12" cy="6.5" rx="6.5" ry="2.5" />
+        <path d="M5.5 6.5v5c0 1.4 2.9 2.5 6.5 2.5s6.5-1.1 6.5-2.5v-5" />
+        <path d="M5.5 11.5v5c0 1.4 2.9 2.5 6.5 2.5s6.5-1.1 6.5-2.5v-5" />
+      </svg>
+    );
+  }
+
+  if (key === "firebase") {
+    return (
+      <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
+        <path d="M6 18 11.5 4l2.6 4.2L6 18Z" />
+        <path d="M18 18 12 5.8 9.8 10 18 18Z" />
+        <path d="M8.4 14.3 12 18l3.6-3.7" />
+      </svg>
+    );
+  }
+
   if (key === "jekyll") {
     return (
       <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -174,6 +318,14 @@ function renderStackIcon(key: StackItem["key"]) {
     );
   }
 
+  if (key === "github-pages") {
+    return (
+      <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
+        <path d="M12 3a8.5 8.5 0 0 0-2.7 16.6v-2.4c-2 .4-2.5-.9-2.5-.9-.4-1-.9-1.3-.9-1.3-.8-.5.1-.5.1-.5.8.1 1.3.9 1.3.9.8 1.3 2.1 1 2.7.8.1-.5.3-.9.6-1.1-1.8-.2-3.8-.9-3.8-4a3.2 3.2 0 0 1 .9-2.2 3 3 0 0 1 .1-2.2s.7-.2 2.3.8a8 8 0 0 1 4.2 0c1.6-1 2.3-.8 2.3-.8a3 3 0 0 1 .1 2.2 3.2 3.2 0 0 1 .9 2.2c0 3.1-2 3.8-3.9 4 .3.2.6.7.6 1.4v2.1A8.5 8.5 0 0 0 12 3Z" />
+      </svg>
+    );
+  }
+
   if (key === "astro") {
     return (
       <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -189,6 +341,16 @@ function renderStackIcon(key: StackItem["key"]) {
         <rect x="4" y="5" width="7" height="6" rx="1.5" />
         <rect x="13" y="5" width="7" height="6" rx="1.5" />
         <rect x="4" y="13" width="16" height="6" rx="1.5" />
+      </svg>
+    );
+  }
+
+  if (key === "decap-cms") {
+    return (
+      <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
+        <path d="M5 7h10l4 4v6H5z" />
+        <path d="M15 7v4h4" />
+        <path d="M8 14h8M8 17h5" />
       </svg>
     );
   }
@@ -247,6 +409,18 @@ function stackIconBadgeClass(key: StackItem["key"]) {
   if (key === "ruby") {
     return "border-[#9f1239]/30 bg-[#fff1f2] text-[#be123c]";
   }
+  if (key === "javascript") {
+    return "border-[#a16207]/30 bg-[#fffbeb] text-[#a16207]";
+  }
+  if (key === "php") {
+    return "border-[#4338ca]/30 bg-[#eef2ff] text-[#4338ca]";
+  }
+  if (key === "mysql") {
+    return "border-[#0c4a6e]/30 bg-[#ecfeff] text-[#0e7490]";
+  }
+  if (key === "firebase") {
+    return "border-[#c2410c]/30 bg-[#fff7ed] text-[#ea580c]";
+  }
   if (key === "jekyll") {
     return "border-[#991b1b]/30 bg-[#fef2f2] text-[#b91c1c]";
   }
@@ -256,11 +430,17 @@ function stackIconBadgeClass(key: StackItem["key"]) {
   if (key === "netlify") {
     return "border-[#0f766e]/30 bg-[#f0fdfa] text-[#0f766e]";
   }
+  if (key === "github-pages") {
+    return "border-[#111827]/30 bg-[#f8fafc] text-[#111827]";
+  }
   if (key === "astro") {
     return "border-[#7c3aed]/30 bg-[#f5f3ff] text-[#7c3aed]";
   }
   if (key === "headless-cms") {
     return "border-[#4338ca]/30 bg-[#eef2ff] text-[#4338ca]";
+  }
+  if (key === "decap-cms") {
+    return "border-[#0f7663]/30 bg-[#ecfdf5] text-[#0f7663]";
   }
   if (key === "ga4") {
     return "border-[#9a6700]/30 bg-[#fffbeb] text-[#a16207]";
@@ -329,26 +509,6 @@ export default function ServicesPage() {
         ))}
       </section>
 
-      <section className="mt-10 rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6">
-        <h2 className="font-display text-2xl uppercase leading-[0.95] text-ink">Stack We Use</h2>
-        <p className="mt-2 text-sm text-ink/80">
-          Core platforms we use across JAMstack builds, SEO execution, analytics, and client portal delivery.
-        </p>
-        <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {stackItems.map((item) => (
-            <li key={item.key} className="rounded-xl border border-ink/20 bg-white p-3">
-              <span
-                className={`inline-flex h-10 w-10 items-center justify-center rounded-full border ${stackIconBadgeClass(item.key)}`}
-              >
-                {renderStackIcon(item.key)}
-              </span>
-              <p className="mt-3 text-sm font-semibold uppercase tracking-[0.08em] text-ink">{item.label}</p>
-              <p className="mt-1 text-xs text-ink/70">{item.detail}</p>
-            </li>
-          ))}
-        </ul>
-      </section>
-
       <section className="mt-10 rounded-2xl border-2 border-ink/80 bg-mist p-5 text-center shadow-hard sm:p-6">
         <p className="text-sm text-ink/80">Need help choosing the right starting point?</p>
         <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
@@ -362,6 +522,41 @@ export default function ServicesPage() {
           >
             Open Portal
           </Link>
+        </div>
+      </section>
+
+      <section className="mt-10 rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6">
+        <h2 className="font-display text-2xl uppercase leading-[0.95] text-ink">Stack We Use</h2>
+        <p className="mt-2 text-sm text-ink/80">
+          Core platforms we use across JAMstack builds, SEO execution, analytics, and client portal delivery.
+        </p>
+        <div className="mt-5 space-y-5">
+          {stackCategoryBlocks.map((category) => {
+            const items = stackItems.filter((item) => item.category === category.id);
+            if (items.length === 0) {
+              return null;
+            }
+
+            return (
+              <article key={category.id} className="rounded-xl border border-ink/20 bg-white p-4">
+                <h3 className="font-display text-lg uppercase leading-none text-ink">{category.title}</h3>
+                <p className="mt-1 text-xs text-ink/65">{category.description}</p>
+                <ul className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {items.map((item) => (
+                    <li key={item.key} className="rounded-xl border border-ink/15 bg-mist p-3">
+                      <span
+                        className={`inline-flex h-10 w-10 items-center justify-center rounded-full border ${stackIconBadgeClass(item.key)}`}
+                      >
+                        {renderStackIcon(item.key)}
+                      </span>
+                      <p className="mt-3 text-sm font-semibold uppercase tracking-[0.08em] text-ink">{item.label}</p>
+                      <p className="mt-1 text-xs text-ink/70">{item.detail}</p>
+                    </li>
+                  ))}
+                </ul>
+              </article>
+            );
+          })}
         </div>
       </section>
 
