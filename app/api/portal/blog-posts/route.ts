@@ -413,11 +413,6 @@ export async function PATCH(request: Request) {
       effectiveRow = insertedRow as BlogPostRow;
     }
 
-    const legacyPath = postPathFromSlug(currentSlug);
-    if (fs.existsSync(legacyPath)) {
-      fs.unlinkSync(legacyPath);
-    }
-
     return NextResponse.json({ post: mapRowToRecord(effectiveRow) });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Could not update post.";
@@ -448,14 +443,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    let removedLegacy = false;
-    const legacyPath = postPathFromSlug(slug);
-    if (fs.existsSync(legacyPath)) {
-      fs.unlinkSync(legacyPath);
-      removedLegacy = true;
-    }
-
-    if (!removedLegacy && (!count || count === 0)) {
+    if (!count || count === 0) {
       return NextResponse.json({ error: "Post not found." }, { status: 404 });
     }
 
