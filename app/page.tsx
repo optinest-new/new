@@ -55,36 +55,6 @@ const seoSchema = {
   ]
 };
 
-type IconProps = {
-  className?: string;
-};
-
-function FacebookIcon({ className = "h-9 w-9" }: IconProps) {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      className={className}
-      fill="currentColor"
-    >
-      <path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.438H7.078v-3.49h3.047V9.41c0-3.007 1.792-4.669 4.533-4.669 1.313 0 2.687.235 2.687.235V7.93H15.83c-1.492 0-1.957.925-1.957 1.874v2.268h3.328l-.531 3.49h-2.797V24C19.61 23.094 24 18.1 24 12.073z" />
-    </svg>
-  );
-}
-
-function XIcon({ className = "h-9 w-9" }: IconProps) {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      className={className}
-      fill="currentColor"
-    >
-      <path d="M18.902 1.153h3.68l-8.039 9.19L24 22.847h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.153h7.594l5.243 6.932zM17.61 20.644h2.039L6.486 3.24H4.298z" />
-    </svg>
-  );
-}
-
 export default function Home() {
   return (
     <>
@@ -111,63 +81,34 @@ export default function Home() {
             We build fast, SEO-friendly websites that help growing brands attract qualified traffic and turn visits into leads.
           </p>
           <section aria-label="Homepage actions" className="mt-10 w-full max-w-5xl md:mt-12">
-            <section aria-label="Primary call to action">
-              <ScheduleCallModal
-                label="Schedule a Call"
-                className="inline-flex items-center gap-3 rounded-full border-2 border-ink bg-ink px-6 py-3.5 font-mono text-xs uppercase tracking-[0.2em] text-mist transition hover:-translate-y-1 hover:shadow-hard focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-4 sm:gap-4 sm:px-8 sm:py-4 sm:text-sm"
-              >
-                <span aria-hidden="true" className="text-2xl leading-none">
-                  →
-                </span>
-              </ScheduleCallModal>
-            </section>
-
-            <section aria-label="Service quick links" className="mt-7">
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-ink/65 sm:text-sm">
-                Explore Services
+            <section
+              aria-label="Services call to action"
+              className="mx-auto w-full max-w-3xl rounded-2xl border-2 border-ink/80 bg-[#fff8cf]/95 px-4 py-5 shadow-hard sm:px-6 sm:py-6"
+            >
+              <p className="font-display text-[clamp(1.4rem,3.8vw,2.1rem)] uppercase leading-[0.95] text-[#5f3f00]">
+                Ready To Scale Faster?
               </p>
-              <div className="mt-4 grid gap-3 md:grid-cols-3">
-                <Link
-                  href="/services/seo"
-                  className="inline-flex min-h-11 items-center justify-center rounded-full border-2 border-[#1d4ea5] bg-[#edf4ff] px-5 py-2 text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-[#123a86] transition hover:-translate-y-0.5 hover:bg-[#dce9ff] sm:text-xs"
+              <p className="mx-auto mt-2 max-w-2xl text-sm text-[#4f3f18] sm:text-base">
+                Explore our growth-focused service offers and find the right path for traffic, design, and development.
+              </p>
+              <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+                <ScheduleCallModal
+                  label="Schedule a Call"
+                  className="inline-flex min-h-12 items-center gap-3 rounded-full border-2 border-ink bg-ink px-6 py-2.5 font-mono text-[0.75rem] font-bold uppercase tracking-[0.16em] text-mist transition hover:-translate-y-1 hover:shadow-hard focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-4 sm:text-xs"
                 >
-                  SEO Growth
-                </Link>
+                  <span aria-hidden="true" className="text-xl leading-none">
+                    →
+                  </span>
+                </ScheduleCallModal>
                 <Link
-                  href="/services/web-design"
-                  className="inline-flex min-h-11 items-center justify-center rounded-full border-2 border-[#8a5a00] bg-[#fff1c5] px-5 py-2 text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-[#7a4f00] transition hover:-translate-y-0.5 hover:bg-[#ffe9ab] sm:text-xs"
+                  href="/services"
+                  className="inline-flex min-h-12 items-center justify-center rounded-full border-2 border-[#8a5a00] bg-[#c98f00] px-7 py-2.5 text-[0.75rem] font-bold uppercase tracking-[0.16em] text-white transition hover:-translate-y-0.5 hover:bg-[#b98200] hover:shadow-hard sm:text-xs"
                 >
-                  Web Design
-                </Link>
-                <Link
-                  href="/services/web-development"
-                  className="inline-flex min-h-11 items-center justify-center rounded-full border-2 border-[#1f5c28] bg-[#e9f9ec] px-5 py-2 text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-[#174f22] transition hover:-translate-y-0.5 hover:bg-[#d8f3de] sm:text-xs"
-                >
-                  Web Development
+                  Explore Growth Services
                 </Link>
               </div>
             </section>
 
-            <nav aria-label="Social links" className="mt-9 flex items-center justify-center gap-5 sm:mt-10 sm:gap-7">
-              <a
-                href="https://facebook.com/optinestdigital"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Visit Optinest Digital on Facebook"
-                className="text-[#1877f2] transition hover:-translate-y-1 hover:text-[#145fbd]"
-              >
-                <FacebookIcon className="h-8 w-8 sm:h-9 sm:w-9" />
-              </a>
-              <a
-                href="https://x.com/optinestdigital"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Visit Optinest Digital on X"
-                className="text-[#0f1419] transition hover:-translate-y-1 hover:text-[#000]"
-              >
-                <XIcon className="h-8 w-8 sm:h-9 sm:w-9" />
-              </a>
-            </nav>
           </section>
         </header>
       </main>
