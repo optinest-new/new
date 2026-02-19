@@ -3,6 +3,7 @@ import { BlogList } from "@/components/blog/blog-list";
 import { getPaginatedPosts } from "@/lib/blog";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://optinestdigital.com";
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Blog",
@@ -28,8 +29,8 @@ export const metadata: Metadata = {
   }
 };
 
-export default function BlogIndexPage() {
-  const { posts, currentPage, totalPages } = getPaginatedPosts(1);
+export default async function BlogIndexPage() {
+  const { posts, currentPage, totalPages } = await getPaginatedPosts(1);
 
   return (
     <BlogList

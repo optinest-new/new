@@ -4,9 +4,20 @@ import { notFound } from "next/navigation";
 import { FloatingShare } from "@/components/blog/floating-share";
 import { LeadMagnetCard } from "@/components/blog/lead-magnet-card";
 import { getBlogLeadMagnet } from "@/lib/blog-lead-magnet";
-import { getAllBlogSlugs, getAllPostsMeta, getPostBySlug } from "@/lib/blog";
+import { getAllPostsMeta, getPostBySlug } from "@/lib/blog";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://optinestdigital.com";
+export const dynamic = "force-dynamic";
+
+function toAbsoluteAssetUrl(value: string): string {
+  if (/^https?:\/\//i.test(value)) {
+    return value;
+  }
+  if (value.startsWith("/")) {
+    return `${siteUrl}${value}`;
+  }
+  return `${siteUrl}/${value}`;
+}
 
 type BlogPostPageProps = {
   params: Promise<{ slug: string }>;
@@ -81,10 +92,6 @@ function normalizeLowercaseListLinkTitles(html: string): string {
   });
 }
 
-export function generateStaticParams() {
-  return getAllBlogSlugs().map((slug) => ({ slug }));
-}
-
 export async function generateMetadata({ params }: BlogPostPageProps): Promise<Metadata> {
   const { slug } = await params;
   const post = await getPostBySlug(slug);
@@ -109,7 +116,7 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
       authors: [post.author],
       images: [
         {
-          url: post.featureImage,
+          url: toAbsoluteAssetUrl(post.featureImage),
           alt: `Feature image for ${post.title}`
         }
       ]
@@ -118,7 +125,7 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
       card: "summary_large_image",
       title: post.title,
       description: post.excerpt,
-      images: [post.featureImage]
+      images: [toAbsoluteAssetUrl(post.featureImage)]
     }
   };
 }
@@ -131,7 +138,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     notFound();
   }
 
-  const relatedPosts = getAllPostsMeta()
+  const relatedPosts = (await getAllPostsMeta())
     .filter((candidate) => candidate.slug !== post.slug)
     .map((candidate) => {
       let score = 0;
@@ -155,7 +162,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     description: post.excerpt,
     datePublished: post.date,
     dateModified: post.date,
-    image: `${siteUrl}${post.featureImage}`,
+    image: toAbsoluteAssetUrl(post.featureImage),
     mainEntityOfPage: `${siteUrl}/blog/${post.slug}`,
     author: {
       "@type": "Organization",

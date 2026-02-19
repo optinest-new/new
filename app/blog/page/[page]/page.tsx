@@ -4,17 +4,11 @@ import { BlogList } from "@/components/blog/blog-list";
 import { getPaginatedPosts } from "@/lib/blog";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://optinestdigital.com";
+export const dynamic = "force-dynamic";
 
 type BlogPaginationPageProps = {
   params: Promise<{ page: string }>;
 };
-
-export async function generateStaticParams() {
-  const { totalPages } = getPaginatedPosts(1);
-  return Array.from({ length: totalPages - 1 }, (_, i) => ({
-    page: String(i + 2)
-  }));
-}
 
 export async function generateMetadata({ params }: BlogPaginationPageProps): Promise<Metadata> {
   const { page } = await params;
@@ -54,7 +48,7 @@ export default async function BlogPaginationPage({ params }: BlogPaginationPageP
     notFound();
   }
 
-  const { posts, currentPage, totalPages } = getPaginatedPosts(pageNumber);
+  const { posts, currentPage, totalPages } = await getPaginatedPosts(pageNumber);
 
   if (pageNumber > totalPages) {
     notFound();

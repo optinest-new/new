@@ -3334,6 +3334,12 @@ export default function PortalPage() {
             {isBootstrapManager ? (
               <>
                 <Link
+                  href="/portal/blog"
+                  className="inline-flex items-center rounded-full border-2 border-[#5b3db8] bg-[#6f4dd9] px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white transition hover:-translate-y-0.5 hover:bg-[#5f3ec8]"
+                >
+                  Blog Manager
+                </Link>
+                <Link
                   href="/portal/onboarding"
                   className="inline-flex items-center rounded-full border-2 border-[#0f7663] bg-[#16a085] px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white transition hover:-translate-y-0.5 hover:bg-[#0f8d74]"
                 >

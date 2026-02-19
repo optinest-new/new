@@ -4,6 +4,7 @@ import matter from "gray-matter";
 import { remark } from "remark";
 import remarkGfm from "remark-gfm";
 import remarkHtml from "remark-html";
+import { createSupabaseServerClient, hasSupabaseServerEnv } from "@/lib/supabase-server";
 
 export const POSTS_PER_PAGE = 9;
 
@@ -33,6 +34,24 @@ export type BlogPostMeta = BlogFrontmatter & {
 export type BlogPost = BlogPostMeta & {
   contentHtml: string;
   faqItems: BlogFaqItem[];
+};
+
+type BlogPostSourceRecord = BlogFrontmatter & {
+  slug: string;
+  contentMarkdown: string;
+};
+
+type BlogPostRow = {
+  slug: string;
+  title: string;
+  excerpt: string;
+  published_at: string;
+  author: string;
+  category: string;
+  tags: string[] | null;
+  primary_keyword: string;
+  feature_image: string;
+  content_markdown: string;
 };
 
 function ensureContentDirectory() {
@@ -115,56 +134,172 @@ function extractFaqItems(markdown: string): BlogFaqItem[] {
   return items.slice(0, 10);
 }
 
-function parsePostFile(slug: string): BlogPost {
-  ensureContentDirectory();
-  const filePath = path.join(CONTENT_DIR, `${slug}.md`);
-  const file = fs.readFileSync(filePath, "utf8");
-  const { data, content } = matter(file);
-
-  const frontmatter = data as BlogFrontmatter;
-  const readingTime = toReadingTime(content);
-
+function mapRowToSourceRecord(row: BlogPostRow): BlogPostSourceRecord {
   return {
-    slug,
-    ...frontmatter,
-    readingTime,
-    contentHtml: content,
-    faqItems: extractFaqItems(content)
+    slug: row.slug,
+    title: row.title,
+    excerpt: row.excerpt,
+    date: row.published_at,
+    author: row.author,
+    category: row.category,
+    tags: row.tags ?? [],
+    primaryKeyword: row.primary_keyword,
+    featureImage: row.feature_image,
+    contentMarkdown: row.content_markdown
   };
 }
 
-export function getAllBlogSlugs() {
+function parseLegacyPostFile(slug: string): BlogPostSourceRecord | null {
+  ensureContentDirectory();
+  const filePath = path.join(CONTENT_DIR, `${slug}.md`);
+  if (!fs.existsSync(filePath)) {
+    return null;
+  }
+
+  const file = fs.readFileSync(filePath, "utf8");
+  const { data, content } = matter(file);
+  const frontmatter = data as Partial<BlogFrontmatter>;
+
+  return {
+    slug,
+    title: String(frontmatter.title ?? ""),
+    excerpt: String(frontmatter.excerpt ?? ""),
+    date: String(frontmatter.date ?? ""),
+    author: String(frontmatter.author ?? ""),
+    category: String(frontmatter.category ?? ""),
+    tags: Array.isArray(frontmatter.tags) ? frontmatter.tags.map((item) => String(item)) : [],
+    primaryKeyword: String(frontmatter.primaryKeyword ?? ""),
+    featureImage: String(frontmatter.featureImage ?? ""),
+    contentMarkdown: content
+  };
+}
+
+function getAllLegacyPostRecords(): BlogPostSourceRecord[] {
   ensureContentDirectory();
   return fs
     .readdirSync(CONTENT_DIR)
     .filter((file) => file.endsWith(".md"))
-    .map((file) => file.replace(/\.md$/, ""));
+    .map((file) => file.replace(/\.md$/, ""))
+    .map((slug) => parseLegacyPostFile(slug))
+    .filter((post): post is BlogPostSourceRecord => Boolean(post));
 }
 
-export function getAllPostsMeta(): BlogPostMeta[] {
-  return getAllBlogSlugs()
-    .map((slug) => parsePostFile(slug))
-    .map(({ contentHtml: _contentHtml, faqItems: _faqItems, ...meta }) => meta)
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+async function getAllDbPostRecords(): Promise<BlogPostSourceRecord[]> {
+  if (!hasSupabaseServerEnv()) {
+    return [];
+  }
+
+  try {
+    const supabase = createSupabaseServerClient();
+    const { data, error } = await supabase
+      .from("blog_posts")
+      .select(
+        "slug,title,excerpt,published_at,author,category,tags,primary_keyword,feature_image,content_markdown"
+      )
+      .eq("is_published", true)
+      .order("published_at", { ascending: false })
+      .order("updated_at", { ascending: false });
+
+    if (error) {
+      return [];
+    }
+
+    return ((data ?? []) as BlogPostRow[]).map((row) => mapRowToSourceRecord(row));
+  } catch {
+    return [];
+  }
 }
 
-export async function getPostBySlug(slug: string): Promise<BlogPost | null> {
-  const slugs = getAllBlogSlugs();
-  if (!slugs.includes(slug)) {
+async function getDbPostBySlug(slug: string): Promise<BlogPostSourceRecord | null> {
+  if (!hasSupabaseServerEnv()) {
     return null;
   }
 
-  const post = parsePostFile(slug);
-  const processed = await remark().use(remarkGfm).use(remarkHtml).process(post.contentHtml);
+  try {
+    const supabase = createSupabaseServerClient();
+    const { data, error } = await supabase
+      .from("blog_posts")
+      .select(
+        "slug,title,excerpt,published_at,author,category,tags,primary_keyword,feature_image,content_markdown"
+      )
+      .eq("is_published", true)
+      .eq("slug", slug)
+      .maybeSingle();
 
+    if (error || !data) {
+      return null;
+    }
+
+    return mapRowToSourceRecord(data as BlogPostRow);
+  } catch {
+    return null;
+  }
+}
+
+function sortRecordsByDateDesc(a: BlogPostSourceRecord, b: BlogPostSourceRecord) {
+  return new Date(b.date).getTime() - new Date(a.date).getTime();
+}
+
+async function getAllMergedPostRecords(): Promise<BlogPostSourceRecord[]> {
+  const [dbPosts, legacyPosts] = await Promise.all([getAllDbPostRecords(), Promise.resolve(getAllLegacyPostRecords())]);
+  const merged = new Map<string, BlogPostSourceRecord>();
+
+  for (const post of dbPosts) {
+    merged.set(post.slug, post);
+  }
+
+  for (const post of legacyPosts) {
+    if (!merged.has(post.slug)) {
+      merged.set(post.slug, post);
+    }
+  }
+
+  return Array.from(merged.values()).sort(sortRecordsByDateDesc);
+}
+
+function toPostMeta(record: BlogPostSourceRecord): BlogPostMeta {
   return {
-    ...post,
-    contentHtml: processed.toString()
+    slug: record.slug,
+    title: record.title,
+    excerpt: record.excerpt,
+    date: record.date,
+    author: record.author,
+    category: record.category,
+    tags: record.tags,
+    primaryKeyword: record.primaryKeyword,
+    featureImage: record.featureImage,
+    readingTime: toReadingTime(record.contentMarkdown)
   };
 }
 
-export function getPaginatedPosts(page: number, perPage = POSTS_PER_PAGE) {
-  const all = getAllPostsMeta();
+export async function getAllBlogSlugs() {
+  const posts = await getAllMergedPostRecords();
+  return posts.map((post) => post.slug);
+}
+
+export async function getAllPostsMeta(): Promise<BlogPostMeta[]> {
+  const posts = await getAllMergedPostRecords();
+  return posts.map((post) => toPostMeta(post));
+}
+
+export async function getPostBySlug(slug: string): Promise<BlogPost | null> {
+  const fromDb = await getDbPostBySlug(slug);
+  const record = fromDb ?? parseLegacyPostFile(slug);
+  if (!record) {
+    return null;
+  }
+
+  const processed = await remark().use(remarkGfm).use(remarkHtml).process(record.contentMarkdown);
+
+  return {
+    ...toPostMeta(record),
+    contentHtml: processed.toString(),
+    faqItems: extractFaqItems(record.contentMarkdown)
+  };
+}
+
+export async function getPaginatedPosts(page: number, perPage = POSTS_PER_PAGE) {
+  const all = await getAllPostsMeta();
   const totalPages = Math.max(1, Math.ceil(all.length / perPage));
   const currentPage = Math.min(Math.max(page, 1), totalPages);
   const start = (currentPage - 1) * perPage;

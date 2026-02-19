@@ -1,9 +1,9 @@
 import type { MetadataRoute } from "next";
 import { POSTS_PER_PAGE, getAllPostsMeta } from "@/lib/blog";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://optinestdigital.com";
-  const posts = getAllPostsMeta();
+  const posts = await getAllPostsMeta();
   const totalPages = Math.max(1, Math.ceil(posts.length / POSTS_PER_PAGE));
 
   const paginatedUrls: MetadataRoute.Sitemap = Array.from({ length: totalPages - 1 }, (_, i) => ({
