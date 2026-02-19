@@ -13,3 +13,5 @@ pnpm-debug.log*
 .DS_Store
 .env*
 !.env.example
+supabase
+README.md
