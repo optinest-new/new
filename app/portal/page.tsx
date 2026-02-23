@@ -229,6 +229,38 @@ const clientServiceNeedOptions: Array<{ value: ClientServiceNeed; label: string 
   { value: "maintenance", label: "Maintenance" }
 ];
 
+function mapScheduleCallServiceSelection(value: string): ClientServiceNeed[] {
+  if (value === "Web Design") {
+    return ["web_design"];
+  }
+
+  if (value === "Web Development") {
+    return ["web_development"];
+  }
+
+  if (value === "SEO") {
+    return ["seo"];
+  }
+
+  if (value === "Web Design + SEO") {
+    return ["web_design", "seo"];
+  }
+
+  if (value === "Web Design + Web Development") {
+    return ["web_design", "web_development"];
+  }
+
+  if (value === "SEO + Web Development") {
+    return ["seo", "web_development"];
+  }
+
+  if (value === "All Three") {
+    return ["web_design", "seo", "web_development"];
+  }
+
+  return [];
+}
+
 const statusStyles: Record<string, string> = {
   planning: "bg-[#d8ecff] text-[#134d7a]",
   in_progress: "bg-[#fff1c5] text-[#8a5a00]",
@@ -2143,10 +2175,7 @@ export default function PortalPage() {
       return;
     }
 
-    const services = scheduleCallServicesNeeded
-      .split(",")
-      .map((value) => value.trim())
-      .filter((value) => value.length > 0);
+    const services = mapScheduleCallServiceSelection(scheduleCallServicesNeeded);
 
     setIsSubmittingScheduleCall(true);
     setScheduleCallError("");
@@ -3224,15 +3253,25 @@ export default function PortalPage() {
               </div>
               <div className="sm:col-span-2">
                 <label className="block text-xs font-semibold uppercase tracking-[0.14em] text-ink/70">
-                  Services Needed
+                  Service Needed (Web Design / Web Development / SEO / Combination)
                 </label>
-                <input
-                  type="text"
+                <select
                   value={scheduleCallServicesNeeded}
                   onChange={(event) => setScheduleCallServicesNeeded(event.target.value)}
-                  placeholder="seo, web_design, web_development"
                   className="mt-1 w-full rounded-lg border border-ink/25 bg-white px-3 py-2.5 text-sm text-ink outline-none focus:border-ink/60"
-                />
+                  required
+                >
+                  <option value="" disabled>
+                    Select a service
+                  </option>
+                  <option value="Web Design">Web Design</option>
+                  <option value="Web Development">Web Development</option>
+                  <option value="SEO">SEO</option>
+                  <option value="Web Design + SEO">Web Design + SEO</option>
+                  <option value="Web Design + Web Development">Web Design + Web Development</option>
+                  <option value="SEO + Web Development">SEO + Web Development</option>
+                  <option value="All Three">All Three</option>
+                </select>
               </div>
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-[0.14em] text-ink/70">
