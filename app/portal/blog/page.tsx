@@ -36,6 +36,14 @@ type BlogPostDraft = {
   content: string;
 };
 
+type SeoRequirementCheck = {
+  id: string;
+  label: string;
+  detail: string;
+  passed: boolean;
+  priority: "required" | "recommended";
+};
+
 const SIDEBAR_POSTS_PER_PAGE = 10;
 
 function todayIsoDate() {
@@ -55,6 +63,127 @@ function createEmptyDraft(): BlogPostDraft {
     featureImage: "",
     content: ""
   };
+}
+
+function normalizeDraftSlug(input: string) {
+  return input
+    .toLowerCase()
+    .trim()
+    .replace(/['"`]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 120);
+}
+
+function normalizeSeoText(value: string) {
+  return value.toLowerCase().replace(/\s+/g, " ").trim();
+}
+
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function checkSeoRequirements(draft: BlogPostDraft, markdownWordCount: number): SeoRequirementCheck[] {
+  const title = draft.title.trim();
+  const excerpt = draft.excerpt.trim();
+  const primaryKeyword = draft.primaryKeyword.trim();
+  const normalizedKeyword = normalizeSeoText(primaryKeyword);
+  const normalizedTitle = normalizeSeoText(title);
+  const normalizedContent = normalizeSeoText(draft.content);
+  const openingSnippet = normalizedContent.slice(0, 320);
+  const slug = normalizeDraftSlug(draft.slug || draft.title);
+  const normalizedKeywordSlug = normalizeDraftSlug(primaryKeyword);
+
+  const h2Count = (draft.content.match(/^##\s+.+$/gm) ?? []).length;
+  const internalLinkCount = (draft.content.match(/\[[^\]]+\]\((\/[^)\s]+)\)/g) ?? []).length;
+  const externalLinkCount = (draft.content.match(/\[[^\]]+\]\((https?:\/\/[^)\s]+)\)/gi) ?? []).length;
+  const imageMatches = Array.from(draft.content.matchAll(/!\[([^\]]*)\]\(([^)]+)\)/g));
+  const imageCount = imageMatches.length;
+  const imagesWithAltCount = imageMatches.filter((match) => match[1].trim().length > 0).length;
+  const keywordOccurrenceCount =
+    normalizedKeyword.length > 0
+      ? (normalizedContent.match(new RegExp(escapeRegExp(normalizedKeyword), "g")) ?? []).length
+      : 0;
+
+  return [
+    {
+      id: "title-length",
+      label: "Title length (50-65 chars)",
+      detail: `${title.length} chars`,
+      passed: title.length >= 50 && title.length <= 65,
+      priority: "required"
+    },
+    {
+      id: "excerpt-length",
+      label: "Excerpt length (120-160 chars)",
+      detail: `${excerpt.length} chars`,
+      passed: excerpt.length >= 120 && excerpt.length <= 160,
+      priority: "required"
+    },
+    {
+      id: "keyword-in-title",
+      label: "Primary keyword appears in title",
+      detail: primaryKeyword || "Primary keyword is missing",
+      passed: normalizedKeyword.length > 0 && normalizedTitle.includes(normalizedKeyword),
+      priority: "required"
+    },
+    {
+      id: "keyword-in-opening",
+      label: "Primary keyword appears in opening section",
+      detail: "Checks first ~320 chars of content",
+      passed: normalizedKeyword.length > 0 && openingSnippet.includes(normalizedKeyword),
+      priority: "required"
+    },
+    {
+      id: "word-count",
+      label: "Body length (600+ words)",
+      detail: `${markdownWordCount} words`,
+      passed: markdownWordCount >= 600,
+      priority: "required"
+    },
+    {
+      id: "keyword-frequency",
+      label: "Primary keyword used 2+ times in content",
+      detail: `${keywordOccurrenceCount} occurrences`,
+      passed: normalizedKeyword.length > 0 && keywordOccurrenceCount >= 2,
+      priority: "recommended"
+    },
+    {
+      id: "h2-usage",
+      label: "Contains H2 subheadings",
+      detail: `${h2Count} H2 headings`,
+      passed: h2Count > 0,
+      priority: "recommended"
+    },
+    {
+      id: "internal-links",
+      label: "Contains internal links",
+      detail: `${internalLinkCount} internal links`,
+      passed: internalLinkCount > 0,
+      priority: "recommended"
+    },
+    {
+      id: "external-links",
+      label: "Contains external links",
+      detail: `${externalLinkCount} external links`,
+      passed: externalLinkCount > 0,
+      priority: "recommended"
+    },
+    {
+      id: "images-with-alt",
+      label: "Contains markdown image(s) with alt text",
+      detail: `${imagesWithAltCount} of ${imageCount} images have alt text`,
+      passed: imageCount > 0 && imagesWithAltCount === imageCount,
+      priority: "recommended"
+    },
+    {
+      id: "slug-keyword",
+      label: "Slug includes primary keyword",
+      detail: slug || "Slug is empty",
+      passed: normalizedKeywordSlug.length > 0 && slug.includes(normalizedKeywordSlug),
+      priority: "recommended"
+    }
+  ];
 }
 
 function formatDateTime(value: string) {
@@ -424,6 +553,18 @@ export default function PortalBlogManagerPage() {
     }
     return Math.max(1, Math.ceil(markdownWordCount / 200));
   }, [markdownWordCount]);
+  const seoRequirementChecks = useMemo(
+    () => checkSeoRequirements(draft, markdownWordCount),
+    [draft, markdownWordCount]
+  );
+  const passedSeoCheckCount = useMemo(
+    () => seoRequirementChecks.filter((check) => check.passed).length,
+    [seoRequirementChecks]
+  );
+  const missingRequiredSeoChecks = useMemo(
+    () => seoRequirementChecks.filter((check) => check.priority === "required" && !check.passed).length,
+    [seoRequirementChecks]
+  );
 
   const applyPostToDraft = useCallback((post: BlogPostRecord) => {
     if (localImagePreviewUrlRef.current) {
@@ -1250,15 +1391,19 @@ export default function PortalBlogManagerPage() {
 
               <div className="grid gap-3 sm:grid-cols-2">
                 <label className="text-xs font-semibold uppercase tracking-[0.1em] text-ink/65">
-                  Primary Keyword
+                  Primary Keyword (SEO Basis)
                   <input
                     type="text"
                     value={draft.primaryKeyword}
                     onChange={(event) =>
                       setDraft((current) => ({ ...current, primaryKeyword: event.target.value }))
                     }
+                    placeholder="e.g. seo content brief template"
                     className="mt-1 w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm normal-case tracking-normal text-ink outline-none focus:border-ink/60"
                   />
+                  <p className="mt-1 text-[0.68rem] normal-case tracking-normal text-ink/60">
+                    Used as the source keyword for SEO requirement checks.
+                  </p>
                 </label>
                 <div className="text-xs font-semibold uppercase tracking-[0.1em] text-ink/65">
                   Feature Image Upload
@@ -1482,6 +1627,66 @@ export default function PortalBlogManagerPage() {
                   <div className="border-t border-ink/15 bg-mist/70 px-3 py-2 text-[0.68rem] font-semibold uppercase tracking-[0.08em] text-ink/65">
                     Words: {markdownWordCount} | Est. read time: {markdownReadMinutes} min
                   </div>
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-ink/25 bg-white p-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-xs font-semibold uppercase tracking-[0.1em] text-ink/65">SEO Requirements</p>
+                  <span className="rounded-full bg-[#edf4ff] px-2 py-0.5 text-[0.62rem] font-semibold uppercase tracking-[0.08em] text-[#1d4ea5]">
+                    Passed {passedSeoCheckCount}/{seoRequirementChecks.length}
+                  </span>
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-[0.62rem] font-semibold uppercase tracking-[0.08em] ${
+                      missingRequiredSeoChecks === 0
+                        ? "bg-[#e9f9ec] text-[#1f5c28]"
+                        : "bg-[#ffe2e2] text-[#892727]"
+                    }`}
+                  >
+                    {missingRequiredSeoChecks === 0
+                      ? "All required checks passed"
+                      : `Required missing ${missingRequiredSeoChecks}`}
+                  </span>
+                </div>
+                <p className="mt-2 text-[0.72rem] normal-case tracking-normal text-ink/65">
+                  Advisory checklist while drafting. Save is still allowed while items are incomplete.
+                </p>
+                <label className="mt-3 block text-[0.68rem] font-semibold uppercase tracking-[0.08em] text-ink/70">
+                  SEO Primary Keyword
+                  <input
+                    type="text"
+                    value={draft.primaryKeyword}
+                    onChange={(event) =>
+                      setDraft((current) => ({ ...current, primaryKeyword: event.target.value }))
+                    }
+                    placeholder="Enter keyword used by checker"
+                    className="mt-1 w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm normal-case tracking-normal text-ink outline-none focus:border-ink/60"
+                  />
+                  <span className="mt-1 block text-[0.68rem] normal-case tracking-normal text-ink/60">
+                    This input directly drives keyword checks (title, opening paragraph, frequency, slug).
+                  </span>
+                </label>
+                <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                  {seoRequirementChecks.map((check) => (
+                    <div
+                      key={check.id}
+                      className={`rounded-md border px-2.5 py-2 ${
+                        check.passed
+                          ? "border-[#84b98d] bg-[#f4fcf6]"
+                          : check.priority === "required"
+                            ? "border-[#e0a5a5] bg-[#fff5f5]"
+                            : "border-[#e5d2a1] bg-[#fffaf0]"
+                      }`}
+                    >
+                      <p className="text-[0.68rem] font-semibold uppercase tracking-[0.08em] text-ink/80">
+                        {check.label}
+                      </p>
+                      <p className="mt-1 text-[0.72rem] normal-case tracking-normal text-ink/70">{check.detail}</p>
+                      <p className="mt-1 text-[0.62rem] font-semibold uppercase tracking-[0.08em] text-ink/55">
+                        {check.passed ? "Pass" : check.priority === "required" ? "Required" : "Recommended"}
+                      </p>
+                    </div>
+                  ))}
                 </div>
               </div>
 
