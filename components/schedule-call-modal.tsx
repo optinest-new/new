@@ -29,12 +29,28 @@ function mapServiceSelection(value: string): string[] {
     return ["web_design"];
   }
 
+  if (value === "Web Development") {
+    return ["web_development"];
+  }
+
   if (value === "SEO") {
     return ["seo"];
   }
 
-  if (value === "Both") {
+  if (value === "Web Design + SEO") {
     return ["web_design", "seo"];
+  }
+
+  if (value === "Web Design + Web Development") {
+    return ["web_design", "web_development"];
+  }
+
+  if (value === "SEO + Web Development") {
+    return ["seo", "web_development"];
+  }
+
+  if (value === "All Three") {
+    return ["web_design", "seo", "web_development"];
   }
 
   return [];
@@ -240,7 +256,7 @@ export function ScheduleCallModal({
 
               <label className="grid gap-1 text-sm font-semibold text-ink">
                 <span className="text-[0.78rem] leading-snug sm:text-sm">
-                  Service Needed (Web Design / SEO / Both)
+                  Service Needed (Web Design / Web Development / SEO / Combination)
                 </span>
                 <select
                   name="serviceNeeded"
@@ -252,8 +268,12 @@ export function ScheduleCallModal({
                     Select a service
                   </option>
                   <option value="Web Design">Web Design</option>
+                  <option value="Web Development">Web Development</option>
                   <option value="SEO">SEO</option>
-                  <option value="Both">Both</option>
+                  <option value="Web Design + SEO">Web Design + SEO</option>
+                  <option value="Web Design + Web Development">Web Design + Web Development</option>
+                  <option value="SEO + Web Development">SEO + Web Development</option>
+                  <option value="All Three">All Three</option>
                 </select>
               </label>
 
