@@ -327,6 +327,7 @@ export default function PortalBlogManagerPage() {
   const localImagePreviewUrlRef = useRef("");
   const markdownEditorRef = useRef<HTMLTextAreaElement | null>(null);
   const markdownImageInputRef = useRef<HTMLInputElement | null>(null);
+  const markdownSelectionRef = useRef({ start: 0, end: 0 });
 
   const filteredPosts = useMemo(() => {
     const normalizedSearch = searchDraft.trim().toLowerCase();
@@ -665,7 +666,31 @@ export default function PortalBlogManagerPage() {
       }
       markdownEditorRef.current.focus();
       markdownEditorRef.current.setSelectionRange(start, end);
+      markdownSelectionRef.current = { start, end };
     });
+  }
+
+  function syncMarkdownSelection() {
+    if (!markdownEditorRef.current) {
+      return;
+    }
+
+    markdownSelectionRef.current = {
+      start: markdownEditorRef.current.selectionStart,
+      end: markdownEditorRef.current.selectionEnd
+    };
+  }
+
+  function getMarkdownSelectionRange(contentLength: number) {
+    const editor = markdownEditorRef.current;
+    const rawSelection =
+      editor && document.activeElement === editor
+        ? { start: editor.selectionStart, end: editor.selectionEnd }
+        : markdownSelectionRef.current;
+
+    const start = Math.min(Math.max(rawSelection.start, 0), contentLength);
+    const end = Math.min(Math.max(rawSelection.end, start), contentLength);
+    return { start, end };
   }
 
   function insertMarkdownAroundSelection(prefix: string, suffix: string, placeholder: string) {
@@ -673,9 +698,7 @@ export default function PortalBlogManagerPage() {
       return;
     }
 
-    const editor = markdownEditorRef.current;
-    const start = editor.selectionStart;
-    const end = editor.selectionEnd;
+    const { start, end } = getMarkdownSelectionRange(draft.content.length);
     const selected = draft.content.slice(start, end);
     const inserted = selected || placeholder;
     const nextContent =
@@ -690,9 +713,7 @@ export default function PortalBlogManagerPage() {
       return;
     }
 
-    const editor = markdownEditorRef.current;
-    const start = editor.selectionStart;
-    const end = editor.selectionEnd;
+    const { start, end } = getMarkdownSelectionRange(draft.content.length);
     const nextContent = draft.content.slice(0, start) + snippet + draft.content.slice(end);
     const nextCursorPosition = typeof cursorOffset === "number" ? start + cursorOffset : start + snippet.length;
 
@@ -705,9 +726,7 @@ export default function PortalBlogManagerPage() {
       return;
     }
 
-    const editor = markdownEditorRef.current;
-    const selectionStart = editor.selectionStart;
-    const selectionEnd = editor.selectionEnd;
+    const { start: selectionStart, end: selectionEnd } = getMarkdownSelectionRange(draft.content.length);
     const lineStart = draft.content.lastIndexOf("\n", Math.max(0, selectionStart - 1)) + 1;
     const nextNewlineIndex = draft.content.indexOf("\n", selectionEnd);
     const lineEnd = nextNewlineIndex === -1 ? draft.content.length : nextNewlineIndex;
@@ -1289,7 +1308,15 @@ export default function PortalBlogManagerPage() {
               <div className="text-xs font-semibold uppercase tracking-[0.1em] text-ink/65">
                 Markdown Content
                 <div className="mt-1 overflow-hidden rounded-xl border border-ink/25 bg-white">
-                  <div className="flex flex-wrap gap-1 border-b border-ink/15 bg-mist/70 p-2">
+                  <div
+                    className="flex flex-wrap gap-1 border-b border-ink/15 bg-mist/70 p-2"
+                    onMouseDown={(event) => {
+                      const target = event.target as HTMLElement;
+                      if (target.closest("button")) {
+                        event.preventDefault();
+                      }
+                    }}
+                  >
                     <button
                       type="button"
                       onClick={() => insertMarkdownLinePrefix("# ")}
@@ -1424,6 +1451,10 @@ export default function PortalBlogManagerPage() {
                         onChange={(event) =>
                           setDraft((current) => ({ ...current, content: event.target.value }))
                         }
+                        onSelect={syncMarkdownSelection}
+                        onKeyUp={syncMarkdownSelection}
+                        onClick={syncMarkdownSelection}
+                        onBlur={syncMarkdownSelection}
                         className="h-[32rem] w-full resize-y border-0 px-3 py-3 font-mono text-xs normal-case tracking-normal text-ink outline-none"
                         placeholder="# Heading&#10;&#10;Write your blog content in markdown..."
                       />
