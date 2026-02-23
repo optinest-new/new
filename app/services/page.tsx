@@ -7,15 +7,77 @@ import { serviceDefinitions } from "@/lib/services";
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://optinestdigital.com";
 const servicesPageTitle = "SEO, Web Design, and Web Development Services";
 const servicesPageDescription =
-  "Explore Optinest Digital services for SEO growth, web design, and web development with transparent scope, timeline, and investment options built for qualified lead generation.";
+  "Explore Optinest Digital services for businesses in Manila, Philippines and worldwide that need technical SEO, conversion-focused web design, and web development built for qualified lead generation.";
 const servicesPageKeywords = [
   "seo services",
+  "seo services manila",
+  "seo services philippines",
   "web design services",
+  "web design manila",
   "web development services",
+  "web development philippines",
+  "b2b seo agency",
   "conversion-focused web design",
   "technical seo services",
-  "small business seo agency",
+  "local seo services manila",
   "website redesign services"
+];
+
+type JourneyStep = {
+  key: "discover" | "scope" | "execute" | "launch";
+  title: string;
+  detail: string;
+};
+
+type ServiceFaq = {
+  question: string;
+  answer: string;
+};
+
+const journeySteps: JourneyStep[] = [
+  {
+    key: "discover",
+    title: "Discover Goals",
+    detail: "We align on business objectives, current constraints, and what a successful engagement should deliver."
+  },
+  {
+    key: "scope",
+    title: "Define Scope",
+    detail: "You get a clear service recommendation, timeline, and investment range before implementation starts."
+  },
+  {
+    key: "execute",
+    title: "Execute Sprints",
+    detail: "We run focused implementation cycles with transparent updates so you always know current status."
+  },
+  {
+    key: "launch",
+    title: "Launch & Improve",
+    detail: "After launch, we validate quality and prioritize next optimizations based on measurable outcomes."
+  }
+];
+
+const serviceFaqs: ServiceFaq[] = [
+  {
+    question: "How do I choose between SEO, web design, and web development?",
+    answer:
+      "If your main issue is low qualified traffic, start with SEO. If traffic exists but conversion is weak, start with web design. If your current website is slow or technically limiting growth, start with web development."
+  },
+  {
+    question: "Can we start with one service and expand later?",
+    answer:
+      "Yes. Many projects start with one focused service and expand after initial wins. This keeps scope controlled and improves implementation speed."
+  },
+  {
+    question: "Do you work only in Manila or internationally too?",
+    answer:
+      "Optinest Digital is based in Manila, Philippines, and serves businesses worldwide through structured remote delivery."
+  },
+  {
+    question: "What happens after I schedule a call?",
+    answer:
+      "You get a scope clarification call, a recommended starting path, and next-step implementation guidance based on your goals and timeline."
+  }
 ];
 
 type StackItem = {
@@ -566,6 +628,40 @@ function renderPricingTierIcon(category: string) {
   );
 }
 
+function renderJourneyIcon(stepKey: JourneyStep["key"]) {
+  if (stepKey === "discover") {
+    return (
+      <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
+        <circle cx="11" cy="11" r="6" />
+        <path d="m20 20-3-3" />
+      </svg>
+    );
+  }
+
+  if (stepKey === "scope") {
+    return (
+      <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M4 5h16v14H4z" />
+        <path d="M8 9h8M8 13h5" />
+      </svg>
+    );
+  }
+
+  if (stepKey === "execute") {
+    return (
+      <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="m8 7-4 5 4 5M16 7l4 5-4 5M13 5l-2 14" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="m5 12 4 4 10-10" />
+    </svg>
+  );
+}
+
 export const metadata: Metadata = {
   title: servicesPageTitle,
   description: servicesPageDescription,
@@ -633,6 +729,18 @@ export default function ServicesPage() {
           url: `${siteUrl}/services/${service.slug}`,
           description: service.summary
         }))
+      },
+      {
+        "@type": "FAQPage",
+        "@id": `${siteUrl}/services#faq`,
+        mainEntity: serviceFaqs.map((faq) => ({
+          "@type": "Question",
+          name: faq.question,
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: faq.answer
+          }
+        }))
       }
     ]
   };
@@ -698,8 +806,49 @@ export default function ServicesPage() {
         ))}
       </section>
 
+      <section id="how-we-work" className="mt-10 scroll-mt-28 rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6">
+        <h2 className="font-display text-2xl uppercase leading-[0.95] text-ink">How We Work</h2>
+        <p className="mt-2 max-w-3xl text-sm text-ink/80">
+          A simple engagement flow designed to reduce delays, clarify expectations, and keep decisions easy for your team.
+        </p>
+        <ol className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {journeySteps.map((step, index) => (
+            <li key={step.key} className="rounded-xl border border-ink/20 bg-white p-4">
+              <div className="flex items-center justify-between">
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[#1d4ed8]/30 bg-[#edf4ff] text-[#1d4ea5]">
+                  {renderJourneyIcon(step.key)}
+                </span>
+                <span className="text-[0.64rem] font-bold uppercase tracking-[0.12em] text-ink/60">Step {index + 1}</span>
+              </div>
+              <h3 className="mt-3 font-display text-lg uppercase leading-none text-ink">{step.title}</h3>
+              <p className="mt-2 text-xs leading-relaxed text-ink/75">{step.detail}</p>
+            </li>
+          ))}
+        </ol>
+      </section>
+
       <section className="mt-10 rounded-2xl border-2 border-ink/80 bg-mist p-5 text-center shadow-hard sm:p-6">
         <p className="text-sm text-ink/80">Need help choosing the right starting point?</p>
+        <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+          <Link
+            href="/services/seo"
+            className="inline-flex rounded-full border border-[#1d4ed8]/40 bg-[#eff6ff] px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-[#1d4ea5]"
+          >
+            I Need More Qualified Traffic
+          </Link>
+          <Link
+            href="/services/web-design"
+            className="inline-flex rounded-full border border-[#7c3aed]/40 bg-[#f5f3ff] px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-[#6d28d9]"
+          >
+            I Need Better Conversion UX
+          </Link>
+          <Link
+            href="/services/web-development"
+            className="inline-flex rounded-full border border-[#0f766e]/40 bg-[#ecfdf5] px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-[#0f766e]"
+          >
+            I Need A Faster, Stronger Build
+          </Link>
+        </div>
         <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
           <ScheduleCallModal
             label="Schedule a Call"
@@ -746,6 +895,18 @@ export default function ServicesPage() {
               </article>
             );
           })}
+        </div>
+      </section>
+
+      <section id="services-faq" className="mt-10 rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6">
+        <h2 className="font-display text-2xl uppercase leading-[0.95] text-ink">Frequently Asked Questions</h2>
+        <div className="mt-4 space-y-3">
+          {serviceFaqs.map((faq) => (
+            <details key={faq.question} className="rounded-xl border border-ink/20 bg-white p-4">
+              <summary className="cursor-pointer text-sm font-semibold uppercase tracking-[0.08em] text-ink">{faq.question}</summary>
+              <p className="mt-2 text-sm text-ink/75">{faq.answer}</p>
+            </details>
+          ))}
         </div>
       </section>
 

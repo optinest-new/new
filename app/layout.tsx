@@ -15,11 +15,11 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   applicationName: "Optinest Digital",
   title: {
-    default: "Optinest Digital | Small Web Design & SEO Agency",
+    default: "Optinest Digital | SEO, Web Design, and Development for Businesses",
     template: "%s | Optinest Digital"
   },
   description:
-    "Optinest Digital is a small web design and SEO agency helping businesses grow with fast websites, technical SEO, and conversion-focused strategy.",
+    "Optinest Digital is a Manila, Philippines-based SEO, web design, and web development agency serving businesses worldwide with technical execution focused on qualified leads and revenue growth.",
   manifest: "/manifest.webmanifest",
   icons: {
     icon: "/icon.svg",
@@ -34,11 +34,11 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: "website",
-    locale: "en_US",
+    locale: "en_PH",
     url: siteUrl,
-    title: "Optinest Digital | Small Web Design & SEO Agency",
+    title: "Optinest Digital | SEO, Web Design, and Development for Businesses",
     description:
-      "Optinest Digital is a small web design and SEO agency helping businesses grow with fast websites, technical SEO, and conversion-focused strategy.",
+      "Manila-based SEO, web design, and web development agency helping businesses worldwide increase qualified leads through technical SEO and conversion-focused websites.",
     siteName: "Optinest Digital",
     images: [
       {
@@ -53,7 +53,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Optinest Digital | Web Design & SEO Agency",
     description:
-      "Optinest Digital is a small web design and SEO agency helping businesses grow with fast websites, technical SEO, and conversion-focused strategy.",
+      "Manila-based SEO, web design, and web development agency helping businesses worldwide attract qualified leads.",
     images: ["/og.png"]
   },
   robots: {
@@ -69,13 +69,27 @@ export const metadata: Metadata = {
   },
   keywords: [
     "Optinest Digital",
-    "Web Design Agency",
-    "SEO Agency",
-    "Technical SEO",
-    "Small Agency",
-    "Website Development",
-    "Local SEO"
+    "SEO Agency Manila",
+    "Web Design Agency Manila",
+    "Web Development Agency Philippines",
+    "Technical SEO Services Philippines",
+    "Local SEO Manila",
+    "B2B SEO Agency",
+    "Conversion-focused Web Design",
+    "Lead Generation Website Development",
+    "Digital Agency Philippines",
+    "SEO Services Worldwide"
   ],
+  other: {
+    "geo.region": "PH-NCR",
+    "geo.placename": "Manila, Metro Manila, Philippines",
+    "geo.position": "14.5995;120.9842",
+    ICBM: "14.5995, 120.9842",
+    "business:contact_data:locality": "Manila",
+    "business:contact_data:region": "Metro Manila",
+    "business:contact_data:country_name": "Philippines",
+    "business:contact_data:email": "optinestdigital@gmail.com"
+  },
   category: "technology"
 };
 

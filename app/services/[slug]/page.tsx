@@ -80,6 +80,17 @@ function getFlowIcon(step: string, index: number) {
   );
 }
 
+function implementationStepCardClass(index: number) {
+  const palette = [
+    "border-[#1d4ed8]/25 bg-[#eff6ff]",
+    "border-[#7c3aed]/25 bg-[#f5f3ff]",
+    "border-[#0f766e]/25 bg-[#ecfdf5]",
+    "border-[#b45309]/25 bg-[#fffbeb]"
+  ];
+
+  return palette[index % palette.length];
+}
+
 function pricingTierStyle(category: string) {
   const normalized = category.toLowerCase();
 
@@ -214,8 +225,11 @@ export async function generateMetadata({ params }: ServicePageProps): Promise<Me
     `${service.shortLabel.toLowerCase()} services`,
     `${service.shortLabel.toLowerCase()} agency`,
     `${service.title.toLowerCase()}`,
+    `${service.shortLabel.toLowerCase()} services manila`,
+    `${service.shortLabel.toLowerCase()} services philippines`,
     "lead generation services",
-    "conversion-focused website services"
+    "conversion-focused website services",
+    "services for growing businesses"
   ];
 
   return {
@@ -295,7 +309,17 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
         name: service.title,
         serviceType: service.shortLabel,
         description: service.intro,
-        areaServed: "Worldwide",
+        areaServed: [
+          {
+            "@type": "City",
+            name: "Manila"
+          },
+          {
+            "@type": "Country",
+            name: "Philippines"
+          },
+          "Worldwide"
+        ],
         provider: {
           "@type": "Organization",
           name: "Optinest Digital",
@@ -396,7 +420,7 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
         <h2 id="implementation-flow-heading" className="font-display text-2xl uppercase leading-[0.95] text-ink">Implementation Flow</h2>
         <ol className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
           {service.process.map((step, idx) => (
-            <li key={step} className="rounded-xl border border-ink/20 bg-white p-3">
+            <li key={step} className={`rounded-xl border p-3 ${implementationStepCardClass(idx)}`}>
               <p className="inline-flex items-center gap-1.5 rounded-full bg-[#edf4ff] px-2 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-[#1d4ea5]">
                 {getFlowIcon(step, idx)}
                 Step {idx + 1}

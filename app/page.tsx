@@ -1,28 +1,83 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { ScheduleCallModal } from "@/components/schedule-call-modal";
+
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://optinestdigital.com";
+const localAddress = {
+  "@type": "PostalAddress",
+  addressLocality: "Manila",
+  addressRegion: "Metro Manila",
+  addressCountry: "PH"
+};
+const servedAreas = [
+  {
+    "@type": "City",
+    name: "Manila"
+  },
+  {
+    "@type": "Country",
+    name: "Philippines"
+  },
+  "Worldwide"
+];
+
+export const metadata: Metadata = {
+  title: "Manila SEO, Web Design, and Web Development Services for Businesses",
+  description:
+    "Optinest Digital is a Manila, Philippines-based agency helping businesses worldwide with technical SEO, conversion-focused web design, and web development for qualified lead growth.",
+  keywords: [
+    "manila seo agency",
+    "seo services philippines",
+    "web design manila",
+    "web development philippines",
+    "local seo manila",
+    "technical seo for businesses",
+    "lead generation website services"
+  ],
+  alternates: {
+    canonical: "/"
+  },
+  openGraph: {
+    type: "website",
+    url: siteUrl,
+    title: "Optinest Digital | Manila SEO, Web Design, and Development for Businesses",
+    description:
+      "Based in Manila, Philippines and serving worldwide businesses with technical SEO and conversion-focused website services.",
+    images: ["/og.png"]
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Optinest Digital | Manila SEO and Web Design Agency",
+    description:
+      "Manila-based SEO, web design, and web development for businesses that need qualified leads and measurable growth.",
+    images: ["/og.png"]
+  }
+};
 
 const seoSchema = {
   "@context": "https://schema.org",
   "@graph": [
     {
       "@type": "Organization",
-      "@id": "https://optinestdigital.com/#organization",
+      "@id": `${siteUrl}/#organization`,
       name: "Optinest Digital",
-      url: "https://optinestdigital.com/",
-      logo: "https://optinestdigital.com/icon.svg",
+      url: `${siteUrl}/`,
+      logo: `${siteUrl}/icon.svg`,
       description:
-        "Optinest Digital is a small web design and SEO agency focused on technical SEO and modern web development.",
+        "Optinest Digital is a Manila, Philippines-based SEO, web design, and web development agency serving businesses worldwide with technical execution focused on qualified leads.",
       founder: {
         "@type": "Person",
         name: "Optinest Digital",
         jobTitle: "Senior SEO Specialist and Web Developer"
       },
-      areaServed: "Worldwide",
+      address: localAddress,
+      areaServed: servedAreas,
       contactPoint: [
         {
           "@type": "ContactPoint",
           contactType: "sales",
           email: "optinestdigital@gmail.com",
+          areaServed: ["PH", "Worldwide"],
           availableLanguage: ["English"]
         }
       ],
@@ -32,24 +87,43 @@ const seoSchema = {
       ]
     },
     {
+      "@type": "ProfessionalService",
+      "@id": `${siteUrl}/#localbusiness`,
+      name: "Optinest Digital",
+      url: `${siteUrl}/`,
+      image: `${siteUrl}/og.png`,
+      email: "optinestdigital@gmail.com",
+      address: localAddress,
+      areaServed: servedAreas,
+      serviceType: [
+        "Technical SEO Services",
+        "Local SEO Services",
+        "Web Design Services",
+        "Web Development Services"
+      ],
+      parentOrganization: {
+        "@id": `${siteUrl}/#organization`
+      }
+    },
+    {
       "@type": "WebSite",
-      "@id": "https://optinestdigital.com/#website",
-      url: "https://optinestdigital.com/",
+      "@id": `${siteUrl}/#website`,
+      url: `${siteUrl}/`,
       name: "Optinest Digital",
       publisher: {
-        "@id": "https://optinestdigital.com/#organization"
+        "@id": `${siteUrl}/#organization`
       }
     },
     {
       "@type": "WebPage",
-      "@id": "https://optinestdigital.com/#webpage",
-      url: "https://optinestdigital.com/",
-      name: "Optinest Digital | Small Web Design & SEO Agency",
+      "@id": `${siteUrl}/#webpage`,
+      url: `${siteUrl}/`,
+      name: "Optinest Digital | Manila SEO, Web Design, and Development for Businesses",
       isPartOf: {
-        "@id": "https://optinestdigital.com/#website"
+        "@id": `${siteUrl}/#website`
       },
       about: {
-        "@id": "https://optinestdigital.com/#organization"
+        "@id": `${siteUrl}/#organization`
       }
     }
   ]
