@@ -1153,7 +1153,7 @@ grant execute on function public.search_project_user_emails(uuid, text, integer)
 grant insert on table public.onboarding_leads to anon, authenticated;
 grant select, update, delete on table public.onboarding_leads to authenticated;
 grant insert on table public.lead_magnet_submissions to anon, authenticated;
-grant select on table public.lead_magnet_submissions to authenticated;
+grant select, delete on table public.lead_magnet_submissions to authenticated;
 grant select, update on table public.portal_notifications to authenticated;
 
 alter table public.projects enable row level security;
@@ -1445,6 +1445,13 @@ drop policy if exists "Managers can view lead magnet captures" on public.lead_ma
 create policy "Managers can view lead magnet captures"
 on public.lead_magnet_submissions
 for select
+to authenticated
+using (public.is_bootstrap_manager());
+
+drop policy if exists "Managers can delete lead magnet captures" on public.lead_magnet_submissions;
+create policy "Managers can delete lead magnet captures"
+on public.lead_magnet_submissions
+for delete
 to authenticated
 using (public.is_bootstrap_manager());
 

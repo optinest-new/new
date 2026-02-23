@@ -61,6 +61,8 @@ export default function LeadMagnetSubmissionsPage() {
   const [submissions, setSubmissions] = useState<LeadMagnetSubmission[]>([]);
   const [isLoadingSubmissions, setIsLoadingSubmissions] = useState(false);
   const [isExportingEmails, setIsExportingEmails] = useState(false);
+  const [deletingSubmissionById, setDeletingSubmissionById] = useState<Record<string, boolean>>({});
+  const [pendingDeleteSubmissionId, setPendingDeleteSubmissionId] = useState<string | null>(null);
   const [searchDraft, setSearchDraft] = useState("");
   const [magnetFilter, setMagnetFilter] = useState("all");
   const hasResolvedManagerStatusRef = useRef(false);
@@ -84,6 +86,11 @@ export default function LeadMagnetSubmissionsPage() {
       return matchesSearch && matchesMagnet;
     });
   }, [magnetFilter, searchDraft, submissions]);
+
+  const pendingDeleteSubmission = useMemo(
+    () => submissions.find((entry) => entry.id === pendingDeleteSubmissionId) ?? null,
+    [pendingDeleteSubmissionId, submissions]
+  );
 
   useEffect(() => {
     if (!supabase) {
@@ -151,6 +158,8 @@ export default function LeadMagnetSubmissionsPage() {
   const loadSubmissions = useCallback(async () => {
     if (!supabase || !session || !isBootstrapManager) {
       setSubmissions([]);
+      setDeletingSubmissionById({});
+      setPendingDeleteSubmissionId(null);
       return;
     }
 
@@ -176,6 +185,8 @@ export default function LeadMagnetSubmissionsPage() {
   useEffect(() => {
     if (!session || !isBootstrapManager) {
       setSubmissions([]);
+      setDeletingSubmissionById({});
+      setPendingDeleteSubmissionId(null);
       return;
     }
 
@@ -189,8 +200,43 @@ export default function LeadMagnetSubmissionsPage() {
 
     await supabase.auth.signOut();
     setSubmissions([]);
+    setDeletingSubmissionById({});
+    setPendingDeleteSubmissionId(null);
     setPortalError("");
     setPageMessage("");
+  }
+
+  function handleDeleteModalOpen(submissionId: string) {
+    setPendingDeleteSubmissionId(submissionId);
+    setPortalError("");
+    setPageMessage("");
+  }
+
+  function handleDeleteModalClose() {
+    setPendingDeleteSubmissionId(null);
+  }
+
+  async function handleDeleteSubmission(submissionId: string) {
+    if (!supabase || !session || !isBootstrapManager) {
+      return;
+    }
+
+    setDeletingSubmissionById((current) => ({ ...current, [submissionId]: true }));
+    setPortalError("");
+    setPageMessage("");
+
+    const { error } = await supabase.from("lead_magnet_submissions").delete().eq("id", submissionId);
+
+    setDeletingSubmissionById((current) => ({ ...current, [submissionId]: false }));
+
+    if (error) {
+      setPortalError(error.message);
+      return;
+    }
+
+    setSubmissions((current) => current.filter((entry) => entry.id !== submissionId));
+    setPendingDeleteSubmissionId(null);
+    setPageMessage("Submission removed.");
   }
 
   async function handleExportEmails() {
@@ -344,7 +390,8 @@ export default function LeadMagnetSubmissionsPage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
+    <>
+      <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
       <header className="rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
@@ -462,7 +509,17 @@ export default function LeadMagnetSubmissionsPage() {
             <article key={entry.id} className="rounded-lg border border-ink/20 bg-white p-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="text-sm font-semibold text-ink">{entry.email}</p>
-                <p className="text-[0.68rem] text-ink/60">{formatDateTime(entry.created_at)}</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-[0.68rem] text-ink/60">{formatDateTime(entry.created_at)}</p>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteModalOpen(entry.id)}
+                    disabled={Boolean(deletingSubmissionById[entry.id])}
+                    className="inline-flex items-center rounded-full border border-[#b42318] bg-[#fff1f1] px-2 py-0.5 text-[0.62rem] font-semibold uppercase tracking-[0.08em] text-[#b42318] transition hover:bg-[#ffe3e3] disabled:cursor-not-allowed disabled:opacity-70"
+                  >
+                    {deletingSubmissionById[entry.id] ? "Removing..." : "Remove"}
+                  </button>
+                </div>
               </div>
               <p className="mt-1 text-xs text-ink/75">
                 Magnet: <span className="font-semibold text-ink">{entry.magnet_title}</span>
@@ -484,6 +541,46 @@ export default function LeadMagnetSubmissionsPage() {
           ))}
         </div>
       </section>
-    </main>
+      </main>
+
+      {pendingDeleteSubmission ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/50 px-4 py-6">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="remove-submission-modal-title"
+            className="w-full max-w-lg rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6"
+          >
+            <h2 id="remove-submission-modal-title" className="font-display text-2xl uppercase leading-none text-ink">
+              Remove Submission
+            </h2>
+            <p className="mt-3 text-sm text-ink/85">
+              Remove <span className="font-semibold">{pendingDeleteSubmission.email}</span> from lead captures?
+            </p>
+            <p className="mt-2 text-xs uppercase tracking-[0.08em] text-ink/65">
+              This action cannot be undone.
+            </p>
+            <div className="mt-5 flex flex-wrap items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={handleDeleteModalClose}
+                disabled={Boolean(deletingSubmissionById[pendingDeleteSubmission.id])}
+                className="inline-flex items-center rounded-full border-2 border-ink/35 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.1em] text-ink transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleDeleteSubmission(pendingDeleteSubmission.id)}
+                disabled={Boolean(deletingSubmissionById[pendingDeleteSubmission.id])}
+                className="inline-flex items-center rounded-full border-2 border-[#b42318] bg-[#d92d20] px-4 py-2 text-xs font-semibold uppercase tracking-[0.1em] text-white transition hover:-translate-y-0.5 hover:bg-[#b42318] disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {deletingSubmissionById[pendingDeleteSubmission.id] ? "Removing..." : "Confirm Remove"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </>
   );
 }
