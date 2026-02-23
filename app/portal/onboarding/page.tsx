@@ -498,6 +498,8 @@ export default function OnboardingPipelinePage() {
         name: projectName,
         status: "planning",
         progress: 0,
+        quoted_amount: quotedValue,
+        amount_paid: depositValue,
         summary: lead.goals || null
       })
       .select("id")

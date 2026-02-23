@@ -12,6 +12,8 @@ type PortalProject = {
   name: string;
   status: string;
   progress: number;
+  quoted_amount: number | null;
+  amount_paid: number | null;
   start_date: string | null;
   due_date: string | null;
   summary: string | null;
@@ -187,9 +189,10 @@ type ClientDirectorySuggestion = {
   full_name: string | null;
 };
 
-type ProjectOwnerContact = {
+type ProjectContact = {
   email: string;
   full_name: string | null;
+  role: MemberRole;
 };
 
 type UploadThreadAttachmentResult =
@@ -466,6 +469,19 @@ function formatUsd(value: number | null): string {
     currency: "USD",
     maximumFractionDigits: 2
   }).format(value);
+}
+
+function formatProjectBalance(quotedAmount: number | null, amountPaid: number | null): string {
+  if (quotedAmount === null || Number.isNaN(quotedAmount)) {
+    return "Not set";
+  }
+
+  const balance = quotedAmount - (amountPaid ?? 0);
+  if (balance < 0) {
+    return `Credit ${formatUsd(Math.abs(balance))}`;
+  }
+
+  return formatUsd(balance);
 }
 
 function formatBytes(sizeBytes: number): string {
@@ -784,7 +800,7 @@ export default function PortalPage() {
   const [projectQuestions, setProjectQuestions] = useState<ProjectQuestion[]>([]);
   const [questionMessages, setQuestionMessages] = useState<QuestionMessage[]>([]);
   const [memberRolesByUserId, setMemberRolesByUserId] = useState<Record<string, MemberRole>>({});
-  const [projectOwners, setProjectOwners] = useState<ProjectOwnerContact[]>([]);
+  const [projectContacts, setProjectContacts] = useState<ProjectContact[]>([]);
   const [projectFiles, setProjectFiles] = useState<ProjectFile[]>([]);
   const [projectMilestones, setProjectMilestones] = useState<ProjectMilestone[]>([]);
   const [projectApprovalTasks, setProjectApprovalTasks] = useState<ProjectApprovalTask[]>([]);
@@ -806,6 +822,8 @@ export default function PortalPage() {
   const [projectStartDateDraft, setProjectStartDateDraft] = useState("");
   const [projectDueDateDraft, setProjectDueDateDraft] = useState("");
   const [projectSummaryDraft, setProjectSummaryDraft] = useState("");
+  const [projectQuotedAmountDraft, setProjectQuotedAmountDraft] = useState("");
+  const [projectAmountPaidDraft, setProjectAmountPaidDraft] = useState("");
   const [isSavingProject, setIsSavingProject] = useState(false);
   const [isArchivingProject, setIsArchivingProject] = useState(false);
   const [isDeletingProject, setIsDeletingProject] = useState(false);
@@ -901,6 +919,10 @@ export default function PortalPage() {
   const [activeWorkspaceTab, setActiveWorkspaceTab] = useState<PortalWorkspaceTabId>("manager_controls");
 
   const selectedProject = projects.find((project) => project.id === selectedProjectId) || null;
+  const selectedProjectBalance =
+    selectedProject && selectedProject.quoted_amount !== null
+      ? selectedProject.quoted_amount - (selectedProject.amount_paid ?? 0)
+      : null;
   const effectiveRole: MemberRole | null = isBootstrapManager ? "manager" : currentRole;
   const isProjectAdmin = isBootstrapManager || currentRole === "manager" || currentRole === "owner";
   const hasSelectedProject = Boolean(selectedProject);
@@ -1145,7 +1167,7 @@ export default function PortalPage() {
 
     const { data, error } = await supabase
       .from("projects")
-      .select("id,name,status,progress,start_date,due_date,summary,updated_at")
+      .select("id,name,status,progress,quoted_amount,amount_paid,start_date,due_date,summary,updated_at")
       .order("updated_at", { ascending: false });
 
     setIsLoadingProjects(false);
@@ -1200,7 +1222,7 @@ export default function PortalPage() {
 
       setIsLoadingProjectData(true);
       setPortalError("");
-      setProjectOwners([]);
+      setProjectContacts([]);
 
       const [
         updatesResult,
@@ -1320,55 +1342,41 @@ export default function PortalPage() {
       setMemberRolesByUserId(memberRoleMap);
       setCurrentRole((membershipResult.data?.role as MemberRole | undefined) ?? null);
 
-      const { data: ownerEmailRows } = await supabase
-        .from("project_member_emails")
-        .select("email")
-        .eq("project_id", projectId)
-        .eq("role", "owner");
+      const { data: contactRows, error: contactsError } = await supabase.rpc("get_project_contacts", {
+        project_uuid: projectId
+      });
 
-      const ownerEmails = Array.from(
-        new Set(
-          (ownerEmailRows ?? [])
-            .map((row) => (typeof row.email === "string" ? row.email.trim().toLowerCase() : ""))
-            .filter((emailValue) => emailValue.length > 0)
-        )
-      );
-
-      if (ownerEmails.length === 0) {
-        setProjectOwners([]);
+      if (contactsError) {
+        setProjectContacts([]);
         return;
       }
 
-      const ownerContacts = await Promise.all(
-        ownerEmails.map(async (ownerEmail) => {
-          const { data: ownerMatches } = await supabase.rpc("search_project_user_emails", {
-            project_uuid: projectId,
-            search_query: ownerEmail,
-            result_limit: 1
-          });
+      const contacts = ((contactRows ?? []) as Array<{
+        email?: string | null;
+        full_name?: string | null;
+        role?: string | null;
+      }>)
+        .map((row) => {
+          const email = typeof row.email === "string" ? row.email.trim().toLowerCase() : "";
+          if (!email) {
+            return null;
+          }
 
-          const matches = (ownerMatches ?? []) as Array<{
-            email?: string | null;
-            full_name?: string | null;
-          }>;
-          const exactMatch =
-            matches.find(
-              (entry) =>
-                typeof entry.email === "string" && entry.email.trim().toLowerCase() === ownerEmail
-            ) || matches[0];
+          const role = row.role === "owner" || row.role === "manager" || row.role === "client" ? row.role : "client";
           const fullName =
-            typeof exactMatch?.full_name === "string" && exactMatch.full_name.trim().length > 0
-              ? exactMatch.full_name.trim()
-              : deriveNameFromEmail(ownerEmail);
+            typeof row.full_name === "string" && row.full_name.trim().length > 0
+              ? row.full_name.trim()
+              : deriveNameFromEmail(email);
 
           return {
-            email: ownerEmail,
-            full_name: fullName
+            email,
+            full_name: fullName,
+            role
           };
         })
-      );
+        .filter((entry) => entry !== null) as ProjectContact[];
 
-      setProjectOwners(ownerContacts);
+      setProjectContacts(contacts);
     },
     [session, supabase]
   );
@@ -1431,7 +1439,7 @@ export default function PortalPage() {
       setProjectApprovalTasks([]);
       setProjectClientIntake(null);
       setProjectAccessItems([]);
-      setProjectOwners([]);
+      setProjectContacts([]);
       setQuestionMessageAttachmentUrls({});
       setMemberRolesByUserId({});
       setCurrentRole(null);
@@ -1533,7 +1541,7 @@ export default function PortalPage() {
       setProjectApprovalTasks([]);
       setProjectClientIntake(null);
       setProjectAccessItems([]);
-      setProjectOwners([]);
+      setProjectContacts([]);
       setQuestionMessageAttachmentUrls({});
       setMemberRolesByUserId({});
       setCurrentRole(null);
@@ -1643,6 +1651,8 @@ export default function PortalPage() {
       setProjectStartDateDraft("");
       setProjectDueDateDraft("");
       setProjectSummaryDraft("");
+      setProjectQuotedAmountDraft("");
+      setProjectAmountPaidDraft("");
       setIsProjectSnapshotModalOpen(false);
       return;
     }
@@ -1652,6 +1662,10 @@ export default function PortalPage() {
     setProjectStartDateDraft(selectedProject.start_date || "");
     setProjectDueDateDraft(selectedProject.due_date || "");
     setProjectSummaryDraft(selectedProject.summary || "");
+    setProjectQuotedAmountDraft(
+      selectedProject.quoted_amount !== null ? String(selectedProject.quoted_amount) : ""
+    );
+    setProjectAmountPaidDraft(selectedProject.amount_paid !== null ? String(selectedProject.amount_paid) : "");
   }, [selectedProject]);
 
   useEffect(() => {
@@ -2616,6 +2630,8 @@ export default function PortalPage() {
         name: projectName,
         status: "planning",
         progress: 0,
+        quoted_amount: quotedValue,
+        amount_paid: depositValue,
         summary: lead.goals || null
       })
       .select("id")
@@ -2691,11 +2707,33 @@ export default function PortalPage() {
         return;
       }
 
+      const quotedDraft = projectQuotedAmountDraft.trim();
+      const amountPaidDraft = projectAmountPaidDraft.trim();
+      const nextQuotedAmount = quotedDraft ? Number.parseFloat(quotedDraft) : null;
+      const nextAmountPaid = amountPaidDraft ? Number.parseFloat(amountPaidDraft) : null;
+
+      if (
+        (quotedDraft && Number.isNaN(nextQuotedAmount as number)) ||
+        (amountPaidDraft && Number.isNaN(nextAmountPaid as number))
+      ) {
+        setIsSavingProject(false);
+        setPortalError("Quoted amount and amount paid must be valid numbers.");
+        return;
+      }
+
+      if ((nextQuotedAmount !== null && nextQuotedAmount < 0) || (nextAmountPaid !== null && nextAmountPaid < 0)) {
+        setIsSavingProject(false);
+        setPortalError("Quoted amount and amount paid cannot be negative.");
+        return;
+      }
+
       const updateResult = await supabase
         .from("projects")
         .update({
           status: projectStatusDraft,
           progress: nextProgress,
+          quoted_amount: nextQuotedAmount,
+          amount_paid: nextAmountPaid,
           start_date: projectStartDateDraft || null,
           due_date: projectDueDateDraft || null,
           summary: nextSummary || null
@@ -4170,16 +4208,21 @@ export default function PortalPage() {
                     {isProjectAdmin ? (
                       <div className="mt-2 text-xs text-ink/70">
                         <p className="font-semibold uppercase tracking-[0.1em] text-ink/60">
-                          Project Owner{projectOwners.length === 1 ? "" : "s"}
+                          Project Contacts
                         </p>
-                        {projectOwners.length === 0 ? (
-                          <p className="mt-1">No owner assigned yet.</p>
+                        {projectContacts.length === 0 ? (
+                          <p className="mt-1">No project contacts assigned yet.</p>
                         ) : (
                           <ul className="mt-1 space-y-1">
-                            {projectOwners.map((owner) => (
-                              <li key={owner.email}>
-                                <span className="font-semibold text-ink">{owner.full_name || "Project Owner"}</span>{" "}
-                                <span className="text-ink/65">({owner.email})</span>
+                            {projectContacts.map((contact) => (
+                              <li key={`${contact.email}-${contact.role}`}>
+                                <span className="font-semibold text-ink">
+                                  {contact.full_name || "Project Contact"}
+                                </span>{" "}
+                                <span className="text-ink/65">({contact.email})</span>{" "}
+                                <span className="rounded-full border border-ink/20 bg-white px-1.5 py-0.5 text-[0.62rem] font-semibold uppercase tracking-[0.08em] text-ink/70">
+                                  {formatRole(contact.role)}
+                                </span>
                               </li>
                             ))}
                           </ul>
@@ -4251,6 +4294,34 @@ export default function PortalPage() {
                   </div>
 
                   <div className="mt-3 border-t border-ink/15 pt-3">
+                    <div className="rounded-lg border border-ink/20 bg-[#f3f9ff] p-3">
+                      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-ink/70">
+                        Billing Summary
+                      </p>
+                      <div className="mt-2 grid gap-2 text-sm text-ink/80 sm:grid-cols-3">
+                        <p>
+                          Quoted Amount: <span className="font-semibold text-ink">{formatUsd(selectedProject.quoted_amount)}</span>
+                        </p>
+                        <p>
+                          Amount Paid: <span className="font-semibold text-ink">{formatUsd(selectedProject.amount_paid)}</span>
+                        </p>
+                        <p>
+                          Balance:{" "}
+                          <span
+                            className={`font-semibold ${
+                              selectedProjectBalance !== null && selectedProjectBalance > 0
+                                ? "text-[#8a5a00]"
+                                : "text-ink"
+                            }`}
+                          >
+                            {formatProjectBalance(selectedProject.quoted_amount, selectedProject.amount_paid)}
+                          </span>
+                        </p>
+                      </div>
+                      <p className="mt-2 text-xs text-ink/65">Balance = Quoted Amount - Amount Paid</p>
+                    </div>
+
+                    <div className="mt-3 border-t border-ink/15 pt-3">
                     {selectedProject.summary ? (
                       <div
                         className="text-sm text-ink/80 [&_a]:text-[#2d5bd1] [&_a]:underline [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_h1]:text-xl [&_h1]:font-semibold [&_h2]:text-lg [&_h2]:font-semibold [&_h3]:font-semibold"
@@ -4261,6 +4332,7 @@ export default function PortalPage() {
                     ) : (
                       <p className="text-sm text-ink/65">No summary added yet.</p>
                     )}
+                    </div>
                   </div>
                 </div>
                 </section>
@@ -4335,6 +4407,29 @@ export default function PortalPage() {
                                 type="date"
                                 value={projectDueDateDraft}
                                 onChange={(event) => setProjectDueDateDraft(event.target.value)}
+                                className="mt-1 w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm normal-case tracking-normal text-ink outline-none focus:border-ink/60"
+                              />
+                            </label>
+                          </div>
+
+                          <div className="grid gap-3 sm:grid-cols-2">
+                            <label className="block text-xs font-semibold uppercase tracking-[0.1em] text-ink/65">
+                              Quoted Amount
+                              <input
+                                type="text"
+                                value={projectQuotedAmountDraft}
+                                onChange={(event) => setProjectQuotedAmountDraft(event.target.value)}
+                                placeholder="5000"
+                                className="mt-1 w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm normal-case tracking-normal text-ink outline-none focus:border-ink/60"
+                              />
+                            </label>
+                            <label className="block text-xs font-semibold uppercase tracking-[0.1em] text-ink/65">
+                              Amount Paid
+                              <input
+                                type="text"
+                                value={projectAmountPaidDraft}
+                                onChange={(event) => setProjectAmountPaidDraft(event.target.value)}
+                                placeholder="2500"
                                 className="mt-1 w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm normal-case tracking-normal text-ink outline-none focus:border-ink/60"
                               />
                             </label>

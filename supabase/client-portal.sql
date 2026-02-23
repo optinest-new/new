@@ -44,6 +44,8 @@ create table if not exists public.projects (
   name text not null,
   status text not null default 'planning' check (status in ('planning', 'in_progress', 'review', 'completed', 'archived')),
   progress integer not null default 0 check (progress >= 0 and progress <= 100),
+  quoted_amount numeric(12, 2),
+  amount_paid numeric(12, 2),
   summary text,
   start_date date,
   due_date date,
@@ -55,6 +57,20 @@ alter table public.projects drop constraint if exists projects_status_check;
 alter table public.projects
 add constraint projects_status_check
 check (status in ('planning', 'in_progress', 'review', 'completed', 'archived'));
+
+alter table public.projects
+  add column if not exists quoted_amount numeric(12, 2),
+  add column if not exists amount_paid numeric(12, 2);
+
+alter table public.projects drop constraint if exists projects_quoted_amount_check;
+alter table public.projects
+add constraint projects_quoted_amount_check
+check (quoted_amount is null or quoted_amount >= 0);
+
+alter table public.projects drop constraint if exists projects_amount_paid_check;
+alter table public.projects
+add constraint projects_amount_paid_check
+check (amount_paid is null or amount_paid >= 0);
 
 create table if not exists public.project_members (
   project_id uuid not null references public.projects(id) on delete cascade,
@@ -403,6 +419,17 @@ check (
     'project_started'
   )
 );
+
+update public.projects p
+set
+  quoted_amount = coalesce(p.quoted_amount, ol.quoted_amount),
+  amount_paid = coalesce(p.amount_paid, ol.deposit_amount)
+from public.onboarding_leads ol
+where ol.converted_project_id = p.id
+  and (
+    (p.quoted_amount is null and ol.quoted_amount is not null)
+    or (p.amount_paid is null and ol.deposit_amount is not null)
+  );
 
 alter table public.lead_magnet_submissions
   add column if not exists email text,
@@ -1268,6 +1295,93 @@ begin
 end;
 $$;
 
+drop function if exists public.get_project_contacts(uuid);
+
+create function public.get_project_contacts(project_uuid uuid)
+returns table(email text, full_name text, role text)
+language sql
+security definer
+set search_path = public, auth
+as $$
+  with requester as (
+    select public.is_project_admin(project_uuid) as allowed
+  ),
+  raw_contacts as (
+    select
+      lower(trim(u.email)) as email,
+      nullif(
+        trim(
+          coalesce(
+            u.raw_user_meta_data ->> 'registered_full_name',
+            u.raw_user_meta_data ->> 'full_name',
+            u.raw_user_meta_data ->> 'name',
+            u.raw_user_meta_data ->> 'fullName',
+            ident.identity_data ->> 'full_name',
+            ident.identity_data ->> 'name',
+            ident.identity_data ->> 'fullName',
+            ''
+          )
+        ),
+        ''
+      ) as full_name,
+      pm.role
+    from public.project_members pm
+    join auth.users u on u.id = pm.user_id
+    left join lateral (
+      select i.identity_data
+      from auth.identities i
+      where i.user_id = u.id
+      limit 1
+    ) ident on true
+    where pm.project_id = project_uuid
+      and u.email is not null
+      and trim(u.email) <> ''
+
+    union all
+
+    select
+      lower(trim(pme.email)) as email,
+      null::text as full_name,
+      pme.role
+    from public.project_member_emails pme
+    where pme.project_id = project_uuid
+      and pme.email is not null
+      and trim(pme.email) <> ''
+  ),
+  ranked_contacts as (
+    select
+      rc.email,
+      rc.full_name,
+      rc.role,
+      row_number() over (
+        partition by rc.email
+        order by
+          case rc.role
+            when 'owner' then 0
+            when 'manager' then 1
+            else 2
+          end,
+          case when rc.full_name is null then 1 else 0 end
+      ) as rank_order
+    from raw_contacts rc
+  )
+  select
+    c.email::text,
+    c.full_name::text,
+    c.role::text
+  from ranked_contacts c
+  cross join requester r
+  where r.allowed
+    and c.rank_order = 1
+  order by
+    case c.role
+      when 'owner' then 0
+      when 'manager' then 1
+      else 2
+    end,
+    c.email;
+$$;
+
 revoke all on function public.is_project_member(uuid) from public;
 grant execute on function public.is_project_member(uuid) to authenticated;
 
@@ -1300,6 +1414,9 @@ grant execute on function public.delete_project_permanently(uuid) to authenticat
 
 revoke all on function public.search_project_user_emails(uuid, text, integer) from public;
 grant execute on function public.search_project_user_emails(uuid, text, integer) to authenticated;
+
+revoke all on function public.get_project_contacts(uuid) from public;
+grant execute on function public.get_project_contacts(uuid) to authenticated;
 
 grant insert on table public.onboarding_leads to anon, authenticated;
 grant select, update, delete on table public.onboarding_leads to authenticated;
