@@ -118,6 +118,7 @@ export default function OnboardingPipelinePage() {
   const [convertingOnboardingLeadById, setConvertingOnboardingLeadById] = useState<
     Record<string, boolean>
   >({});
+  const [deletingOnboardingLeadById, setDeletingOnboardingLeadById] = useState<Record<string, boolean>>({});
   const [expandedLeadIds, setExpandedLeadIds] = useState<Record<string, boolean>>({});
   const hasResolvedManagerStatusRef = useRef(false);
 
@@ -217,6 +218,7 @@ export default function OnboardingPipelinePage() {
       setOnboardingLeadDrafts({});
       setSavingOnboardingLeadById({});
       setConvertingOnboardingLeadById({});
+      setDeletingOnboardingLeadById({});
       setExpandedLeadIds({});
       return;
     }
@@ -257,6 +259,7 @@ export default function OnboardingPipelinePage() {
     setOnboardingLeadDrafts(nextDrafts);
     setSavingOnboardingLeadById({});
     setConvertingOnboardingLeadById({});
+    setDeletingOnboardingLeadById({});
     setExpandedLeadIds((current) => {
       const next: Record<string, boolean> = {};
       for (const lead of rows) {
@@ -272,6 +275,7 @@ export default function OnboardingPipelinePage() {
       setOnboardingLeadDrafts({});
       setSavingOnboardingLeadById({});
       setConvertingOnboardingLeadById({});
+      setDeletingOnboardingLeadById({});
       setExpandedLeadIds({});
       return;
     }
@@ -287,6 +291,7 @@ export default function OnboardingPipelinePage() {
     await supabase.auth.signOut();
     setOnboardingLeads([]);
     setOnboardingLeadDrafts({});
+    setDeletingOnboardingLeadById({});
     setExpandedLeadIds({});
     setPortalError("");
     setPipelineMessage("");
@@ -434,6 +439,41 @@ export default function OnboardingPipelinePage() {
         ? "Lead converted and client was assigned to the project."
         : "Lead converted. Client will be auto-assigned when they sign in with the onboarding email."
     );
+    await loadOnboardingLeads();
+  }
+
+  async function handleDeleteOnboardingLead(leadId: string) {
+    if (!supabase || !session || !isBootstrapManager) {
+      return;
+    }
+
+    const lead = onboardingLeads.find((entry) => entry.id === leadId);
+    if (!lead) {
+      return;
+    }
+
+    const shouldDelete = window.confirm(
+      `Remove ${lead.full_name} (${lead.email}) from onboarding pipeline? This action cannot be undone.`
+    );
+
+    if (!shouldDelete) {
+      return;
+    }
+
+    setDeletingOnboardingLeadById((current) => ({ ...current, [leadId]: true }));
+    setPortalError("");
+    setPipelineMessage("");
+
+    const { error } = await supabase.from("onboarding_leads").delete().eq("id", leadId);
+
+    setDeletingOnboardingLeadById((current) => ({ ...current, [leadId]: false }));
+
+    if (error) {
+      setPortalError(error.message);
+      return;
+    }
+
+    setPipelineMessage("Lead removed from onboarding pipeline.");
     await loadOnboardingLeads();
   }
 
@@ -614,6 +654,7 @@ export default function OnboardingPipelinePage() {
             const draft = onboardingLeadDrafts[lead.id];
             const isSaving = Boolean(savingOnboardingLeadById[lead.id]);
             const isConverting = Boolean(convertingOnboardingLeadById[lead.id]);
+            const isDeleting = Boolean(deletingOnboardingLeadById[lead.id]);
             const serviceTags = lead.services_needed ?? [];
             const isExpanded = Boolean(expandedLeadIds[lead.id]);
 
@@ -781,12 +822,20 @@ export default function OnboardingPipelinePage() {
                       <button
                         type="button"
                         onClick={() => void handleConvertOnboardingLeadToProject(lead.id)}
-                        disabled={isConverting}
+                        disabled={isConverting || isDeleting}
                         className="inline-flex items-center rounded-full border-2 border-[#0f7663] bg-[#16a085] px-3 py-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-white transition hover:bg-[#0f8d74] disabled:cursor-not-allowed disabled:opacity-70"
                       >
                         {isConverting ? "Converting..." : "Convert to Project"}
                       </button>
                     ) : null}
+                    <button
+                      type="button"
+                      onClick={() => void handleDeleteOnboardingLead(lead.id)}
+                      disabled={isDeleting || isSaving || isConverting}
+                      className="inline-flex items-center rounded-full border-2 border-[#b42318] bg-[#d92d20] px-3 py-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-white transition hover:bg-[#b42318] disabled:cursor-not-allowed disabled:opacity-70"
+                    >
+                      {isDeleting ? "Removing..." : "Remove Lead"}
+                    </button>
                   </div>
                   </form>
                 ) : null}
