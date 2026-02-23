@@ -466,6 +466,106 @@ function stackIconBadgeClass(key: StackItem["key"]) {
   return "border-[#0f7663]/30 bg-[#f0fdf4] text-[#15803d]";
 }
 
+function pricingTierStyle(category: string) {
+  const normalized = category.toLowerCase();
+
+  if (normalized.includes("large") || normalized.includes("enterprise") || normalized.includes("custom") || normalized.includes("corporate")) {
+    return {
+      row: "border-[#b42318]/25 bg-[#fff4f2]",
+      badge: "bg-[#f04438] text-white",
+      range: "text-[#7a271a]",
+      iconWrap: "border-[#f04438]/40 bg-[#ffe4e1] text-[#b42318]"
+    };
+  }
+
+  if (normalized.includes("e-commerce") || normalized.includes("mid-sized")) {
+    return {
+      row: "border-[#175cd3]/25 bg-[#eff8ff]",
+      badge: "bg-[#175cd3] text-white",
+      range: "text-[#1849a9]",
+      iconWrap: "border-[#175cd3]/40 bg-[#dbeafe] text-[#175cd3]"
+    };
+  }
+
+  if (normalized.includes("local")) {
+    return {
+      row: "border-[#0e9384]/25 bg-[#ecfdf3]",
+      badge: "bg-[#0e9384] text-white",
+      range: "text-[#0f766e]",
+      iconWrap: "border-[#0e9384]/35 bg-[#ccfbf1] text-[#0f766e]"
+    };
+  }
+
+  if (
+    normalized.includes("small") ||
+    normalized.includes("startup") ||
+    normalized.includes("simple") ||
+    normalized.includes("personal") ||
+    normalized.includes("portfolio")
+  ) {
+    return {
+      row: "border-[#12b76a]/25 bg-[#edfcf2]",
+      badge: "bg-[#12b76a] text-white",
+      range: "text-[#027a48]",
+      iconWrap: "border-[#12b76a]/35 bg-[#dcfce7] text-[#027a48]"
+    };
+  }
+
+  return {
+    row: "border-[#c58a00]/30 bg-[#fff7e0]",
+    badge: "bg-[#b17a00] text-white",
+    range: "text-[#6a4700]",
+    iconWrap: "border-[#b17a00]/35 bg-[#fef3c7] text-[#7a5200]"
+  };
+}
+
+function renderPricingTierIcon(category: string) {
+  const normalized = category.toLowerCase();
+
+  if (normalized.includes("large") || normalized.includes("enterprise") || normalized.includes("aggressive")) {
+    return (
+      <svg aria-hidden="true" viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M6 16V9M12 16V6M18 16v-4" />
+        <path d="M4 18h16" />
+      </svg>
+    );
+  }
+
+  if (normalized.includes("e-commerce")) {
+    return (
+      <svg aria-hidden="true" viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2">
+        <rect x="3.5" y="7" width="17" height="10" rx="2" />
+        <path d="M3.5 11h17" />
+      </svg>
+    );
+  }
+
+  if (normalized.includes("local")) {
+    return (
+      <svg aria-hidden="true" viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M12 21s6-5.2 6-10a6 6 0 1 0-12 0c0 4.8 6 10 6 10Z" />
+        <circle cx="12" cy="11" r="2" />
+      </svg>
+    );
+  }
+
+  if (normalized.includes("small") || normalized.includes("startup") || normalized.includes("simple") || normalized.includes("personal")) {
+    return (
+      <svg aria-hidden="true" viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2">
+        <circle cx="12" cy="12" r="7" />
+        <path d="M12 8v8M9.5 10.5c.3-1 1.1-1.5 2.5-1.5 1.5 0 2.5.7 2.5 1.8 0 1-1 1.5-2.5 1.8-1.3.3-2.3.7-2.3 1.8 0 1 .8 1.8 2.3 1.8 1.4 0 2.2-.6 2.5-1.6" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M4 8h16v8H4z" />
+      <path d="M8 12h8" />
+    </svg>
+  );
+}
+
 export const metadata: Metadata = {
   title: servicesPageTitle,
   description: servicesPageDescription,
@@ -559,15 +659,41 @@ export default function ServicesPage() {
           <article key={service.slug} className="flex h-full flex-col rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard">
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-ink/65">{service.shortLabel}</p>
             <h2 className="mt-2 font-display text-2xl uppercase leading-[0.95] text-ink">{service.title}</h2>
-            <p className="mt-3 flex-1 text-sm text-ink/80">{service.summary}</p>
+            <p className="mt-3 text-sm text-ink/80">{service.summary}</p>
             <p className="mt-4 text-xs font-semibold uppercase tracking-[0.1em] text-[#1f56c2]">{service.timeline}</p>
-            <p className="mt-1 text-xs font-semibold uppercase tracking-[0.1em] text-[#8a5a00]">{service.investment}</p>
-            <Link
-              href={`/services/${service.slug}`}
-              className="mt-5 inline-flex w-fit rounded-full border-2 border-ink bg-ink px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] text-mist transition hover:-translate-y-0.5"
-            >
-              View Service
-            </Link>
+            <div className="mt-2 rounded-xl border-2 border-[#c58a00]/45 bg-[#fff4d6] px-3 py-2">
+              <p className="text-[0.62rem] font-bold uppercase tracking-[0.12em] text-[#7a5200]">Pricing</p>
+              <ul className="mt-2 space-y-2">
+                {service.pricingTiers.map((tier) => {
+                  const style = pricingTierStyle(tier.category);
+                  return (
+                    <li key={`${service.slug}-${tier.category}`} className={`rounded-lg border px-2.5 py-2 ${style.row}`}>
+                      <div className="flex items-start gap-2">
+                        <span className={`mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border ${style.iconWrap}`}>
+                          {renderPricingTierIcon(tier.category)}
+                        </span>
+                        <div>
+                          <span
+                            className={`inline-flex rounded-full px-2 py-0.5 text-[0.62rem] font-bold uppercase tracking-[0.1em] ${style.badge}`}
+                          >
+                            {tier.category}
+                          </span>
+                          <p className={`mt-1 text-sm font-semibold leading-snug ${style.range}`}>{tier.range}</p>
+                        </div>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+            <div className="mt-auto pt-5">
+              <Link
+                href={`/services/${service.slug}`}
+                className="inline-flex items-center justify-center rounded-full border-2 border-ink bg-ink px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] text-mist transition hover:-translate-y-0.5"
+              >
+                View Service
+              </Link>
+            </div>
           </article>
         ))}
       </section>

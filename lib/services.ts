@@ -6,10 +6,37 @@ export type ServiceDefinition = {
   intro: string;
   timeline: string;
   investment: string;
+  pricingTiers: PricingTier[];
   deliverables: string[];
   outcomes: string[];
   process: string[];
 };
+
+export type PricingTier = {
+  category: string;
+  range: string;
+};
+
+function buildInvestmentSummary(pricingTiers: PricingTier[]) {
+  return pricingTiers.map((tier) => `${tier.category}: ${tier.range}`).join(" · ");
+}
+
+const seoPricingTiers: PricingTier[] = [
+  { category: "Small Businesses/Startups", range: "₱15,000 – ₱100,000 per month" },
+  { category: "Mid-Sized Businesses", range: "₱100,000 – ₱150,000 per month" },
+  { category: "Large Enterprises/Aggressive Campaigns", range: "₱150,000 – ₱500,000+ per month" },
+  { category: "Local SEO (Targeted Cities)", range: "₱20,000 – ₱100,000 per month" }
+];
+
+const webDesignPricingTiers: PricingTier[] = [
+  { category: "Simple/Personal Website (5 pages)", range: "₱15,000 – ₱50,000" },
+  { category: "Small Business/Portfolio Website", range: "₱20,000 – ₱100,000" }
+];
+
+const webDevelopmentPricingTiers: PricingTier[] = [
+  { category: "E-commerce Website (with online payment)", range: "₱40,000 – ₱300,000+" },
+  { category: "Custom/Corporate Site", range: "₱100,000 – ₱3,000,000+" }
+];
 
 export const serviceDefinitions: ServiceDefinition[] = [
   {
@@ -21,7 +48,8 @@ export const serviceDefinitions: ServiceDefinition[] = [
     intro:
       "This service is for businesses that need qualified organic traffic, not vanity rankings. We prioritize technical fixes, search-intent mapping, and measurable growth opportunities.",
     timeline: "6 to 12 weeks for initial rollout, then monthly growth cycles.",
-    investment: "Typical range: $1,500 to $6,000 per month depending on scope.",
+    investment: buildInvestmentSummary(seoPricingTiers),
+    pricingTiers: seoPricingTiers,
     deliverables: [
       "Technical SEO audit with prioritized action plan",
       "Search-intent and page architecture map",
@@ -45,7 +73,8 @@ export const serviceDefinitions: ServiceDefinition[] = [
     intro:
       "This service is ideal if your site looks outdated, confuses visitors, or underperforms on conversion. We redesign key page experiences around real buying behavior.",
     timeline: "4 to 10 weeks depending on number of templates and content readiness.",
-    investment: "Typical range: $2,500 to $12,000 per project.",
+    investment: buildInvestmentSummary(webDesignPricingTiers),
+    pricingTiers: webDesignPricingTiers,
     deliverables: [
       "Brand-aligned visual direction and UI system",
       "High-conversion homepage and service page designs",
@@ -69,7 +98,8 @@ export const serviceDefinitions: ServiceDefinition[] = [
     intro:
       "This service is for teams that need a reliable website build or rebuild with speed, stability, and search visibility in mind from day one.",
     timeline: "4 to 12 weeks depending on feature complexity and integrations.",
-    investment: "Typical range: $3,500 to $18,000 per project.",
+    investment: buildInvestmentSummary(webDevelopmentPricingTiers),
+    pricingTiers: webDevelopmentPricingTiers,
     deliverables: [
       "Production-ready frontend implementation",
       "Technical SEO foundations (metadata, schema, crawlability)",
