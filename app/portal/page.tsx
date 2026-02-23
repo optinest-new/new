@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { Session } from "@supabase/supabase-js";
 import { createSupabaseBrowserClient, hasSupabasePublicEnv } from "@/lib/supabase-browser";
 import { PortalNotificationCenter } from "@/components/portal-notification-center";
+import { PortalAlertModal, type PortalAlertTone } from "@/components/portal-alert-modal";
 
 type PortalProject = {
   id: string;
@@ -659,6 +660,9 @@ export default function PortalPage() {
   const [fullName, setFullName] = useState("");
   const [authMessage, setAuthMessage] = useState("");
   const [portalError, setPortalError] = useState("");
+  const [alertModal, setAlertModal] = useState<{ tone: PortalAlertTone; title: string; message: string } | null>(
+    null
+  );
   const [isSubmittingAuth, setIsSubmittingAuth] = useState(false);
   const [isSendingResetEmail, setIsSendingResetEmail] = useState(false);
   const [isRecoveryMode, setIsRecoveryMode] = useState(false);
@@ -972,6 +976,18 @@ export default function PortalPage() {
       subscription.unsubscribe();
     };
   }, [supabase]);
+
+  useEffect(() => {
+    if (!portalError) {
+      return;
+    }
+
+    setAlertModal({
+      tone: "error",
+      title: "Action Failed",
+      message: portalError
+    });
+  }, [portalError]);
 
   const loadProjects = useCallback(async () => {
     if (!supabase || !session) {
@@ -1748,6 +1764,11 @@ export default function PortalPage() {
     setIsRecoveryMode(false);
     setScheduleCallMessage("");
     setScheduleCallError("");
+    setPortalError("");
+  }
+
+  function handleAlertModalClose() {
+    setAlertModal(null);
     setPortalError("");
   }
 
@@ -3402,11 +3423,6 @@ export default function PortalPage() {
             </button>
           </div>
         </div>
-        {portalError ? (
-          <p className="mt-4 rounded-lg border border-[#d88] bg-[#fff1f1] px-3 py-2 text-sm text-[#7a1f1f]">
-            {portalError}
-          </p>
-        ) : null}
       </header>
 
       <section className="mt-6 grid gap-6 lg:grid-cols-[320px_1fr]">
@@ -5122,6 +5138,13 @@ export default function PortalPage() {
           )}
         </div>
       </section>
+      <PortalAlertModal
+        open={Boolean(alertModal)}
+        tone={alertModal?.tone ?? "info"}
+        title={alertModal?.title ?? "Portal Alert"}
+        message={alertModal?.message ?? ""}
+        onClose={handleAlertModalClose}
+      />
     </main>
   );
 }

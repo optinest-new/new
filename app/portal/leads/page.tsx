@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { createSupabaseBrowserClient, hasSupabasePublicEnv } from "@/lib/supabase-browser";
 import { PortalNotificationCenter } from "@/components/portal-notification-center";
+import { PortalAlertModal, type PortalAlertTone } from "@/components/portal-alert-modal";
 
 type LeadMagnetSubmission = {
   id: string;
@@ -23,6 +24,12 @@ type LeadMagnetSubmissionExportRow = {
   post_title: string | null;
   post_slug: string | null;
   page_path: string | null;
+};
+
+type PortalAlertState = {
+  tone: PortalAlertTone;
+  title: string;
+  message: string;
 };
 
 function formatDateTime(value: string): string {
@@ -65,6 +72,7 @@ export default function LeadMagnetSubmissionsPage() {
   const [pendingDeleteSubmissionId, setPendingDeleteSubmissionId] = useState<string | null>(null);
   const [searchDraft, setSearchDraft] = useState("");
   const [magnetFilter, setMagnetFilter] = useState("all");
+  const [alertModal, setAlertModal] = useState<PortalAlertState | null>(null);
   const hasResolvedManagerStatusRef = useRef(false);
 
   const magnetOptions = useMemo(() => {
@@ -193,6 +201,30 @@ export default function LeadMagnetSubmissionsPage() {
     void loadSubmissions();
   }, [isBootstrapManager, loadSubmissions, session]);
 
+  useEffect(() => {
+    if (!portalError) {
+      return;
+    }
+
+    setAlertModal({
+      tone: "error",
+      title: "Action Failed",
+      message: portalError
+    });
+  }, [portalError]);
+
+  useEffect(() => {
+    if (!pageMessage) {
+      return;
+    }
+
+    setAlertModal({
+      tone: "success",
+      title: "Action Complete",
+      message: pageMessage
+    });
+  }, [pageMessage]);
+
   async function handleSignOut() {
     if (!supabase) {
       return;
@@ -214,6 +246,12 @@ export default function LeadMagnetSubmissionsPage() {
 
   function handleDeleteModalClose() {
     setPendingDeleteSubmissionId(null);
+  }
+
+  function handleAlertModalClose() {
+    setAlertModal(null);
+    setPortalError("");
+    setPageMessage("");
   }
 
   async function handleDeleteSubmission(submissionId: string) {
@@ -420,16 +458,6 @@ export default function LeadMagnetSubmissionsPage() {
           </div>
         </div>
 
-        {portalError ? (
-          <p className="mt-4 rounded-lg border border-[#d88] bg-[#fff1f1] px-3 py-2 text-sm text-[#7a1f1f]">
-            {portalError}
-          </p>
-        ) : null}
-        {pageMessage ? (
-          <p className="mt-3 rounded-lg border border-[#84b98d] bg-[#e9f9ec] px-3 py-2 text-sm text-[#1f5c28]">
-            {pageMessage}
-          </p>
-        ) : null}
       </header>
 
       <section className="mt-6 rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6">
@@ -581,6 +609,13 @@ export default function LeadMagnetSubmissionsPage() {
           </div>
         </div>
       ) : null}
+      <PortalAlertModal
+        open={Boolean(alertModal)}
+        tone={alertModal?.tone ?? "info"}
+        title={alertModal?.title ?? "Portal Alert"}
+        message={alertModal?.message ?? ""}
+        onClose={handleAlertModalClose}
+      />
     </>
   );
 }

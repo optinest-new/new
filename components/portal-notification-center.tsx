@@ -187,7 +187,7 @@ export function PortalNotificationCenter({ session, onProjectSelect }: PortalNot
       {isOpen ? (
         <div
           style={mobilePanelTop !== null ? { top: `${mobilePanelTop}px` } : undefined}
-          className="fixed left-1/2 z-50 w-[min(92vw,24rem)] -translate-x-1/2 rounded-xl border-2 border-ink/80 bg-white p-3 shadow-hard sm:absolute sm:right-0 sm:mt-2 sm:translate-x-0"
+          className="fixed left-1/2 z-50 w-[min(92vw,24rem)] -translate-x-1/2 rounded-xl border-2 border-ink/80 bg-white p-3 shadow-hard sm:absolute sm:left-auto sm:right-0 sm:mt-2 sm:w-96 sm:max-w-[calc(100vw-2rem)] sm:translate-x-0"
         >
           <div className="flex items-center justify-between gap-2">
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-ink/70">Notifications</p>

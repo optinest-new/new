@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { PortalNotificationCenter } from "@/components/portal-notification-center";
+import { PortalAlertModal, type PortalAlertTone } from "@/components/portal-alert-modal";
 import { createSupabaseBrowserClient, hasSupabasePublicEnv } from "@/lib/supabase-browser";
 
 type BlogPostListItem = {
@@ -42,6 +43,12 @@ type SeoRequirementCheck = {
   detail: string;
   passed: boolean;
   priority: "required" | "recommended";
+};
+
+type PortalAlertState = {
+  tone: PortalAlertTone;
+  title: string;
+  message: string;
 };
 
 const SIDEBAR_POSTS_PER_PAGE = 10;
@@ -452,6 +459,7 @@ export default function PortalBlogManagerPage() {
   const [imageUploadMessage, setImageUploadMessage] = useState("");
   const [markdownImageUploadMessage, setMarkdownImageUploadMessage] = useState("");
   const [localImagePreviewUrl, setLocalImagePreviewUrl] = useState("");
+  const [alertModal, setAlertModal] = useState<PortalAlertState | null>(null);
   const hasResolvedManagerStatusRef = useRef(false);
   const localImagePreviewUrlRef = useRef("");
   const markdownEditorRef = useRef<HTMLTextAreaElement | null>(null);
@@ -737,6 +745,30 @@ export default function PortalBlogManagerPage() {
   }, [isBootstrapManager, loadPosts, session]);
 
   useEffect(() => {
+    if (!portalError) {
+      return;
+    }
+
+    setAlertModal({
+      tone: "error",
+      title: "Action Failed",
+      message: portalError
+    });
+  }, [portalError]);
+
+  useEffect(() => {
+    if (!pageMessage) {
+      return;
+    }
+
+    setAlertModal({
+      tone: "success",
+      title: "Action Complete",
+      message: pageMessage
+    });
+  }, [pageMessage]);
+
+  useEffect(() => {
     setSidebarPage((currentPage) => Math.min(currentPage, totalSidebarPages));
   }, [totalSidebarPages]);
 
@@ -748,6 +780,12 @@ export default function PortalBlogManagerPage() {
       }
     };
   }, []);
+
+  function handleAlertModalClose() {
+    setAlertModal(null);
+    setPortalError("");
+    setPageMessage("");
+  }
 
   async function handleSignOut() {
     if (!supabase) {
@@ -1165,16 +1203,6 @@ export default function PortalBlogManagerPage() {
           </div>
         </div>
 
-        {portalError ? (
-          <p className="mt-4 rounded-lg border border-[#d88] bg-[#fff1f1] px-3 py-2 text-sm text-[#7a1f1f]">
-            {portalError}
-          </p>
-        ) : null}
-        {pageMessage ? (
-          <p className="mt-4 rounded-lg border border-[#84b98d] bg-[#e9f9ec] px-3 py-2 text-sm text-[#1f5c28]">
-            {pageMessage}
-          </p>
-        ) : null}
       </header>
 
       <section className="mt-6 grid gap-6 lg:grid-cols-[320px_1fr]">
@@ -1722,6 +1750,13 @@ export default function PortalBlogManagerPage() {
           )}
         </section>
       </section>
+      <PortalAlertModal
+        open={Boolean(alertModal)}
+        tone={alertModal?.tone ?? "info"}
+        title={alertModal?.title ?? "Portal Alert"}
+        message={alertModal?.message ?? ""}
+        onClose={handleAlertModalClose}
+      />
     </main>
   );
 }

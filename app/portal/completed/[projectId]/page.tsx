@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import type { Session } from "@supabase/supabase-js";
 import { createSupabaseBrowserClient, hasSupabasePublicEnv } from "@/lib/supabase-browser";
 import { PortalNotificationCenter } from "@/components/portal-notification-center";
+import { PortalAlertModal, type PortalAlertTone } from "@/components/portal-alert-modal";
 
 type PortalProject = {
   id: string;
@@ -226,6 +227,9 @@ export default function CompletedProjectPage() {
   const [isLoadingSession, setIsLoadingSession] = useState(true);
   const [isLoadingProject, setIsLoadingProject] = useState(false);
   const [portalError, setPortalError] = useState("");
+  const [alertModal, setAlertModal] = useState<{ tone: PortalAlertTone; title: string; message: string } | null>(
+    null
+  );
   const [project, setProject] = useState<PortalProject | null>(null);
   const [projectUpdates, setProjectUpdates] = useState<ProjectUpdate[]>([]);
   const [projectQuestions, setProjectQuestions] = useState<ProjectQuestion[]>([]);
@@ -262,6 +266,18 @@ export default function CompletedProjectPage() {
       subscription.unsubscribe();
     };
   }, [supabase]);
+
+  useEffect(() => {
+    if (!portalError) {
+      return;
+    }
+
+    setAlertModal({
+      tone: "error",
+      title: "Action Failed",
+      message: portalError
+    });
+  }, [portalError]);
 
   const loadCompletedProject = useCallback(async () => {
     if (!supabase || !session || !projectId) {
@@ -483,6 +499,11 @@ export default function CompletedProjectPage() {
     setSession(null);
   }
 
+  function handleAlertModalClose() {
+    setAlertModal(null);
+    setPortalError("");
+  }
+
   if (!isSupabaseConfigured) {
     return (
       <main className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6">
@@ -553,12 +574,6 @@ export default function CompletedProjectPage() {
 
       {session ? (
         <>
-          {portalError ? (
-            <section className="mt-6 rounded-2xl border border-[#d88] bg-[#fff1f1] px-4 py-3 text-sm text-[#7a1f1f] shadow-hard">
-              {portalError}
-            </section>
-          ) : null}
-
           {isLoadingProject ? (
             <section className="mt-6 rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6">
               <p className="text-sm text-ink/80">Loading completed project details...</p>
@@ -729,6 +744,13 @@ export default function CompletedProjectPage() {
           ) : null}
         </>
       ) : null}
+      <PortalAlertModal
+        open={Boolean(alertModal)}
+        tone={alertModal?.tone ?? "info"}
+        title={alertModal?.title ?? "Portal Alert"}
+        message={alertModal?.message ?? ""}
+        onClose={handleAlertModalClose}
+      />
     </main>
   );
 }

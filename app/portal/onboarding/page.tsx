@@ -5,6 +5,7 @@ import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "re
 import type { Session } from "@supabase/supabase-js";
 import { createSupabaseBrowserClient, hasSupabasePublicEnv } from "@/lib/supabase-browser";
 import { PortalNotificationCenter } from "@/components/portal-notification-center";
+import { PortalAlertModal, type PortalAlertTone } from "@/components/portal-alert-modal";
 
 type OnboardingStatus = "call_scheduled" | "qualified" | "deposited" | "project_started";
 
@@ -39,6 +40,12 @@ type OnboardingLeadDraft = {
   quoted_amount: string;
   deposit_amount: string;
   payment_reference: string;
+};
+
+type PortalAlertState = {
+  tone: PortalAlertTone;
+  title: string;
+  message: string;
 };
 
 const REMOVED_FROM_PIPELINE_MARKER = "[removed_from_pipeline]";
@@ -135,6 +142,7 @@ export default function OnboardingPipelinePage() {
   const [deletingOnboardingLeadById, setDeletingOnboardingLeadById] = useState<Record<string, boolean>>({});
   const [pendingDeleteLeadId, setPendingDeleteLeadId] = useState<string | null>(null);
   const [expandedLeadIds, setExpandedLeadIds] = useState<Record<string, boolean>>({});
+  const [alertModal, setAlertModal] = useState<PortalAlertState | null>(null);
   const hasResolvedManagerStatusRef = useRef(false);
 
   const filteredOnboardingLeads = useMemo(() => {
@@ -305,6 +313,30 @@ export default function OnboardingPipelinePage() {
 
     void loadOnboardingLeads();
   }, [isBootstrapManager, loadOnboardingLeads, session]);
+
+  useEffect(() => {
+    if (!portalError) {
+      return;
+    }
+
+    setAlertModal({
+      tone: "error",
+      title: "Action Failed",
+      message: portalError
+    });
+  }, [portalError]);
+
+  useEffect(() => {
+    if (!pipelineMessage) {
+      return;
+    }
+
+    setAlertModal({
+      tone: "success",
+      title: "Action Complete",
+      message: pipelineMessage
+    });
+  }, [pipelineMessage]);
 
   async function handleSignOut() {
     if (!supabase) {
@@ -532,6 +564,12 @@ export default function OnboardingPipelinePage() {
     setPendingDeleteLeadId(null);
   }
 
+  function handleAlertModalClose() {
+    setAlertModal(null);
+    setPortalError("");
+    setPipelineMessage("");
+  }
+
   if (!isSupabaseConfigured) {
     return (
       <main className="mx-auto w-full max-w-4xl px-4 py-10 sm:px-6">
@@ -628,16 +666,6 @@ export default function OnboardingPipelinePage() {
           </div>
         </div>
 
-        {portalError ? (
-          <p className="mt-4 rounded-lg border border-[#d88] bg-[#fff1f1] px-3 py-2 text-sm text-[#7a1f1f]">
-            {portalError}
-          </p>
-        ) : null}
-        {pipelineMessage ? (
-          <p className="mt-3 rounded-lg border border-[#84b98d] bg-[#e9f9ec] px-3 py-2 text-sm text-[#1f5c28]">
-            {pipelineMessage}
-          </p>
-        ) : null}
       </header>
 
       <section className="mt-6 rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6">
@@ -944,6 +972,13 @@ export default function OnboardingPipelinePage() {
           </div>
         </div>
       ) : null}
+      <PortalAlertModal
+        open={Boolean(alertModal)}
+        tone={alertModal?.tone ?? "info"}
+        title={alertModal?.title ?? "Portal Alert"}
+        message={alertModal?.message ?? ""}
+        onClose={handleAlertModalClose}
+      />
     </>
   );
 }
