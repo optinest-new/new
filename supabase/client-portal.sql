@@ -976,6 +976,154 @@ begin
 end;
 $$;
 
+drop function if exists public.submit_client_project(text, text, date, date);
+
+create function public.submit_client_project(
+  project_name text,
+  summary_text text default null,
+  requested_start_date date default null,
+  requested_due_date date default null
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+  normalized_project_name text := nullif(trim(project_name), '');
+  normalized_summary text := nullif(trim(coalesce(summary_text, '')), '');
+  submitter_email text;
+  submitter_full_name text;
+  timeline_text text := null;
+  manager_user_id uuid;
+  new_lead_id uuid;
+begin
+  if auth.uid() is null then
+    raise exception 'not_authenticated';
+  end if;
+
+  if normalized_project_name is null then
+    raise exception 'project_name_required';
+  end if;
+
+  if
+    requested_start_date is not null
+    and requested_due_date is not null
+    and requested_due_date < requested_start_date
+  then
+    raise exception 'invalid_date_range';
+  end if;
+
+  select lower(trim(u.email))
+  into submitter_email
+  from auth.users u
+  where u.id = auth.uid();
+
+  if submitter_email is null or submitter_email = '' then
+    raise exception 'email_required';
+  end if;
+
+  if exists (
+    select 1
+    from public.projects p
+    where p.status not in ('completed', 'archived')
+      and (
+        exists (
+          select 1
+          from public.project_members pm
+          where pm.project_id = p.id
+            and pm.user_id = auth.uid()
+        )
+        or exists (
+          select 1
+          from public.project_member_emails pme
+          where pme.project_id = p.id
+            and lower(pme.email) = submitter_email
+        )
+      )
+  ) then
+    raise exception 'active_project_exists';
+  end if;
+
+  select
+    nullif(
+      trim(
+        coalesce(
+          u.raw_user_meta_data ->> 'registered_full_name',
+          u.raw_user_meta_data ->> 'full_name',
+          u.raw_user_meta_data ->> 'name',
+          u.raw_user_meta_data ->> 'fullName',
+          ''
+        )
+      ),
+      ''
+    )
+  into submitter_full_name
+  from auth.users u
+  where u.id = auth.uid();
+
+  if submitter_full_name is null then
+    submitter_full_name := nullif(
+      trim(initcap(replace(replace(split_part(submitter_email, '@', 1), '.', ' '), '_', ' '))),
+      ''
+    );
+  end if;
+
+  if submitter_full_name is null then
+    submitter_full_name := 'Client';
+  end if;
+
+  timeline_text := case
+    when requested_start_date is not null and requested_due_date is not null then
+      'Requested start ' || requested_start_date::text || ', due ' || requested_due_date::text
+    when requested_start_date is not null then
+      'Requested start ' || requested_start_date::text
+    when requested_due_date is not null then
+      'Requested due ' || requested_due_date::text
+    else null
+  end;
+
+  insert into public.onboarding_leads (
+    full_name,
+    email,
+    status,
+    proposed_project_name,
+    goals,
+    timeline_goal,
+    notes,
+    created_by
+  )
+  values (
+    submitter_full_name,
+    submitter_email,
+    'call_scheduled',
+    normalized_project_name,
+    normalized_summary,
+    timeline_text,
+    'Submitted from client portal project request.',
+    auth.uid()
+  )
+  returning id into new_lead_id;
+
+  select u.id
+  into manager_user_id
+  from auth.users u
+  order by u.created_at asc
+  limit 1;
+
+  perform public.create_user_notification(
+    manager_user_id,
+    null,
+    'client_project_submission',
+    'Client Project Submitted',
+    submitter_email || ' submitted "' || normalized_project_name || '" to onboarding.',
+    '/portal/onboarding'
+  );
+
+  return new_lead_id;
+end;
+$$;
+
 drop function if exists public.claim_pending_project_memberships();
 
 create function public.claim_pending_project_memberships()
@@ -1131,6 +1279,9 @@ grant execute on function public.is_bootstrap_manager() to authenticated;
 
 revoke all on function public.assign_client_to_project(uuid, text, text) from public;
 grant execute on function public.assign_client_to_project(uuid, text, text) to authenticated;
+
+revoke all on function public.submit_client_project(text, text, date, date) from public;
+grant execute on function public.submit_client_project(text, text, date, date) to authenticated;
 
 revoke all on function public.claim_pending_project_memberships() from public;
 grant execute on function public.claim_pending_project_memberships() to authenticated;

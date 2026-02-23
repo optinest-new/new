@@ -187,6 +187,11 @@ type ClientDirectorySuggestion = {
   full_name: string | null;
 };
 
+type ProjectOwnerContact = {
+  email: string;
+  full_name: string | null;
+};
+
 type UploadThreadAttachmentResult =
   | {
       ok: true;
@@ -203,6 +208,24 @@ type MemberRole = "client" | "manager" | "owner";
 type ProjectStatus = "planning" | "in_progress" | "review" | "completed" | "archived";
 type MilestoneStatus = "planned" | "in_progress" | "done";
 type ApprovalStatus = "pending" | "approved" | "changes_requested";
+type PortalWorkspaceTabId =
+  | "manager_controls"
+  | "active_project"
+  | "search_filters"
+  | "access_credentials"
+  | "admin_workspace"
+  | "timeline_milestones"
+  | "task_approvals"
+  | "progress_updates"
+  | "questions_threads"
+  | "files_documents";
+type PortalWorkspaceTab = {
+  id: PortalWorkspaceTabId;
+  label: string;
+  requiresProject?: boolean;
+  adminOnly?: boolean;
+  bootstrapOnly?: boolean;
+};
 
 const projectStatuses: ProjectStatus[] = ["planning", "in_progress", "review", "completed"];
 const onboardingStatuses: OnboardingStatus[] = [
@@ -228,6 +251,18 @@ const clientServiceNeedOptions: Array<{ value: ClientServiceNeed; label: string 
   { value: "content", label: "Content" },
   { value: "analytics", label: "Analytics" },
   { value: "maintenance", label: "Maintenance" }
+];
+const portalWorkspaceTabs: PortalWorkspaceTab[] = [
+  { id: "manager_controls", label: "Manager Controls", bootstrapOnly: true },
+  { id: "active_project", label: "Active Project", requiresProject: true },
+  { id: "search_filters", label: "Search & Filters", requiresProject: true },
+  { id: "access_credentials", label: "Access & Credentials", requiresProject: true },
+  { id: "admin_workspace", label: "Admin Workspace", requiresProject: true, adminOnly: true },
+  { id: "timeline_milestones", label: "Timeline & Milestones", requiresProject: true },
+  { id: "task_approvals", label: "Task Approvals", requiresProject: true },
+  { id: "progress_updates", label: "Progress Updates", requiresProject: true },
+  { id: "questions_threads", label: "Questions & Threads", requiresProject: true },
+  { id: "files_documents", label: "Files & Documents", requiresProject: true }
 ];
 
 function mapScheduleCallServiceSelection(value: string): ClientServiceNeed[] {
@@ -445,6 +480,23 @@ function formatBytes(sizeBytes: number): string {
   return `${(sizeBytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+function deriveNameFromEmail(email: string): string {
+  const localPart = email.split("@")[0] || "";
+  const normalized = localPart
+    .replace(/[._-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (!normalized) {
+    return "Project Owner";
+  }
+
+  return normalized
+    .split(" ")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
 function toSafeFileName(fileName: string): string {
   return fileName
     .trim()
@@ -644,6 +696,60 @@ function formatDeleteProjectError(message: string): string {
   return message;
 }
 
+function formatClientProjectSubmissionError(message: string): string {
+  if (message.includes("active_project_exists")) {
+    return "You already have an active project. Submit a new request after active projects are completed or archived.";
+  }
+
+  if (message.includes("project_name_required")) {
+    return "Project name is required.";
+  }
+
+  if (message.includes("invalid_date_range")) {
+    return "Due date cannot be earlier than start date.";
+  }
+
+  if (message.includes("email_required")) {
+    return "Your account email is required before submitting a project request.";
+  }
+
+  if (message.includes("not_authenticated")) {
+    return "Please sign in again and retry.";
+  }
+
+  return message;
+}
+
+function getDepositedLeadRequirementsError(draft: OnboardingLeadDraft): string | null {
+  if (draft.status !== "deposited") {
+    return null;
+  }
+
+  const missing: string[] = [];
+
+  if (!draft.quoted_amount.trim()) {
+    missing.push("Quoted Amount");
+  }
+
+  if (!draft.deposit_amount.trim()) {
+    missing.push("Deposit Amount");
+  }
+
+  if (!draft.payment_reference.trim()) {
+    missing.push("Payment Reference");
+  }
+
+  if (!draft.manager_notes.trim()) {
+    missing.push("Manager Notes");
+  }
+
+  if (missing.length === 0) {
+    return null;
+  }
+
+  return `Status "deposited" requires: ${missing.join(", ")}.`;
+}
+
 export default function PortalPage() {
   const isSupabaseConfigured = hasSupabasePublicEnv();
   const supabase = useMemo(
@@ -678,6 +784,7 @@ export default function PortalPage() {
   const [projectQuestions, setProjectQuestions] = useState<ProjectQuestion[]>([]);
   const [questionMessages, setQuestionMessages] = useState<QuestionMessage[]>([]);
   const [memberRolesByUserId, setMemberRolesByUserId] = useState<Record<string, MemberRole>>({});
+  const [projectOwners, setProjectOwners] = useState<ProjectOwnerContact[]>([]);
   const [projectFiles, setProjectFiles] = useState<ProjectFile[]>([]);
   const [projectMilestones, setProjectMilestones] = useState<ProjectMilestone[]>([]);
   const [projectApprovalTasks, setProjectApprovalTasks] = useState<ProjectApprovalTask[]>([]);
@@ -727,6 +834,14 @@ export default function PortalPage() {
   const [isSubmittingScheduleCall, setIsSubmittingScheduleCall] = useState(false);
   const [scheduleCallMessage, setScheduleCallMessage] = useState("");
   const [scheduleCallError, setScheduleCallError] = useState("");
+  const [isClientProjectRequestOpen, setIsClientProjectRequestOpen] = useState(false);
+  const [clientProjectRequestName, setClientProjectRequestName] = useState("");
+  const [clientProjectRequestSummary, setClientProjectRequestSummary] = useState("");
+  const [clientProjectRequestStartDate, setClientProjectRequestStartDate] = useState("");
+  const [clientProjectRequestDueDate, setClientProjectRequestDueDate] = useState("");
+  const [isSubmittingClientProjectRequest, setIsSubmittingClientProjectRequest] = useState(false);
+  const [clientProjectRequestMessage, setClientProjectRequestMessage] = useState("");
+  const [clientProjectRequestError, setClientProjectRequestError] = useState("");
   const [onboardingLeads, setOnboardingLeads] = useState<OnboardingLead[]>([]);
   const [isLoadingOnboardingLeads, setIsLoadingOnboardingLeads] = useState(false);
   const [onboardingSearchDraft, setOnboardingSearchDraft] = useState("");
@@ -783,14 +898,17 @@ export default function PortalPage() {
   const [isClientIntakeOpen, setIsClientIntakeOpen] = useState(false);
   const [isAccessChecklistOpen, setIsAccessChecklistOpen] = useState(false);
   const [expandedAccessItemIds, setExpandedAccessItemIds] = useState<Record<string, boolean>>({});
+  const [activeWorkspaceTab, setActiveWorkspaceTab] = useState<PortalWorkspaceTabId>("manager_controls");
 
   const selectedProject = projects.find((project) => project.id === selectedProjectId) || null;
   const effectiveRole: MemberRole | null = isBootstrapManager ? "manager" : currentRole;
   const isProjectAdmin = isBootstrapManager || currentRole === "manager" || currentRole === "owner";
+  const hasSelectedProject = Boolean(selectedProject);
   const activeProjects = useMemo(
     () => projects.filter((project) => project.status !== "completed" && project.status !== "archived"),
     [projects]
   );
+  const canSubmitClientProjectRequest = !isProjectAdmin && activeProjects.length === 0;
   const completedProjects = useMemo(
     () => projects.filter((project) => project.status === "completed"),
     [projects]
@@ -909,6 +1027,20 @@ export default function PortalPage() {
       }
     );
   }, [onboardingPipelineLeads]);
+  const availableWorkspaceTabs = useMemo(() => {
+    return portalWorkspaceTabs.filter((tab) => {
+      if (tab.bootstrapOnly && !isBootstrapManager) {
+        return false;
+      }
+      if (tab.adminOnly && !isProjectAdmin) {
+        return false;
+      }
+      if (tab.requiresProject && !hasSelectedProject) {
+        return false;
+      }
+      return true;
+    });
+  }, [hasSelectedProject, isBootstrapManager, isProjectAdmin]);
   const accessStatusCounts = useMemo(() => {
     return projectAccessItems.reduce<Record<AccessItemStatus, number>>(
       (counts, item) => {
@@ -923,6 +1055,16 @@ export default function PortalPage() {
       }
     );
   }, [projectAccessItems]);
+
+  useEffect(() => {
+    if (availableWorkspaceTabs.length === 0) {
+      return;
+    }
+
+    if (!availableWorkspaceTabs.some((tab) => tab.id === activeWorkspaceTab)) {
+      setActiveWorkspaceTab(availableWorkspaceTabs[0].id);
+    }
+  }, [activeWorkspaceTab, availableWorkspaceTabs]);
 
   useEffect(() => {
     setAuthMessage("");
@@ -982,10 +1124,14 @@ export default function PortalPage() {
       return;
     }
 
+    const alertMessage = portalError.includes("active_project_exists")
+      ? formatClientProjectSubmissionError(portalError)
+      : portalError;
+
     setAlertModal({
       tone: "error",
       title: "Action Failed",
-      message: portalError
+      message: alertMessage
     });
   }, [portalError]);
 
@@ -1035,6 +1181,7 @@ export default function PortalPage() {
 
   const handleSelectProject = useCallback((projectId: string) => {
     setSelectedProjectId(projectId);
+    setActiveWorkspaceTab("active_project");
 
     if (typeof window === "undefined") {
       return;
@@ -1053,6 +1200,7 @@ export default function PortalPage() {
 
       setIsLoadingProjectData(true);
       setPortalError("");
+      setProjectOwners([]);
 
       const [
         updatesResult,
@@ -1171,6 +1319,56 @@ export default function PortalPage() {
       }
       setMemberRolesByUserId(memberRoleMap);
       setCurrentRole((membershipResult.data?.role as MemberRole | undefined) ?? null);
+
+      const { data: ownerEmailRows } = await supabase
+        .from("project_member_emails")
+        .select("email")
+        .eq("project_id", projectId)
+        .eq("role", "owner");
+
+      const ownerEmails = Array.from(
+        new Set(
+          (ownerEmailRows ?? [])
+            .map((row) => (typeof row.email === "string" ? row.email.trim().toLowerCase() : ""))
+            .filter((emailValue) => emailValue.length > 0)
+        )
+      );
+
+      if (ownerEmails.length === 0) {
+        setProjectOwners([]);
+        return;
+      }
+
+      const ownerContacts = await Promise.all(
+        ownerEmails.map(async (ownerEmail) => {
+          const { data: ownerMatches } = await supabase.rpc("search_project_user_emails", {
+            project_uuid: projectId,
+            search_query: ownerEmail,
+            result_limit: 1
+          });
+
+          const matches = (ownerMatches ?? []) as Array<{
+            email?: string | null;
+            full_name?: string | null;
+          }>;
+          const exactMatch =
+            matches.find(
+              (entry) =>
+                typeof entry.email === "string" && entry.email.trim().toLowerCase() === ownerEmail
+            ) || matches[0];
+          const fullName =
+            typeof exactMatch?.full_name === "string" && exactMatch.full_name.trim().length > 0
+              ? exactMatch.full_name.trim()
+              : deriveNameFromEmail(ownerEmail);
+
+          return {
+            email: ownerEmail,
+            full_name: fullName
+          };
+        })
+      );
+
+      setProjectOwners(ownerContacts);
     },
     [session, supabase]
   );
@@ -1233,6 +1431,7 @@ export default function PortalPage() {
       setProjectApprovalTasks([]);
       setProjectClientIntake(null);
       setProjectAccessItems([]);
+      setProjectOwners([]);
       setQuestionMessageAttachmentUrls({});
       setMemberRolesByUserId({});
       setCurrentRole(null);
@@ -1246,6 +1445,14 @@ export default function PortalPage() {
       setScheduleCallMessage("");
       setScheduleCallError("");
       setIsSubmittingScheduleCall(false);
+      setIsClientProjectRequestOpen(false);
+      setClientProjectRequestName("");
+      setClientProjectRequestSummary("");
+      setClientProjectRequestStartDate("");
+      setClientProjectRequestDueDate("");
+      setIsSubmittingClientProjectRequest(false);
+      setClientProjectRequestMessage("");
+      setClientProjectRequestError("");
       setReplyDrafts({});
       setReplyUrlDrafts({});
       setReplyFileDrafts({});
@@ -1326,6 +1533,7 @@ export default function PortalPage() {
       setProjectApprovalTasks([]);
       setProjectClientIntake(null);
       setProjectAccessItems([]);
+      setProjectOwners([]);
       setQuestionMessageAttachmentUrls({});
       setMemberRolesByUserId({});
       setCurrentRole(null);
@@ -2237,6 +2445,60 @@ export default function PortalPage() {
     setScheduleCallMessage("Call request submitted. We will contact you to confirm the schedule.");
   }
 
+  async function handleSubmitClientProjectRequest(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!supabase || !session) {
+      return;
+    }
+
+    const projectName = clientProjectRequestName.trim();
+    const summaryText = clientProjectRequestSummary.trim();
+
+    if (!projectName) {
+      setClientProjectRequestError("Project name is required.");
+      return;
+    }
+
+    if (
+      clientProjectRequestStartDate &&
+      clientProjectRequestDueDate &&
+      clientProjectRequestDueDate < clientProjectRequestStartDate
+    ) {
+      setClientProjectRequestError("Due date cannot be earlier than start date.");
+      return;
+    }
+
+    setIsSubmittingClientProjectRequest(true);
+    setClientProjectRequestError("");
+    setClientProjectRequestMessage("");
+
+    const { error } = await supabase.rpc("submit_client_project", {
+      project_name: projectName,
+      summary_text: summaryText || null,
+      requested_start_date: clientProjectRequestStartDate || null,
+      requested_due_date: clientProjectRequestDueDate || null
+    });
+
+    setIsSubmittingClientProjectRequest(false);
+
+    if (error) {
+      setClientProjectRequestError(formatClientProjectSubmissionError(error.message));
+      return;
+    }
+
+    setClientProjectRequestName("");
+    setClientProjectRequestSummary("");
+    setClientProjectRequestStartDate("");
+    setClientProjectRequestDueDate("");
+    setIsClientProjectRequestOpen(false);
+    setClientProjectRequestMessage(
+      "Project request submitted. Your manager has been notified in the onboarding pipeline."
+    );
+
+    await loadProjects();
+  }
+
   function handleOnboardingDraftChange(
     leadId: string,
     field: keyof OnboardingLeadDraft,
@@ -2265,6 +2527,12 @@ export default function PortalPage() {
 
     const draft = onboardingLeadDrafts[leadId];
     if (!draft) {
+      return;
+    }
+
+    const depositedRequirementError = getDepositedLeadRequirementsError(draft);
+    if (depositedRequirementError) {
+      setPortalError(depositedRequirementError);
       return;
     }
 
@@ -2319,6 +2587,19 @@ export default function PortalPage() {
       return;
     }
 
+    const depositedRequirementError = getDepositedLeadRequirementsError(draft);
+    if (depositedRequirementError) {
+      setPortalError(depositedRequirementError);
+      return;
+    }
+
+    const quotedValue = Number.parseFloat(draft.quoted_amount.trim());
+    const depositValue = Number.parseFloat(draft.deposit_amount.trim());
+    if (Number.isNaN(quotedValue) || Number.isNaN(depositValue)) {
+      setPortalError("Quoted and deposit amounts must be valid numbers.");
+      return;
+    }
+
     if (lead.converted_project_id) {
       setPortalError("This onboarding lead is already converted to a project.");
       return;
@@ -2365,6 +2646,11 @@ export default function PortalPage() {
       .from("onboarding_leads")
       .update({
         status: "project_started",
+        manager_notes: draft.manager_notes.trim() || null,
+        proposed_project_name: projectName,
+        quoted_amount: quotedValue,
+        deposit_amount: depositValue,
+        payment_reference: draft.payment_reference.trim() || null,
         converted_project_id: projectRow.id,
         converted_at: new Date().toISOString()
       })
@@ -3562,7 +3848,127 @@ export default function PortalPage() {
         </aside>
 
         <div className="space-y-6">
-          {isBootstrapManager ? (
+          {canSubmitClientProjectRequest ? (
+            <section className="rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h2 className="font-display text-xl uppercase text-ink">Need A New Project?</h2>
+                  <p className="mt-2 text-sm text-ink/75">
+                    Submit a request and your manager will receive it in the onboarding pipeline.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsClientProjectRequestOpen((current) => !current)}
+                  className="inline-flex items-center rounded-full border-2 border-[#1f56c2] bg-[#2d6cdf] px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white transition hover:-translate-y-0.5 hover:bg-[#245cc3]"
+                >
+                  {isClientProjectRequestOpen ? "Close" : "Add Project"}
+                </button>
+              </div>
+
+              {clientProjectRequestMessage ? (
+                <p className="mt-4 rounded-lg border border-[#84b98d] bg-[#e9f9ec] px-3 py-2 text-sm text-[#1f5c28]">
+                  {clientProjectRequestMessage}
+                </p>
+              ) : null}
+
+              {clientProjectRequestError ? (
+                <p className="mt-4 rounded-lg border border-[#d88] bg-[#fff1f1] px-3 py-2 text-sm text-[#7a1f1f]">
+                  {clientProjectRequestError}
+                </p>
+              ) : null}
+
+              {isClientProjectRequestOpen ? (
+                <form onSubmit={handleSubmitClientProjectRequest} className="mt-4 grid gap-3 sm:grid-cols-2">
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-semibold uppercase tracking-[0.12em] text-ink/70">
+                      Project Name
+                    </label>
+                    <input
+                      type="text"
+                      value={clientProjectRequestName}
+                      onChange={(event) => setClientProjectRequestName(event.target.value)}
+                      placeholder="Website redesign, SEO growth, landing page build..."
+                      className="mt-1 w-full rounded-lg border border-ink/25 bg-white px-3 py-2.5 text-sm text-ink outline-none focus:border-ink/60"
+                      required
+                    />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-semibold uppercase tracking-[0.12em] text-ink/70">
+                      Project Goals / Summary
+                    </label>
+                    <textarea
+                      rows={4}
+                      value={clientProjectRequestSummary}
+                      onChange={(event) => setClientProjectRequestSummary(event.target.value)}
+                      placeholder="Describe what you want to build and your business goals."
+                      className="mt-1 w-full rounded-lg border border-ink/25 bg-white px-3 py-2.5 text-sm text-ink outline-none focus:border-ink/60"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-[0.12em] text-ink/70">
+                      Requested Start Date
+                    </label>
+                    <input
+                      type="date"
+                      value={clientProjectRequestStartDate}
+                      onChange={(event) => setClientProjectRequestStartDate(event.target.value)}
+                      className="mt-1 w-full rounded-lg border border-ink/25 bg-white px-3 py-2.5 text-sm text-ink outline-none focus:border-ink/60"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-[0.12em] text-ink/70">
+                      Requested Due Date
+                    </label>
+                    <input
+                      type="date"
+                      value={clientProjectRequestDueDate}
+                      onChange={(event) => setClientProjectRequestDueDate(event.target.value)}
+                      className="mt-1 w-full rounded-lg border border-ink/25 bg-white px-3 py-2.5 text-sm text-ink outline-none focus:border-ink/60"
+                    />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <button
+                      type="submit"
+                      disabled={isSubmittingClientProjectRequest}
+                      className="inline-flex items-center rounded-full border-2 border-[#9a5300] bg-[#cc6d00] px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white transition hover:-translate-y-0.5 hover:bg-[#b85f00] disabled:cursor-not-allowed disabled:opacity-70"
+                    >
+                      {isSubmittingClientProjectRequest ? "Submitting..." : "Submit Project Request"}
+                    </button>
+                  </div>
+                </form>
+              ) : null}
+            </section>
+          ) : null}
+
+          {availableWorkspaceTabs.length > 0 ? (
+            <section className="rounded-2xl border-2 border-ink/80 bg-mist p-3 shadow-hard sm:p-4">
+              <p className="px-1 text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-ink/70">
+                Dashboard Tabs
+              </p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {availableWorkspaceTabs.map((tab) => {
+                  const isActive = tab.id === activeWorkspaceTab;
+                  return (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => setActiveWorkspaceTab(tab.id)}
+                      className={`whitespace-nowrap rounded-full border px-3 py-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.1em] transition ${
+                        isActive
+                          ? "border-[#a87700] bg-[#ffe8a3] text-[#5b3a00] shadow-[2px_2px_0_#a87700]"
+                          : "border-ink/25 bg-white text-ink hover:border-ink/50"
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+          ) : null}
+
+          {isBootstrapManager && activeWorkspaceTab === "manager_controls" ? (
             <section className="rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6">
               <div className="flex items-center justify-between gap-3">
                 <h2 className="font-display text-xl uppercase text-ink">Manager Controls</h2>
@@ -3735,17 +4141,20 @@ export default function PortalPage() {
           ) : null}
 
           {!selectedProject ? (
-            <section className="rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard">
-              <p className="text-sm text-ink/80">Select a project to view details.</p>
-              {isProjectAdmin ? (
-                <p className="mt-2 text-xs text-ink/65">
-                  Archive and permanent delete actions appear in Project Snapshot after selecting a project.
-                </p>
-              ) : null}
-            </section>
+            activeWorkspaceTab === "manager_controls" ? null : (
+              <section className="rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard">
+                <p className="text-sm text-ink/80">Select a project to view details.</p>
+                {isProjectAdmin ? (
+                  <p className="mt-2 text-xs text-ink/65">
+                    Archive and permanent delete actions appear in Project Snapshot after selecting a project.
+                  </p>
+                ) : null}
+              </section>
+            )
           ) : (
             <>
-              <section className="rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6">
+              {activeWorkspaceTab === "active_project" ? (
+                <section className="rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <h2 className="font-display text-2xl uppercase leading-none text-ink">
@@ -3758,6 +4167,25 @@ export default function PortalPage() {
                     <p className="mt-1 text-xs font-semibold uppercase tracking-[0.1em] text-ink/60">
                       Your Access: {formatRole(effectiveRole)}
                     </p>
+                    {isProjectAdmin ? (
+                      <div className="mt-2 text-xs text-ink/70">
+                        <p className="font-semibold uppercase tracking-[0.1em] text-ink/60">
+                          Project Owner{projectOwners.length === 1 ? "" : "s"}
+                        </p>
+                        {projectOwners.length === 0 ? (
+                          <p className="mt-1">No owner assigned yet.</p>
+                        ) : (
+                          <ul className="mt-1 space-y-1">
+                            {projectOwners.map((owner) => (
+                              <li key={owner.email}>
+                                <span className="font-semibold text-ink">{owner.full_name || "Project Owner"}</span>{" "}
+                                <span className="text-ink/65">({owner.email})</span>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    ) : null}
                   </div>
                   <span
                     className={`self-start rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] ${
@@ -3835,7 +4263,8 @@ export default function PortalPage() {
                     )}
                   </div>
                 </div>
-              </section>
+                </section>
+              ) : null}
 
               {isProjectSnapshotModalOpen ? (
                 <div
@@ -3945,7 +4374,8 @@ export default function PortalPage() {
                 </div>
               ) : null}
 
-              <section className="rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6">
+              {activeWorkspaceTab === "search_filters" ? (
+                <section className="rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6">
                 <h3 className="font-display text-xl uppercase text-ink">Search & Filters</h3>
                 <div className="mt-3 grid gap-3 md:grid-cols-4">
                   <input
@@ -4007,9 +4437,11 @@ export default function PortalPage() {
                     </select>
                   </label>
                 </div>
-              </section>
+                </section>
+              ) : null}
 
-              <section className="rounded-2xl border-2 border-ink/80 bg-mist p-4 shadow-hard sm:p-5">
+              {activeWorkspaceTab === "access_credentials" ? (
+                <section className="rounded-2xl border-2 border-ink/80 bg-mist p-4 shadow-hard sm:p-5">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <h3 className="font-display text-xl uppercase text-ink">
                     {isProjectAdmin ? "Access & Credentials Checklist" : "Client Intake & Access"}
@@ -4529,9 +4961,10 @@ export default function PortalPage() {
                     ) : null}
                   </article>
                 </div>
-              </section>
+                </section>
+              ) : null}
 
-              {isProjectAdmin ? (
+              {isProjectAdmin && activeWorkspaceTab === "admin_workspace" ? (
                 <section className="rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6">
                   <h3 className="font-display text-xl uppercase text-ink">Admin Workspace</h3>
                   <p className="mt-2 text-sm text-ink/75">
@@ -4592,7 +5025,8 @@ export default function PortalPage() {
                 </section>
               ) : null}
 
-              <section className="rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6">
+              {activeWorkspaceTab === "timeline_milestones" ? (
+                <section className="rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <h3 className="font-display text-xl uppercase text-ink">Project Timeline & Milestones</h3>
                   <span className="text-xs font-semibold uppercase tracking-[0.1em] text-ink/65">
@@ -4690,9 +5124,11 @@ export default function PortalPage() {
                     </article>
                   ))}
                 </div>
-              </section>
+                </section>
+              ) : null}
 
-              <section className="rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6">
+              {activeWorkspaceTab === "task_approvals" ? (
+                <section className="rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <h3 className="font-display text-xl uppercase text-ink">Task Approvals</h3>
                   <span className="text-xs font-semibold uppercase tracking-[0.1em] text-ink/65">
@@ -4816,9 +5252,11 @@ export default function PortalPage() {
                     );
                   })}
                 </div>
-              </section>
+                </section>
+              ) : null}
 
-              <section className="rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6">
+              {activeWorkspaceTab === "progress_updates" ? (
+                <section className="rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6">
                 <h3 className="font-display text-xl uppercase text-ink">Progress Updates</h3>
                 {isLoadingProjectData ? <p className="mt-3 text-sm text-ink/75">Loading...</p> : null}
                 {!isLoadingProjectData && filteredProjectUpdates.length === 0 ? (
@@ -4844,9 +5282,11 @@ export default function PortalPage() {
                     </article>
                   ))}
                 </div>
-              </section>
+                </section>
+              ) : null}
 
-              <section className="rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6">
+              {activeWorkspaceTab === "questions_threads" ? (
+                <section className="rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6">
                 <h3 className="font-display text-xl uppercase text-ink">Questions & Threads</h3>
                 <form onSubmit={handleSubmitQuestion} className="mt-3 space-y-3">
                   <textarea
@@ -5084,9 +5524,11 @@ export default function PortalPage() {
                   );
                   })}
                 </div>
-              </section>
+                </section>
+              ) : null}
 
-              <section className="rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6">
+              {activeWorkspaceTab === "files_documents" ? (
+                <section className="rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <h3 className="font-display text-xl uppercase text-ink">Files & Documents</h3>
                   <label className="inline-flex cursor-pointer items-center rounded-full border-2 border-ink bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-ink transition hover:-translate-y-0.5">
@@ -5133,7 +5575,8 @@ export default function PortalPage() {
                     </article>
                   ))}
                 </div>
-              </section>
+                </section>
+              ) : null}
             </>
           )}
         </div>

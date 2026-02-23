@@ -103,6 +103,36 @@ function formatAssignmentError(message: string): string {
   return message;
 }
 
+function getDepositedLeadRequirementsError(draft: OnboardingLeadDraft): string | null {
+  if (draft.status !== "deposited") {
+    return null;
+  }
+
+  const missing: string[] = [];
+
+  if (!draft.quoted_amount.trim()) {
+    missing.push("Quoted Amount");
+  }
+
+  if (!draft.deposit_amount.trim()) {
+    missing.push("Deposit Amount");
+  }
+
+  if (!draft.payment_reference.trim()) {
+    missing.push("Payment Reference");
+  }
+
+  if (!draft.manager_notes.trim()) {
+    missing.push("Manager Notes");
+  }
+
+  if (missing.length === 0) {
+    return null;
+  }
+
+  return `Status "deposited" requires: ${missing.join(", ")}.`;
+}
+
 function isRemovedFromPipeline(managerNotes: string | null): boolean {
   if (!managerNotes) {
     return false;
@@ -384,6 +414,12 @@ export default function OnboardingPipelinePage() {
       return;
     }
 
+    const depositedRequirementError = getDepositedLeadRequirementsError(draft);
+    if (depositedRequirementError) {
+      setPortalError(depositedRequirementError);
+      return;
+    }
+
     const quoted = draft.quoted_amount.trim();
     const deposit = draft.deposit_amount.trim();
     const quotedValue = quoted ? Number.parseFloat(quoted) : null;
@@ -437,6 +473,19 @@ export default function OnboardingPipelinePage() {
       return;
     }
 
+    const depositedRequirementError = getDepositedLeadRequirementsError(draft);
+    if (depositedRequirementError) {
+      setPortalError(depositedRequirementError);
+      return;
+    }
+
+    const quotedValue = Number.parseFloat(draft.quoted_amount.trim());
+    const depositValue = Number.parseFloat(draft.deposit_amount.trim());
+    if (Number.isNaN(quotedValue) || Number.isNaN(depositValue)) {
+      setPortalError("Quoted and deposit amounts must be valid numbers.");
+      return;
+    }
+
     const projectName = draft.proposed_project_name.trim() || `${lead.company_name || lead.full_name} Project`;
 
     setConvertingOnboardingLeadById((current) => ({ ...current, [leadId]: true }));
@@ -478,6 +527,11 @@ export default function OnboardingPipelinePage() {
       .from("onboarding_leads")
       .update({
         status: "project_started",
+        manager_notes: draft.manager_notes.trim() || null,
+        proposed_project_name: projectName,
+        quoted_amount: quotedValue,
+        deposit_amount: depositValue,
+        payment_reference: draft.payment_reference.trim() || null,
         converted_project_id: projectRow.id,
         converted_at: new Date().toISOString()
       })
@@ -741,6 +795,7 @@ export default function OnboardingPipelinePage() {
             const isDeleting = Boolean(deletingOnboardingLeadById[lead.id]);
             const serviceTags = lead.services_needed ?? [];
             const isExpanded = Boolean(expandedLeadIds[lead.id]);
+            const requiresDepositedFields = draft.status === "deposited";
 
             if (!draft) {
               return null;
@@ -833,6 +888,11 @@ export default function OnboardingPipelinePage() {
                       ))}
                     </select>
                   </label>
+                  {requiresDepositedFields ? (
+                    <p className="sm:col-span-2 rounded-md border border-[#0f7663]/35 bg-[#e8fff9] px-2 py-1.5 text-xs text-[#0f6a70]">
+                      Deposited leads require Quoted Amount, Deposit Amount, Payment Reference, and Manager Notes.
+                    </p>
+                  ) : null}
                   <label className="text-xs font-semibold uppercase tracking-[0.1em] text-ink/65">
                     Project Name
                     <input
@@ -854,6 +914,7 @@ export default function OnboardingPipelinePage() {
                         handleOnboardingDraftChange(lead.id, "quoted_amount", event.target.value)
                       }
                       placeholder="5000"
+                      required={requiresDepositedFields}
                       className="mt-1 w-full rounded-lg border border-ink/25 bg-white px-2 py-2 text-sm normal-case tracking-normal text-ink outline-none focus:border-ink/60"
                     />
                   </label>
@@ -866,6 +927,7 @@ export default function OnboardingPipelinePage() {
                         handleOnboardingDraftChange(lead.id, "deposit_amount", event.target.value)
                       }
                       placeholder="2500"
+                      required={requiresDepositedFields}
                       className="mt-1 w-full rounded-lg border border-ink/25 bg-white px-2 py-2 text-sm normal-case tracking-normal text-ink outline-none focus:border-ink/60"
                     />
                   </label>
@@ -878,6 +940,7 @@ export default function OnboardingPipelinePage() {
                         handleOnboardingDraftChange(lead.id, "payment_reference", event.target.value)
                       }
                       placeholder="Invoice number, payment link, transfer reference"
+                      required={requiresDepositedFields}
                       className="mt-1 w-full rounded-lg border border-ink/25 bg-white px-2 py-2 text-sm normal-case tracking-normal text-ink outline-none focus:border-ink/60"
                     />
                   </label>
@@ -890,6 +953,7 @@ export default function OnboardingPipelinePage() {
                         handleOnboardingDraftChange(lead.id, "manager_notes", event.target.value)
                       }
                       placeholder="Qualification notes, blockers, action items"
+                      required={requiresDepositedFields}
                       className="mt-1 w-full rounded-lg border border-ink/25 bg-white px-2 py-2 text-sm normal-case tracking-normal text-ink outline-none focus:border-ink/60"
                     />
                   </label>

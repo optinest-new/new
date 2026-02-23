@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { createSupabaseBrowserClient, hasSupabasePublicEnv } from "@/lib/supabase-browser";
+import { PortalAlertModal } from "@/components/portal-alert-modal";
 
 type PortalNotification = {
   id: string;
@@ -42,8 +43,11 @@ export function PortalNotificationCenter({ session, onProjectSelect }: PortalNot
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [incomingAlert, setIncomingAlert] = useState<{ title: string; message: string } | null>(null);
   const [mobilePanelTop, setMobilePanelTop] = useState<number | null>(null);
   const triggerButtonRef = useRef<HTMLButtonElement | null>(null);
+  const hasInitializedNotificationsRef = useRef(false);
+  const seenUnreadNotificationIdsRef = useRef<Set<string>>(new Set());
 
   const unreadCount = useMemo(
     () => notifications.reduce((count, item) => count + (item.is_read ? 0 : 1), 0),
@@ -73,13 +77,39 @@ export function PortalNotificationCenter({ session, onProjectSelect }: PortalNot
       return;
     }
 
-    setNotifications((data ?? []) as PortalNotification[]);
+    const nextNotifications = (data ?? []) as PortalNotification[];
+    const nextUnreadIds = new Set(
+      nextNotifications.filter((item) => !item.is_read).map((item) => item.id)
+    );
+
+    if (hasInitializedNotificationsRef.current) {
+      const newUnread = nextNotifications
+        .filter((item) => !item.is_read && !seenUnreadNotificationIdsRef.current.has(item.id))
+        .sort(
+          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+
+      if (newUnread.length > 0) {
+        const latest = newUnread[0];
+        setIncomingAlert({
+          title: latest.title,
+          message: latest.message?.trim() || "You have a new portal alert."
+        });
+      }
+    }
+
+    hasInitializedNotificationsRef.current = true;
+    seenUnreadNotificationIdsRef.current = nextUnreadIds;
+    setNotifications(nextNotifications);
   }, [session, supabase]);
 
   useEffect(() => {
     if (!session || !supabase) {
       setNotifications([]);
       setErrorMessage("");
+      setIncomingAlert(null);
+      hasInitializedNotificationsRef.current = false;
+      seenUnreadNotificationIdsRef.current = new Set();
       return;
     }
 
@@ -90,6 +120,32 @@ export function PortalNotificationCenter({ session, onProjectSelect }: PortalNot
 
     return () => {
       window.clearInterval(intervalId);
+    };
+  }, [loadNotifications, session, supabase]);
+
+  useEffect(() => {
+    if (!session || !supabase) {
+      return;
+    }
+
+    const channel = supabase
+      .channel(`portal-notifications-${session.user.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "portal_notifications",
+          filter: `user_id=eq.${session.user.id}`
+        },
+        () => {
+          void loadNotifications();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
     };
   }, [loadNotifications, session, supabase]);
 
@@ -169,85 +225,94 @@ export function PortalNotificationCenter({ session, onProjectSelect }: PortalNot
   }
 
   return (
-    <div className="relative">
-      <button
-        ref={triggerButtonRef}
-        type="button"
-        onClick={() => setIsOpen((current) => !current)}
-        className="inline-flex items-center gap-2 rounded-full border-2 border-ink bg-white px-3 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-ink transition hover:-translate-y-0.5"
-      >
-        Alerts
-        {unreadCount > 0 ? (
-          <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-[#d44444] px-1.5 py-0.5 text-[0.62rem] font-bold text-white">
-            {unreadCount > 99 ? "99+" : unreadCount}
-          </span>
-        ) : null}
-      </button>
-
-      {isOpen ? (
-        <div
-          style={mobilePanelTop !== null ? { top: `${mobilePanelTop}px` } : undefined}
-          className="fixed left-1/2 z-50 w-[min(92vw,24rem)] -translate-x-1/2 rounded-xl border-2 border-ink/80 bg-white p-3 shadow-hard sm:absolute sm:left-auto sm:right-0 sm:mt-2 sm:w-96 sm:max-w-[calc(100vw-2rem)] sm:translate-x-0"
+    <>
+      <div className="relative">
+        <button
+          ref={triggerButtonRef}
+          type="button"
+          onClick={() => setIsOpen((current) => !current)}
+          className="inline-flex items-center gap-2 rounded-full border-2 border-ink bg-white px-3 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-ink transition hover:-translate-y-0.5"
         >
-          <div className="flex items-center justify-between gap-2">
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-ink/70">Notifications</p>
-            <button
-              type="button"
-              onClick={() => void handleMarkAllAsRead()}
-              disabled={unreadCount === 0}
-              className="text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-ink/70 hover:underline disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              Mark all read
-            </button>
-          </div>
-
-          {errorMessage ? (
-            <p className="mt-2 rounded-md border border-[#d88] bg-[#fff1f1] px-2.5 py-2 text-xs text-[#7a1f1f]">
-              {errorMessage}
-            </p>
+          Alerts
+          {unreadCount > 0 ? (
+            <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-[#d44444] px-1.5 py-0.5 text-[0.62rem] font-bold text-white">
+              {unreadCount > 99 ? "99+" : unreadCount}
+            </span>
           ) : null}
+        </button>
 
-          {isLoading ? (
-            <p className="mt-3 text-sm text-ink/70">Loading notifications...</p>
-          ) : notifications.length === 0 ? (
-            <p className="mt-3 text-sm text-ink/70">No notifications yet.</p>
-          ) : (
-            <div className="mt-3 max-h-96 space-y-2 overflow-y-auto pr-1">
-              {notifications.map((item) => {
-                const href = item.project_id ? `/portal?project=${item.project_id}` : item.link_path || "/portal";
-                const projectName = item.project?.[0]?.name?.trim() || "";
-                return (
-                  <Link
-                    key={item.id}
-                    href={href}
-                    onClick={() => {
-                      if (item.project_id && onProjectSelect) {
-                        onProjectSelect(item.project_id);
-                      }
-                      if (!item.is_read) {
-                        void handleMarkAsRead(item.id);
-                      }
-                      setIsOpen(false);
-                    }}
-                    className={`block rounded-lg border px-3 py-2 transition ${
-                      item.is_read ? "border-ink/15 bg-white" : "border-ink/30 bg-mist"
-                    }`}
-                  >
-                    <p className="text-xs font-semibold text-ink">{item.title}</p>
-                    {item.project_id ? (
-                      <p className="mt-1 text-[0.68rem] font-semibold uppercase tracking-[0.08em] text-ink/65">
-                        Project: {projectName || item.project_id.slice(0, 8)}
-                      </p>
-                    ) : null}
-                    {item.message ? <p className="mt-1 text-xs text-ink/75">{item.message}</p> : null}
-                    <p className="mt-1 text-[0.68rem] text-ink/60">{formatDateTime(item.created_at)}</p>
-                  </Link>
-                );
-              })}
+        {isOpen ? (
+          <div
+            style={mobilePanelTop !== null ? { top: `${mobilePanelTop}px` } : undefined}
+            className="fixed left-1/2 z-50 w-[min(92vw,24rem)] -translate-x-1/2 rounded-xl border-2 border-ink/80 bg-white p-3 shadow-hard sm:absolute sm:left-auto sm:right-0 sm:mt-2 sm:w-96 sm:max-w-[calc(100vw-2rem)] sm:translate-x-0"
+          >
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-ink/70">Notifications</p>
+              <button
+                type="button"
+                onClick={() => void handleMarkAllAsRead()}
+                disabled={unreadCount === 0}
+                className="text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-ink/70 hover:underline disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Mark all read
+              </button>
             </div>
-          )}
-        </div>
-      ) : null}
-    </div>
+
+            {errorMessage ? (
+              <p className="mt-2 rounded-md border border-[#d88] bg-[#fff1f1] px-2.5 py-2 text-xs text-[#7a1f1f]">
+                {errorMessage}
+              </p>
+            ) : null}
+
+            {isLoading ? (
+              <p className="mt-3 text-sm text-ink/70">Loading notifications...</p>
+            ) : notifications.length === 0 ? (
+              <p className="mt-3 text-sm text-ink/70">No notifications yet.</p>
+            ) : (
+              <div className="mt-3 max-h-96 space-y-2 overflow-y-auto pr-1">
+                {notifications.map((item) => {
+                  const href = item.project_id ? `/portal?project=${item.project_id}` : item.link_path || "/portal";
+                  const projectName = item.project?.[0]?.name?.trim() || "";
+                  return (
+                    <Link
+                      key={item.id}
+                      href={href}
+                      onClick={() => {
+                        if (item.project_id && onProjectSelect) {
+                          onProjectSelect(item.project_id);
+                        }
+                        if (!item.is_read) {
+                          void handleMarkAsRead(item.id);
+                        }
+                        setIsOpen(false);
+                      }}
+                      className={`block rounded-lg border px-3 py-2 transition ${
+                        item.is_read ? "border-ink/15 bg-white" : "border-ink/30 bg-mist"
+                      }`}
+                    >
+                      <p className="text-xs font-semibold text-ink">{item.title}</p>
+                      {item.project_id ? (
+                        <p className="mt-1 text-[0.68rem] font-semibold uppercase tracking-[0.08em] text-ink/65">
+                          Project: {projectName || item.project_id.slice(0, 8)}
+                        </p>
+                      ) : null}
+                      {item.message ? <p className="mt-1 text-xs text-ink/75">{item.message}</p> : null}
+                      <p className="mt-1 text-[0.68rem] text-ink/60">{formatDateTime(item.created_at)}</p>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        ) : null}
+      </div>
+      <PortalAlertModal
+        open={Boolean(incomingAlert)}
+        tone="info"
+        title={incomingAlert?.title || "New Alert"}
+        message={incomingAlert?.message || ""}
+        onClose={() => setIncomingAlert(null)}
+      />
+    </>
   );
 }
