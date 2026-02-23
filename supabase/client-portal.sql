@@ -1151,7 +1151,7 @@ revoke all on function public.search_project_user_emails(uuid, text, integer) fr
 grant execute on function public.search_project_user_emails(uuid, text, integer) to authenticated;
 
 grant insert on table public.onboarding_leads to anon, authenticated;
-grant select, update on table public.onboarding_leads to authenticated;
+grant select, update, delete on table public.onboarding_leads to authenticated;
 grant insert on table public.lead_magnet_submissions to anon, authenticated;
 grant select on table public.lead_magnet_submissions to authenticated;
 grant select, update on table public.portal_notifications to authenticated;
@@ -1426,6 +1426,13 @@ for update
 to authenticated
 using (public.is_bootstrap_manager())
 with check (public.is_bootstrap_manager());
+
+drop policy if exists "Managers can delete onboarding leads" on public.onboarding_leads;
+create policy "Managers can delete onboarding leads"
+on public.onboarding_leads
+for delete
+to authenticated
+using (public.is_bootstrap_manager());
 
 drop policy if exists "Anyone can submit lead magnet captures" on public.lead_magnet_submissions;
 create policy "Anyone can submit lead magnet captures"

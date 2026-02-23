@@ -41,6 +41,8 @@ type OnboardingLeadDraft = {
   payment_reference: string;
 };
 
+const REMOVED_FROM_PIPELINE_MARKER = "[removed_from_pipeline]";
+
 const onboardingStatuses: OnboardingStatus[] = [
   "call_scheduled",
   "qualified",
@@ -94,6 +96,18 @@ function formatAssignmentError(message: string): string {
   return message;
 }
 
+function isRemovedFromPipeline(managerNotes: string | null): boolean {
+  if (!managerNotes) {
+    return false;
+  }
+
+  return managerNotes.trim().toLowerCase().startsWith(REMOVED_FROM_PIPELINE_MARKER);
+}
+
+function isPermissionDeleteError(message: string): boolean {
+  return /permission|policy|row-level|not allowed|42501/i.test(message);
+}
+
 export default function OnboardingPipelinePage() {
   const isSupabaseConfigured = hasSupabasePublicEnv();
   const supabase = useMemo(
@@ -119,6 +133,7 @@ export default function OnboardingPipelinePage() {
     Record<string, boolean>
   >({});
   const [deletingOnboardingLeadById, setDeletingOnboardingLeadById] = useState<Record<string, boolean>>({});
+  const [pendingDeleteLeadId, setPendingDeleteLeadId] = useState<string | null>(null);
   const [expandedLeadIds, setExpandedLeadIds] = useState<Record<string, boolean>>({});
   const hasResolvedManagerStatusRef = useRef(false);
 
@@ -148,6 +163,11 @@ export default function OnboardingPipelinePage() {
       }
     );
   }, [onboardingLeads]);
+
+  const pendingDeleteLead = useMemo(
+    () => onboardingLeads.find((lead) => lead.id === pendingDeleteLeadId) ?? null,
+    [onboardingLeads, pendingDeleteLeadId]
+  );
 
   useEffect(() => {
     if (!supabase) {
@@ -219,6 +239,7 @@ export default function OnboardingPipelinePage() {
       setSavingOnboardingLeadById({});
       setConvertingOnboardingLeadById({});
       setDeletingOnboardingLeadById({});
+      setPendingDeleteLeadId(null);
       setExpandedLeadIds({});
       return;
     }
@@ -242,10 +263,11 @@ export default function OnboardingPipelinePage() {
     }
 
     const rows = (data ?? []) as OnboardingLead[];
-    setOnboardingLeads(rows);
+    const activeRows = rows.filter((lead) => !isRemovedFromPipeline(lead.manager_notes));
+    setOnboardingLeads(activeRows);
 
     const nextDrafts: Record<string, OnboardingLeadDraft> = {};
-    for (const lead of rows) {
+    for (const lead of activeRows) {
       nextDrafts[lead.id] = {
         status: lead.status,
         manager_notes: lead.manager_notes || "",
@@ -276,6 +298,7 @@ export default function OnboardingPipelinePage() {
       setSavingOnboardingLeadById({});
       setConvertingOnboardingLeadById({});
       setDeletingOnboardingLeadById({});
+      setPendingDeleteLeadId(null);
       setExpandedLeadIds({});
       return;
     }
@@ -292,6 +315,7 @@ export default function OnboardingPipelinePage() {
     setOnboardingLeads([]);
     setOnboardingLeadDrafts({});
     setDeletingOnboardingLeadById({});
+    setPendingDeleteLeadId(null);
     setExpandedLeadIds({});
     setPortalError("");
     setPipelineMessage("");
@@ -452,19 +476,39 @@ export default function OnboardingPipelinePage() {
       return;
     }
 
-    const shouldDelete = window.confirm(
-      `Remove ${lead.full_name} (${lead.email}) from onboarding pipeline? This action cannot be undone.`
-    );
-
-    if (!shouldDelete) {
-      return;
-    }
-
     setDeletingOnboardingLeadById((current) => ({ ...current, [leadId]: true }));
     setPortalError("");
     setPipelineMessage("");
 
     const { error } = await supabase.from("onboarding_leads").delete().eq("id", leadId);
+
+    if (error && isPermissionDeleteError(error.message)) {
+      const archivedNotes = [
+        `${REMOVED_FROM_PIPELINE_MARKER} ${new Date().toISOString()}`,
+        lead.manager_notes?.trim() || ""
+      ]
+        .filter(Boolean)
+        .join("\n");
+
+      const { error: archiveError } = await supabase
+        .from("onboarding_leads")
+        .update({ manager_notes: archivedNotes })
+        .eq("id", leadId);
+
+      setDeletingOnboardingLeadById((current) => ({ ...current, [leadId]: false }));
+
+      if (archiveError) {
+        setPortalError(archiveError.message);
+        return;
+      }
+
+      setPipelineMessage(
+        "Lead removed from onboarding pipeline. (Archived because delete permission is not enabled yet.)"
+      );
+      setPendingDeleteLeadId(null);
+      await loadOnboardingLeads();
+      return;
+    }
 
     setDeletingOnboardingLeadById((current) => ({ ...current, [leadId]: false }));
 
@@ -474,7 +518,18 @@ export default function OnboardingPipelinePage() {
     }
 
     setPipelineMessage("Lead removed from onboarding pipeline.");
+    setPendingDeleteLeadId(null);
     await loadOnboardingLeads();
+  }
+
+  function handleDeleteModalOpen(leadId: string) {
+    setPendingDeleteLeadId(leadId);
+    setPortalError("");
+    setPipelineMessage("");
+  }
+
+  function handleDeleteModalClose() {
+    setPendingDeleteLeadId(null);
   }
 
   if (!isSupabaseConfigured) {
@@ -545,7 +600,8 @@ export default function OnboardingPipelinePage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
+    <>
+      <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
       <header className="rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
@@ -830,7 +886,7 @@ export default function OnboardingPipelinePage() {
                     ) : null}
                     <button
                       type="button"
-                      onClick={() => void handleDeleteOnboardingLead(lead.id)}
+                      onClick={() => handleDeleteModalOpen(lead.id)}
                       disabled={isDeleting || isSaving || isConverting}
                       className="inline-flex items-center rounded-full border-2 border-[#b42318] bg-[#d92d20] px-3 py-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-white transition hover:bg-[#b42318] disabled:cursor-not-allowed disabled:opacity-70"
                     >
@@ -844,6 +900,50 @@ export default function OnboardingPipelinePage() {
           })}
         </div>
       </section>
-    </main>
+      </main>
+
+      {pendingDeleteLead ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/50 px-4 py-6">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="remove-onboarding-lead-modal-title"
+            className="w-full max-w-lg rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6"
+          >
+            <h2
+              id="remove-onboarding-lead-modal-title"
+              className="font-display text-2xl uppercase leading-none text-ink"
+            >
+              Remove Lead
+            </h2>
+            <p className="mt-3 text-sm text-ink/85">
+              Remove <span className="font-semibold">{pendingDeleteLead.full_name}</span> (
+              <span className="font-semibold">{pendingDeleteLead.email}</span>) from onboarding pipeline?
+            </p>
+            <p className="mt-2 text-xs uppercase tracking-[0.08em] text-ink/65">
+              This action cannot be undone.
+            </p>
+            <div className="mt-5 flex flex-wrap items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={handleDeleteModalClose}
+                disabled={Boolean(deletingOnboardingLeadById[pendingDeleteLead.id])}
+                className="inline-flex items-center rounded-full border-2 border-ink/35 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.1em] text-ink transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleDeleteOnboardingLead(pendingDeleteLead.id)}
+                disabled={Boolean(deletingOnboardingLeadById[pendingDeleteLead.id])}
+                className="inline-flex items-center rounded-full border-2 border-[#b42318] bg-[#d92d20] px-4 py-2 text-xs font-semibold uppercase tracking-[0.1em] text-white transition hover:-translate-y-0.5 hover:bg-[#b42318] disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {deletingOnboardingLeadById[pendingDeleteLead.id] ? "Removing..." : "Confirm Remove"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </>
   );
 }
