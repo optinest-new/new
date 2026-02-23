@@ -47,7 +47,7 @@ export const serviceDefinitions: ServiceDefinition[] = [
       "Technical SEO, content architecture, and conversion-focused optimization built around lead quality and revenue goals.",
     intro:
       "This service is for businesses that need qualified organic traffic, not vanity rankings. We prioritize technical fixes, search-intent mapping, and measurable growth opportunities.",
-    timeline: "6 to 12 weeks for initial rollout, then monthly growth cycles.",
+    timeline: "8 to 16 weeks for initial traction, then monthly optimization cycles.",
     investment: buildInvestmentSummary(seoPricingTiers),
     pricingTiers: seoPricingTiers,
     deliverables: [
@@ -72,7 +72,7 @@ export const serviceDefinitions: ServiceDefinition[] = [
       "Conversion-focused website design with modern visual systems, messaging clarity, and strong mobile usability.",
     intro:
       "This service is ideal if your site looks outdated, confuses visitors, or underperforms on conversion. We redesign key page experiences around real buying behavior.",
-    timeline: "4 to 10 weeks depending on number of templates and content readiness.",
+    timeline: "4 to 8 weeks for core templates, or 8 to 12 weeks with larger scope and slower content readiness.",
     investment: buildInvestmentSummary(webDesignPricingTiers),
     pricingTiers: webDesignPricingTiers,
     deliverables: [
@@ -97,7 +97,7 @@ export const serviceDefinitions: ServiceDefinition[] = [
       "Fast, SEO-friendly, production-ready builds with clean code, strong Core Web Vitals, and scalable architecture.",
     intro:
       "This service is for teams that need a reliable website build or rebuild with speed, stability, and search visibility in mind from day one.",
-    timeline: "4 to 12 weeks depending on feature complexity and integrations.",
+    timeline: "6 to 14 weeks depending on feature complexity, CMS requirements, and third-party integrations.",
     investment: buildInvestmentSummary(webDevelopmentPricingTiers),
     pricingTiers: webDevelopmentPricingTiers,
     deliverables: [
