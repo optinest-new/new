@@ -794,7 +794,7 @@ export default function ServicesPage() {
                 })}
               </ul>
             </div>
-            <div className="mt-auto pt-5">
+            <div className="mt-auto flex justify-center pt-5">
               <Link
                 href={`/services/${service.slug}`}
                 className="inline-flex items-center justify-center rounded-full border-2 border-ink bg-ink px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] text-mist transition hover:-translate-y-0.5"
@@ -828,7 +828,7 @@ export default function ServicesPage() {
       </section>
 
       <section className="mt-10 rounded-2xl border-2 border-ink/80 bg-mist p-5 text-center shadow-hard sm:p-6">
-        <p className="text-sm text-ink/80">Need help choosing the right starting point?</p>
+        <p className="text-base font-semibold text-ink/85 sm:text-lg">Need help choosing the right starting point?</p>
         <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
           <Link
             href="/services/seo"
