@@ -364,6 +364,7 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
           <span className="inline-flex w-fit rounded-full bg-[#d8ecff] px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-[#134d7a]">
             {service.timeline}
           </span>
+          <p className="text-[0.72rem] text-ink/65">Timeline assumes timely feedback and content approvals.</p>
           <div className="rounded-xl border-2 border-[#c58a00]/45 bg-[#fff4d6] px-4 py-3">
             <p className="text-[0.62rem] font-bold uppercase tracking-[0.12em] text-[#7a5200]">Pricing</p>
             <ul className="mt-2 space-y-2">

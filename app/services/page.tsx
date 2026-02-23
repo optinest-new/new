@@ -769,6 +769,7 @@ export default function ServicesPage() {
             <h2 className="mt-2 font-display text-2xl uppercase leading-[0.95] text-ink">{service.title}</h2>
             <p className="mt-3 text-sm text-ink/80">{service.summary}</p>
             <p className="mt-4 text-xs font-semibold uppercase tracking-[0.1em] text-[#1f56c2]">{service.timeline}</p>
+            <p className="mt-1 text-[0.68rem] text-ink/65">Timeline assumes timely feedback and content approvals.</p>
             <div className="mt-2 rounded-xl border-2 border-[#c58a00]/45 bg-[#fff4d6] px-3 py-2">
               <p className="text-[0.62rem] font-bold uppercase tracking-[0.12em] text-[#7a5200]">Pricing</p>
               <ul className="mt-2 space-y-2">
