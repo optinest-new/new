@@ -7,30 +7,41 @@ type CreatePayPalOrderInput = {
   cancelUrl: string;
 };
 
-const paypalClientId = process.env.PAYPAL_CLIENT_ID;
-const paypalClientSecret = process.env.PAYPAL_CLIENT_SECRET;
-const paypalEnvironment = (process.env.PAYPAL_ENVIRONMENT || "sandbox").trim().toLowerCase();
+function getPayPalConfig() {
+  const clientId = (process.env["PAYPAL_CLIENT_ID"] || "").trim();
+  const clientSecret = (process.env["PAYPAL_CLIENT_SECRET"] || "").trim();
+  const environment = (process.env["PAYPAL_ENVIRONMENT"] || "sandbox").trim().toLowerCase();
 
-function getPayPalBaseUrl() {
-  return paypalEnvironment === "live" ? "https://api-m.paypal.com" : "https://api-m.sandbox.paypal.com";
+  return {
+    clientId,
+    clientSecret,
+    environment: environment || "sandbox"
+  };
+}
+
+function getPayPalBaseUrl(environment: string) {
+  return environment === "live" ? "https://api-m.paypal.com" : "https://api-m.sandbox.paypal.com";
 }
 
 function getPayPalClientCredentials() {
-  if (!paypalClientId || !paypalClientSecret) {
+  const { clientId, clientSecret } = getPayPalConfig();
+
+  if (!clientId || !clientSecret) {
     throw new Error("PayPal server environment variables are missing.");
   }
 
   return {
-    clientId: paypalClientId,
-    clientSecret: paypalClientSecret
+    clientId,
+    clientSecret
   };
 }
 
 async function getPayPalAccessToken() {
   const { clientId, clientSecret } = getPayPalClientCredentials();
+  const { environment } = getPayPalConfig();
   const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
 
-  const response = await fetch(`${getPayPalBaseUrl()}/v1/oauth2/token`, {
+  const response = await fetch(`${getPayPalBaseUrl(environment)}/v1/oauth2/token`, {
     method: "POST",
     headers: {
       Authorization: `Basic ${credentials}`,
@@ -52,13 +63,15 @@ async function getPayPalAccessToken() {
 }
 
 export function hasPayPalServerEnv() {
-  return Boolean(paypalClientId && paypalClientSecret);
+  const { clientId, clientSecret } = getPayPalConfig();
+  return Boolean(clientId && clientSecret);
 }
 
 export async function createPayPalOrder(input: CreatePayPalOrderInput) {
   const accessToken = await getPayPalAccessToken();
+  const { environment } = getPayPalConfig();
 
-  const response = await fetch(`${getPayPalBaseUrl()}/v2/checkout/orders`, {
+  const response = await fetch(`${getPayPalBaseUrl(environment)}/v2/checkout/orders`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -110,8 +123,9 @@ export async function createPayPalOrder(input: CreatePayPalOrderInput) {
 
 export async function capturePayPalOrder(orderId: string) {
   const accessToken = await getPayPalAccessToken();
+  const { environment } = getPayPalConfig();
 
-  const response = await fetch(`${getPayPalBaseUrl()}/v2/checkout/orders/${orderId}/capture`, {
+  const response = await fetch(`${getPayPalBaseUrl(environment)}/v2/checkout/orders/${orderId}/capture`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${accessToken}`,
