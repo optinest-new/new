@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import Link from "next/link";
 import { FloatingShare } from "@/components/blog/floating-share";
 import { ScheduleCallModal } from "@/components/schedule-call-modal";
-import { serviceDefinitions } from "@/lib/services";
+import { getCountryCodeFromHeaders } from "@/lib/geo";
+import { getPricingCurrencyByCountry, getPricingTiersForCurrency, serviceDefinitions } from "@/lib/services";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://optinestdigital.com";
 const servicesPageTitle = "SEO, Web Design, and Web Development Services";
@@ -688,7 +690,11 @@ export const metadata: Metadata = {
   }
 };
 
-export default function ServicesPage() {
+export default async function ServicesPage() {
+  const requestHeaders = await headers();
+  const countryCode = getCountryCodeFromHeaders(requestHeaders);
+  const pricingCurrency = getPricingCurrencyByCountry(countryCode);
+
   const servicesPageStructuredData = {
     "@context": "https://schema.org",
     "@graph": [
@@ -763,48 +769,54 @@ export default function ServicesPage() {
       </header>
 
       <section aria-label="Service cards" className="mt-10 grid gap-5 md:grid-cols-3">
-        {serviceDefinitions.map((service) => (
-          <article key={service.slug} className="flex h-full flex-col rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard">
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-ink/65">{service.shortLabel}</p>
-            <h2 className="mt-2 font-display text-2xl uppercase leading-[0.95] text-ink">{service.title}</h2>
-            <p className="mt-3 text-sm text-ink/80">{service.summary}</p>
-            <p className="mt-4 text-xs font-semibold uppercase tracking-[0.1em] text-[#1f56c2]">{service.timeline}</p>
-            <p className="mt-1 text-[0.68rem] text-ink/65">Timeline assumes timely feedback and content approvals.</p>
-            <div className="mt-2 rounded-xl border-2 border-[#c58a00]/45 bg-[#fff4d6] px-3 py-2">
-              <p className="text-[0.62rem] font-bold uppercase tracking-[0.12em] text-[#7a5200]">Pricing</p>
-              <ul className="mt-2 space-y-2">
-                {service.pricingTiers.map((tier) => {
-                  const style = pricingTierStyle(tier.category);
-                  return (
-                    <li key={`${service.slug}-${tier.category}`} className={`rounded-lg border px-2.5 py-2 ${style.row}`}>
-                      <div className="flex items-start gap-2">
-                        <span className={`mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border ${style.iconWrap}`}>
-                          {renderPricingTierIcon(tier.category)}
-                        </span>
-                        <div>
+        {serviceDefinitions.map((service) => {
+          const pricingTiers = getPricingTiersForCurrency(service.pricingTiers, pricingCurrency);
+
+          return (
+            <article key={service.slug} className="flex h-full flex-col rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard">
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-ink/65">{service.shortLabel}</p>
+              <h2 className="mt-2 font-display text-2xl uppercase leading-[0.95] text-ink">{service.title}</h2>
+              <p className="mt-3 text-sm text-ink/80">{service.summary}</p>
+              <p className="mt-4 text-xs font-semibold uppercase tracking-[0.1em] text-[#1f56c2]">{service.timeline}</p>
+              <p className="mt-1 text-[0.68rem] text-ink/65">Timeline assumes timely feedback and content approvals.</p>
+              <div className="mt-2 rounded-xl border-2 border-[#c58a00]/45 bg-[#fff4d6] px-3 py-2">
+                <p className="text-[0.62rem] font-bold uppercase tracking-[0.12em] text-[#7a5200]">Pricing</p>
+                <ul className="mt-2 space-y-2">
+                  {pricingTiers.map((tier) => {
+                    const style = pricingTierStyle(tier.category);
+                    return (
+                      <li key={`${service.slug}-${tier.category}`} className={`rounded-lg border px-2.5 py-2 ${style.row}`}>
+                        <div className="flex items-start gap-2">
                           <span
-                            className={`inline-flex rounded-full px-2 py-0.5 text-[0.62rem] font-bold uppercase tracking-[0.1em] ${style.badge}`}
+                            className={`mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border ${style.iconWrap}`}
                           >
-                            {tier.category}
+                            {renderPricingTierIcon(tier.category)}
                           </span>
-                          <p className={`mt-1 text-sm font-semibold leading-snug ${style.range}`}>{tier.range}</p>
+                          <div>
+                            <span
+                              className={`inline-flex rounded-full px-2 py-0.5 text-[0.62rem] font-bold uppercase tracking-[0.1em] ${style.badge}`}
+                            >
+                              {tier.category}
+                            </span>
+                            <p className={`mt-1 text-sm font-semibold leading-snug ${style.range}`}>{tier.range}</p>
+                          </div>
                         </div>
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-            <div className="mt-auto flex justify-center pt-5">
-              <Link
-                href={`/services/${service.slug}`}
-                className="inline-flex items-center justify-center rounded-full border-2 border-ink bg-ink px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] text-mist transition hover:-translate-y-0.5"
-              >
-                View Service
-              </Link>
-            </div>
-          </article>
-        ))}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+              <div className="mt-auto flex justify-center pt-5">
+                <Link
+                  href={`/services/${service.slug}`}
+                  className="inline-flex items-center justify-center rounded-full border-2 border-ink bg-ink px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] text-mist transition hover:-translate-y-0.5"
+                >
+                  View Service
+                </Link>
+              </div>
+            </article>
+          );
+        })}
       </section>
 
       <section id="how-we-work" className="mt-10 scroll-mt-28 rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6">

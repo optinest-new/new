@@ -1,9 +1,17 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { FloatingShare } from "@/components/blog/floating-share";
 import { ScheduleCallModal } from "@/components/schedule-call-modal";
-import { getServiceBySlug, serviceDefinitions } from "@/lib/services";
+import { getCountryCodeFromHeaders } from "@/lib/geo";
+import {
+  buildInvestmentSummary,
+  getPricingCurrencyByCountry,
+  getPricingTiersForCurrency,
+  getServiceBySlug,
+  serviceDefinitions
+} from "@/lib/services";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://optinestdigital.com";
 
@@ -266,6 +274,11 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
     notFound();
   }
 
+  const requestHeaders = await headers();
+  const countryCode = getCountryCodeFromHeaders(requestHeaders);
+  const pricingCurrency = getPricingCurrencyByCountry(countryCode);
+  const pricingTiers = getPricingTiersForCurrency(service.pricingTiers, pricingCurrency);
+  const investmentSummary = buildInvestmentSummary(service.pricingTiers, pricingCurrency);
   const serviceUrl = `${siteUrl}/services/${service.slug}`;
   const serviceStructuredData = {
     "@context": "https://schema.org",
@@ -332,8 +345,8 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
           availability: "https://schema.org/InStock",
           priceSpecification: {
             "@type": "PriceSpecification",
-            priceCurrency: "PHP",
-            description: service.investment
+            priceCurrency: pricingCurrency,
+            description: investmentSummary
           }
         }
       }
@@ -368,7 +381,7 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
           <div className="rounded-xl border-2 border-[#c58a00]/45 bg-[#fff4d6] px-4 py-3">
             <p className="text-[0.62rem] font-bold uppercase tracking-[0.12em] text-[#7a5200]">Pricing</p>
             <ul className="mt-2 space-y-2">
-              {service.pricingTiers.map((tier) => {
+              {pricingTiers.map((tier) => {
                 const style = pricingTierStyle(tier.category);
                 return (
                   <li key={`${service.slug}-${tier.category}`} className={`rounded-lg border px-2.5 py-2 ${style.row}`}>

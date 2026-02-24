@@ -17,8 +17,48 @@ export type PricingTier = {
   range: string;
 };
 
-function buildInvestmentSummary(pricingTiers: PricingTier[]) {
-  return pricingTiers.map((tier) => `${tier.category}: ${tier.range}`).join(" · ");
+export type PricingCurrency = "PHP" | "USD";
+
+const PHP_PER_USD = 56;
+const usdFormatter = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+  maximumFractionDigits: 0
+});
+
+function convertPhpToUsd(phpAmount: number) {
+  return Math.round(phpAmount / PHP_PER_USD);
+}
+
+export function getPricingCurrencyByCountry(countryCode: string | null | undefined): PricingCurrency {
+  return countryCode?.toUpperCase() === "PH" ? "PHP" : "USD";
+}
+
+export function formatPricingRange(range: string, currency: PricingCurrency) {
+  if (currency === "PHP") {
+    return range;
+  }
+
+  return range.replace(/₱\s?([\d,]+)(\+)?/g, (_match, amount, hasPlus) => {
+    const phpValue = Number(String(amount).replace(/,/g, ""));
+    const usdValue = convertPhpToUsd(phpValue);
+    return `${usdFormatter.format(usdValue)}${hasPlus || ""}`;
+  });
+}
+
+export function getPricingTiersForCurrency(pricingTiers: PricingTier[], currency: PricingCurrency): PricingTier[] {
+  if (currency === "PHP") {
+    return pricingTiers;
+  }
+
+  return pricingTiers.map((tier) => ({
+    ...tier,
+    range: formatPricingRange(tier.range, currency)
+  }));
+}
+
+export function buildInvestmentSummary(pricingTiers: PricingTier[], currency: PricingCurrency = "PHP") {
+  return pricingTiers.map((tier) => `${tier.category}: ${formatPricingRange(tier.range, currency)}`).join(" · ");
 }
 
 const seoPricingTiers: PricingTier[] = [
