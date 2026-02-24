@@ -284,6 +284,7 @@ type PortalWorkspaceTab = {
   adminOnly?: boolean;
   bootstrapOnly?: boolean;
 };
+type TabLastSeenById = Partial<Record<PortalWorkspaceTabId, string>>;
 
 const projectStatuses: ProjectStatus[] = ["planning", "in_progress", "review", "completed"];
 const onboardingStatuses: OnboardingStatus[] = [
@@ -331,6 +332,20 @@ const portalWorkspaceTabs: PortalWorkspaceTab[] = [
   { id: "questions_threads", label: "Questions & Threads", requiresProject: true },
   { id: "files_documents", label: "Files & Documents", requiresProject: true }
 ];
+const tabLastSeenStoragePrefix = "portal-dashboard-tab-last-seen-v1";
+
+function parseTimestampMs(value: string | null | undefined): number {
+  if (!value) {
+    return 0;
+  }
+
+  const parsed = Date.parse(value);
+  return Number.isNaN(parsed) ? 0 : parsed;
+}
+
+function getTabLastSeenStorageKey(userId: string, projectId: string): string {
+  return `${tabLastSeenStoragePrefix}:${userId}:${projectId}`;
+}
 
 function mapScheduleCallServiceSelection(value: string): ClientServiceNeed[] {
   if (value === "Web Design") {
@@ -548,12 +563,70 @@ function formatProjectBalance(quotedAmount: number | null, amountPaid: number | 
   return formatUsd(balance);
 }
 
+function getProjectBalanceAmount(quotedAmount: number | null, amountPaid: number | null): number | null {
+  if (quotedAmount === null || Number.isNaN(quotedAmount)) {
+    return null;
+  }
+
+  return Number((quotedAmount - (amountPaid ?? 0)).toFixed(2));
+}
+
+function getProjectPaymentBadge(quotedAmount: number | null, amountPaid: number | null): {
+  label: "Outstanding" | "Paid" | "No Quote";
+  className: string;
+  balance: number | null;
+} {
+  const balance = getProjectBalanceAmount(quotedAmount, amountPaid);
+
+  if (balance === null) {
+    return {
+      label: "No Quote",
+      className: "border-ink/25 bg-fog text-ink/65",
+      balance: null
+    };
+  }
+
+  if (balance > 0) {
+    return {
+      label: "Outstanding",
+      className: "border-[#e3b36d] bg-[#fff8ec] text-[#8a5a00]",
+      balance
+    };
+  }
+
+  return {
+    label: "Paid",
+    className: "border-[#84b98d] bg-[#e9f9ec] text-[#1f5c28]",
+    balance
+  };
+}
+
 function formatRecurringInterval(value: RecurringInterval): string {
   return recurringIntervalOptions.find((option) => option.value === value)?.label || "Monthly";
 }
 
 function formatPaymentStatus(status: ProjectPaymentStatus): string {
   return status.replace("_", " ");
+}
+
+function getPaymentStatusBadgeClass(status: ProjectPaymentStatus): string {
+  if (status === "captured") {
+    return "border-[#84b98d] bg-[#e9f9ec] text-[#1f5c28]";
+  }
+
+  if (status === "created") {
+    return "border-[#e3b36d] bg-[#fff8ec] text-[#8a5a00]";
+  }
+
+  if (status === "approved") {
+    return "border-[#9cc9f3] bg-[#e8f4ff] text-[#134d7a]";
+  }
+
+  if (status === "failed") {
+    return "border-[#e7a4a4] bg-[#fff1f1] text-[#7a1f1f]";
+  }
+
+  return "border-ink/20 bg-fog text-ink/70";
 }
 
 function toDateInputValue(value: string | null): string {
@@ -916,6 +989,8 @@ export default function PortalPage() {
   const [projectClientIntake, setProjectClientIntake] = useState<ClientIntakeProfile | null>(null);
   const [projectAccessItems, setProjectAccessItems] = useState<ProjectAccessItem[]>([]);
   const [projectPayments, setProjectPayments] = useState<ProjectPayment[]>([]);
+  const [selectedProjectPayments, setSelectedProjectPayments] = useState<ProjectPayment[]>([]);
+  const [tabLastSeenById, setTabLastSeenById] = useState<TabLastSeenById>({});
   const [projectBillingProfiles, setProjectBillingProfiles] = useState<ProjectBillingProfile[]>([]);
   const [billingProfileDrafts, setBillingProfileDrafts] = useState<Record<string, ProjectBillingProfileDraft>>({});
   const [isLoadingManagerBilling, setIsLoadingManagerBilling] = useState(false);
@@ -1274,6 +1349,130 @@ export default function PortalPage() {
       return true;
     });
   }, [hasSelectedProject, isBootstrapManager, isProjectAdmin]);
+  const projectTabLatestActivityMs = useMemo<Partial<Record<PortalWorkspaceTabId, number>>>(() => {
+    const latestMilestoneMs = projectMilestones.reduce(
+      (latest, milestone) => Math.max(latest, parseTimestampMs(milestone.created_at)),
+      0
+    );
+    const latestApprovalMs = projectApprovalTasks.reduce((latest, task) => {
+      return Math.max(
+        latest,
+        parseTimestampMs(task.created_at),
+        parseTimestampMs(task.decided_at)
+      );
+    }, 0);
+    const latestProgressUpdateMs = projectUpdates.reduce(
+      (latest, update) => Math.max(latest, parseTimestampMs(update.created_at)),
+      0
+    );
+    const latestThreadMs = Math.max(
+      projectQuestions.reduce((latest, question) => Math.max(latest, parseTimestampMs(question.created_at)), 0),
+      questionMessages.reduce((latest, message) => Math.max(latest, parseTimestampMs(message.created_at)), 0)
+    );
+    const latestFileMs = projectFiles.reduce((latest, file) => Math.max(latest, parseTimestampMs(file.created_at)), 0);
+    const latestAccessChecklistMs = projectAccessItems.reduce(
+      (latest, item) => Math.max(latest, parseTimestampMs(item.updated_at)),
+      0
+    );
+    const latestAccessMs = Math.max(
+      latestAccessChecklistMs,
+      parseTimestampMs(projectClientIntake?.updated_at || null)
+    );
+
+    return {
+      active_project: parseTimestampMs(selectedProject?.updated_at || null),
+      access_credentials: latestAccessMs,
+      timeline_milestones: latestMilestoneMs,
+      task_approvals: latestApprovalMs,
+      progress_updates: latestProgressUpdateMs,
+      questions_threads: latestThreadMs,
+      files_documents: latestFileMs,
+      admin_workspace: Math.max(latestProgressUpdateMs, latestThreadMs, latestApprovalMs),
+      manager_controls: 0,
+      client_billing: 0,
+      payment_mode_controls: 0,
+      search_filters: 0
+    };
+  }, [
+    projectAccessItems,
+    projectApprovalTasks,
+    projectClientIntake?.updated_at,
+    projectFiles,
+    projectMilestones,
+    projectQuestions,
+    projectUpdates,
+    questionMessages,
+    selectedProject?.updated_at
+  ]);
+  const tabNewCountById = useMemo<Partial<Record<PortalWorkspaceTabId, number>>>(() => {
+    const counts: Partial<Record<PortalWorkspaceTabId, number>> = {};
+
+    const activeProjectSeenMs = parseTimestampMs(tabLastSeenById.active_project);
+    counts.active_project =
+      selectedProject && parseTimestampMs(selectedProject.updated_at) > activeProjectSeenMs ? 1 : 0;
+
+    const accessSeenMs = parseTimestampMs(tabLastSeenById.access_credentials);
+    const accessChecklistNewCount = projectAccessItems.filter(
+      (item) => parseTimestampMs(item.updated_at) > accessSeenMs
+    ).length;
+    const hasNewIntakeUpdate =
+      Boolean(projectClientIntake) && parseTimestampMs(projectClientIntake?.updated_at) > accessSeenMs;
+    counts.access_credentials = accessChecklistNewCount + (hasNewIntakeUpdate ? 1 : 0);
+
+    const milestoneSeenMs = parseTimestampMs(tabLastSeenById.timeline_milestones);
+    counts.timeline_milestones = projectMilestones.filter(
+      (milestone) => parseTimestampMs(milestone.created_at) > milestoneSeenMs
+    ).length;
+
+    const approvalSeenMs = parseTimestampMs(tabLastSeenById.task_approvals);
+    counts.task_approvals = projectApprovalTasks.filter((task) => {
+      return (
+        parseTimestampMs(task.created_at) > approvalSeenMs ||
+        parseTimestampMs(task.decided_at) > approvalSeenMs
+      );
+    }).length;
+
+    const progressSeenMs = parseTimestampMs(tabLastSeenById.progress_updates);
+    counts.progress_updates = projectUpdates.filter(
+      (update) => parseTimestampMs(update.created_at) > progressSeenMs
+    ).length;
+
+    const threadsSeenMs = parseTimestampMs(tabLastSeenById.questions_threads);
+    counts.questions_threads = questionMessages.filter(
+      (message) => parseTimestampMs(message.created_at) > threadsSeenMs
+    ).length;
+
+    const filesSeenMs = parseTimestampMs(tabLastSeenById.files_documents);
+    counts.files_documents = projectFiles.filter(
+      (file) => parseTimestampMs(file.created_at) > filesSeenMs
+    ).length;
+
+    if (isProjectAdmin) {
+      const adminSeenMs = parseTimestampMs(tabLastSeenById.admin_workspace);
+      const adminNewCount =
+        projectUpdates.filter((update) => parseTimestampMs(update.created_at) > adminSeenMs).length +
+        questionMessages.filter((message) => parseTimestampMs(message.created_at) > adminSeenMs).length +
+        projectApprovalTasks.filter(
+          (task) =>
+            parseTimestampMs(task.created_at) > adminSeenMs ||
+            parseTimestampMs(task.decided_at) > adminSeenMs
+        ).length;
+      counts.admin_workspace = adminNewCount;
+    }
+
+    return counts;
+  }, [
+    isProjectAdmin,
+    projectAccessItems,
+    projectApprovalTasks,
+    projectClientIntake,
+    projectFiles,
+    projectMilestones,
+    projectUpdates,
+    questionMessages,
+    selectedProject,
+    tabLastSeenById
+  ]);
   const accessStatusCounts = useMemo(() => {
     return projectAccessItems.reduce<Record<AccessItemStatus, number>>(
       (counts, item) => {
@@ -1298,6 +1497,75 @@ export default function PortalPage() {
       setActiveWorkspaceTab(availableWorkspaceTabs[0].id);
     }
   }, [activeWorkspaceTab, availableWorkspaceTabs]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !session || !selectedProjectId) {
+      setTabLastSeenById({});
+      return;
+    }
+
+    const storageKey = getTabLastSeenStorageKey(session.user.id, selectedProjectId);
+    const rawValue = window.localStorage.getItem(storageKey);
+    if (!rawValue) {
+      setTabLastSeenById({});
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(rawValue) as Record<string, unknown>;
+      const next: TabLastSeenById = {};
+      for (const tab of portalWorkspaceTabs) {
+        const value = parsed[tab.id];
+        if (typeof value === "string" && value.trim()) {
+          next[tab.id] = value;
+        }
+      }
+      setTabLastSeenById(next);
+    } catch {
+      setTabLastSeenById({});
+    }
+  }, [selectedProjectId, session]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !session || !selectedProjectId) {
+      return;
+    }
+
+    const storageKey = getTabLastSeenStorageKey(session.user.id, selectedProjectId);
+    window.localStorage.setItem(storageKey, JSON.stringify(tabLastSeenById));
+  }, [selectedProjectId, session, tabLastSeenById]);
+
+  useEffect(() => {
+    if (!session || !selectedProjectId) {
+      return;
+    }
+
+    if (!availableWorkspaceTabs.some((tab) => tab.id === activeWorkspaceTab)) {
+      return;
+    }
+
+    const latestTabActivityMs = projectTabLatestActivityMs[activeWorkspaceTab] || 0;
+    if (!latestTabActivityMs) {
+      return;
+    }
+
+    const seenMs = parseTimestampMs(tabLastSeenById[activeWorkspaceTab]);
+    if (seenMs >= latestTabActivityMs) {
+      return;
+    }
+
+    setTabLastSeenById((current) => ({
+      ...current,
+      [activeWorkspaceTab]: new Date(latestTabActivityMs).toISOString()
+    }));
+  }, [
+    activeWorkspaceTab,
+    availableWorkspaceTabs,
+    projectTabLatestActivityMs,
+    selectedProjectId,
+    session,
+    tabLastSeenById
+  ]);
 
   useEffect(() => {
     setAuthMessage("");
@@ -1434,6 +1702,7 @@ export default function PortalPage() {
       setIsLoadingProjectData(true);
       setPortalError("");
       setProjectContacts([]);
+      setSelectedProjectPayments([]);
 
       const [
         updatesResult,
@@ -1444,6 +1713,7 @@ export default function PortalPage() {
         approvalsResult,
         intakeResult,
         accessItemsResult,
+        projectPaymentsResult,
         membershipResult,
         memberRolesResult
       ] = await Promise.all([
@@ -1497,6 +1767,13 @@ export default function PortalPage() {
           .eq("project_id", projectId)
           .order("created_at", { ascending: true }),
         supabase
+          .from("project_payments")
+          .select(
+            "id,project_id,provider,provider_order_id,provider_capture_id,status,amount,currency_code,payer_user_id,payer_email,created_at"
+          )
+          .eq("project_id", projectId)
+          .order("created_at", { ascending: false }),
+        supabase
           .from("project_members")
           .select("role")
           .eq("project_id", projectId)
@@ -1519,6 +1796,7 @@ export default function PortalPage() {
         approvalsResult.error ||
         intakeResult.error ||
         accessItemsResult.error ||
+        projectPaymentsResult.error ||
         membershipResult.error ||
         memberRolesResult.error
       ) {
@@ -1531,6 +1809,7 @@ export default function PortalPage() {
             approvalsResult.error?.message ||
             intakeResult.error?.message ||
             accessItemsResult.error?.message ||
+            projectPaymentsResult.error?.message ||
             membershipResult.error?.message ||
             memberRolesResult.error?.message ||
             "Unable to load project data."
@@ -1546,6 +1825,7 @@ export default function PortalPage() {
       setProjectApprovalTasks((approvalsResult.data ?? []) as ProjectApprovalTask[]);
       setProjectClientIntake((intakeResult.data ?? null) as ClientIntakeProfile | null);
       setProjectAccessItems((accessItemsResult.data ?? []) as ProjectAccessItem[]);
+      setSelectedProjectPayments((projectPaymentsResult.data ?? []) as ProjectPayment[]);
       const memberRoleMap: Record<string, MemberRole> = {};
       for (const row of memberRolesResult.data ?? []) {
         memberRoleMap[row.user_id] = row.role as MemberRole;
@@ -1804,7 +2084,9 @@ export default function PortalPage() {
       setProjectApprovalTasks([]);
       setProjectClientIntake(null);
       setProjectAccessItems([]);
+      setSelectedProjectPayments([]);
       setProjectPayments([]);
+      setTabLastSeenById({});
       setProjectBillingProfiles([]);
       setBillingProfileDrafts({});
       setIsLoadingManagerBilling(false);
@@ -1949,6 +2231,7 @@ export default function PortalPage() {
       setProjectApprovalTasks([]);
       setProjectClientIntake(null);
       setProjectAccessItems([]);
+      setSelectedProjectPayments([]);
       setProjectContacts([]);
       setQuestionMessageAttachmentUrls({});
       setMemberRolesByUserId({});
@@ -4429,6 +4712,7 @@ export default function PortalPage() {
               <div className="mt-3 space-y-3">
                 {filteredSidebarProjects.map((project) => {
                   const isSelected = project.id === selectedProjectId;
+                  const paymentBadge = getProjectPaymentBadge(project.quoted_amount, project.amount_paid);
 
                   return (
                     <button
@@ -4442,16 +4726,28 @@ export default function PortalPage() {
                       }`}
                     >
                       <p className="text-sm font-semibold text-ink">{project.name}</p>
-                      <div className="mt-2 flex items-center justify-between">
-                        <span
-                          className={`rounded-full px-2 py-0.5 text-[0.62rem] font-semibold uppercase tracking-[0.12em] ${
-                            statusStyles[project.status] || "bg-fog text-ink/70"
-                          }`}
-                        >
-                          {project.status.replace("_", " ")}
-                        </span>
+                      <div className="mt-2 flex items-center justify-between gap-2">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span
+                            className={`rounded-full px-2 py-0.5 text-[0.62rem] font-semibold uppercase tracking-[0.12em] ${
+                              statusStyles[project.status] || "bg-fog text-ink/70"
+                            }`}
+                          >
+                            {project.status.replace("_", " ")}
+                          </span>
+                          <span
+                            className={`rounded-full border px-2 py-0.5 text-[0.62rem] font-semibold uppercase tracking-[0.12em] ${paymentBadge.className}`}
+                          >
+                            {paymentBadge.label}
+                          </span>
+                        </div>
                         <span className="text-xs font-semibold text-ink/70">{project.progress}%</span>
                       </div>
+                      {paymentBadge.balance !== null && paymentBadge.balance > 0 ? (
+                        <p className="mt-1 text-[0.68rem] font-medium text-[#8a5a00]">
+                          Due {formatUsd(paymentBadge.balance)}
+                        </p>
+                      ) : null}
                     </button>
                   );
                 })}
@@ -4472,21 +4768,32 @@ export default function PortalPage() {
                     </p>
                   ) : (
                     <div className="space-y-2">
-                      {completedProjects.map((project) => (
-                        <Link
-                          key={project.id}
-                          href={`/portal/completed/${project.id}`}
-                          className="block rounded-lg border border-ink/20 bg-white px-3 py-2 text-sm transition hover:border-ink/45"
-                        >
-                          <div className="flex items-center justify-between gap-2">
-                            <span className="font-semibold text-ink">{project.name}</span>
-                            <span className="text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-[#0b6a40]">
-                              Open
-                            </span>
-                          </div>
-                          <p className="mt-1 text-xs text-ink/65">View completed project details</p>
-                        </Link>
-                      ))}
+                      {completedProjects.map((project) => {
+                        const paymentBadge = getProjectPaymentBadge(project.quoted_amount, project.amount_paid);
+
+                        return (
+                          <Link
+                            key={project.id}
+                            href={`/portal/completed/${project.id}`}
+                            className="block rounded-lg border border-ink/20 bg-white px-3 py-2 text-sm transition hover:border-ink/45"
+                          >
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="font-semibold text-ink">{project.name}</span>
+                              <div className="flex items-center gap-1.5">
+                                <span
+                                  className={`rounded-full border px-1.5 py-0.5 text-[0.62rem] font-semibold uppercase tracking-[0.1em] ${paymentBadge.className}`}
+                                >
+                                  {paymentBadge.label}
+                                </span>
+                                <span className="text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-[#0b6a40]">
+                                  Open
+                                </span>
+                              </div>
+                            </div>
+                            <p className="mt-1 text-xs text-ink/65">View completed project details</p>
+                          </Link>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
@@ -4601,18 +4908,30 @@ export default function PortalPage() {
               <div className="mt-2 flex flex-wrap gap-2">
                 {availableWorkspaceTabs.map((tab) => {
                   const isActive = tab.id === activeWorkspaceTab;
+                  const tabNewCount = tabNewCountById[tab.id] || 0;
                   return (
                     <button
                       key={tab.id}
                       type="button"
                       onClick={() => setActiveWorkspaceTab(tab.id)}
-                      className={`whitespace-nowrap rounded-full border px-3 py-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.1em] transition ${
+                      className={`inline-flex items-center gap-2 whitespace-nowrap rounded-full border px-3 py-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.1em] transition ${
                         isActive
                           ? "border-[#a87700] bg-[#ffe8a3] text-[#5b3a00] shadow-[2px_2px_0_#a87700]"
                           : "border-ink/25 bg-white text-ink hover:border-ink/50"
                       }`}
                     >
-                      {tab.label}
+                      <span>{tab.label}</span>
+                      {tabNewCount > 0 ? (
+                        <span
+                          className={`inline-flex min-w-5 items-center justify-center rounded-full border px-1.5 py-0.5 text-[0.6rem] font-semibold leading-none ${
+                            isActive
+                              ? "border-[#8a6200] bg-[#fff3cc] text-[#5b3a00]"
+                              : "border-[#8a1f1f] bg-[#ffdede] text-[#8a1f1f]"
+                          }`}
+                        >
+                          {tabNewCount > 99 ? "99+" : tabNewCount}
+                        </span>
+                      ) : null}
                     </button>
                   );
                 })}
@@ -5032,8 +5351,15 @@ export default function PortalPage() {
                         {projectNameById[payment.project_id] || payment.project_id}
                       </p>
                       <p className="mt-1 text-ink/70">{formatDateTime(payment.created_at)}</p>
-                      <p className="mt-1 text-ink/80">
-                        {formatPaymentStatus(payment.status)} · {formatUsd(payment.amount)}
+                      <p className="mt-1 flex flex-wrap items-center gap-1.5 text-ink/80">
+                        <span
+                          className={`rounded-full border px-1.5 py-0.5 text-[0.62rem] font-semibold uppercase tracking-[0.08em] ${getPaymentStatusBadgeClass(
+                            payment.status
+                          )}`}
+                        >
+                          {formatPaymentStatus(payment.status)}
+                        </span>
+                        <span>{formatUsd(payment.amount)}</span>
                       </p>
                       <p className="mt-1 text-ink/70">{payment.payer_email || "Unknown payer"}</p>
                     </article>
@@ -5066,7 +5392,11 @@ export default function PortalPage() {
                           <td className="px-3 py-2">{formatDateTime(payment.created_at)}</td>
                           <td className="px-3 py-2">{projectNameById[payment.project_id] || payment.project_id}</td>
                           <td className="px-3 py-2">
-                            <span className="rounded-full border border-ink/20 bg-white px-2 py-0.5 text-[0.62rem] font-semibold uppercase tracking-[0.08em] text-ink/70">
+                            <span
+                              className={`rounded-full border px-2 py-0.5 text-[0.62rem] font-semibold uppercase tracking-[0.08em] ${getPaymentStatusBadgeClass(
+                                payment.status
+                              )}`}
+                            >
                               {formatPaymentStatus(payment.status)}
                             </span>
                           </td>
@@ -5343,6 +5673,52 @@ export default function PortalPage() {
                             Max payable now: {formatUsd(selectedProjectBalance)}
                           </p>
                         </form>
+                      ) : null}
+
+                      {!isProjectAdmin ? (
+                        <div className="mt-3 rounded-md border border-ink/20 bg-white p-3">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="text-xs font-semibold uppercase tracking-[0.1em] text-ink/65">
+                              Payment History
+                            </p>
+                            <span className="text-[0.68rem] text-ink/60">
+                              {selectedProjectPayments.length} transaction
+                              {selectedProjectPayments.length === 1 ? "" : "s"}
+                            </span>
+                          </div>
+                          {selectedProjectPayments.length === 0 ? (
+                            <p className="mt-2 text-xs text-ink/65">
+                              No payments have been recorded for this project yet.
+                            </p>
+                          ) : (
+                            <div className="mt-2 space-y-2">
+                              {selectedProjectPayments.map((payment) => (
+                                <article
+                                  key={payment.id}
+                                  className="rounded-md border border-ink/15 bg-mist px-2.5 py-2 text-xs"
+                                >
+                                  <div className="flex flex-wrap items-center justify-between gap-2">
+                                    <span className="font-semibold text-ink">{formatDateTime(payment.created_at)}</span>
+                                    <span className="font-semibold text-ink">{formatUsd(payment.amount)}</span>
+                                  </div>
+                                  <div className="mt-1 flex flex-wrap items-center gap-2 text-ink/70">
+                                    <span
+                                      className={`rounded-full border px-1.5 py-0.5 text-[0.62rem] font-semibold uppercase tracking-[0.08em] ${getPaymentStatusBadgeClass(
+                                        payment.status
+                                      )}`}
+                                    >
+                                      {formatPaymentStatus(payment.status)}
+                                    </span>
+                                    <span>{payment.payer_email || "Unknown payer"}</span>
+                                  </div>
+                                  <p className="mt-1 text-[0.68rem] text-ink/60">
+                                    Ref: {payment.provider_capture_id || payment.provider_order_id}
+                                  </p>
+                                </article>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       ) : null}
                     </div>
 
