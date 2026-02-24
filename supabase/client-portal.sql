@@ -240,6 +240,46 @@ create table if not exists public.project_files (
   created_at timestamptz not null default timezone('utc', now())
 );
 
+create table if not exists public.project_payments (
+  id uuid primary key default gen_random_uuid(),
+  project_id uuid not null references public.projects(id) on delete cascade,
+  provider text not null default 'paypal' check (provider in ('paypal')),
+  provider_order_id text not null,
+  provider_capture_id text,
+  status text not null default 'created' check (status in ('created', 'approved', 'captured', 'voided', 'failed')),
+  amount numeric(12, 2) not null check (amount >= 0),
+  currency_code text not null default 'USD',
+  payer_user_id uuid references auth.users(id) on delete set null,
+  payer_email text,
+  provider_payload jsonb,
+  created_at timestamptz not null default timezone('utc', now()),
+  updated_at timestamptz not null default timezone('utc', now()),
+  unique (provider, provider_order_id)
+);
+
+create table if not exists public.project_billing_profiles (
+  project_id uuid primary key references public.projects(id) on delete cascade,
+  recurring_enabled boolean not null default false,
+  recurring_amount numeric(12, 2),
+  recurring_interval text not null default 'monthly' check (
+    recurring_interval in ('weekly', 'biweekly', 'monthly', 'quarterly', 'yearly')
+  ),
+  next_payment_due_at date,
+  autopay_provider text check (autopay_provider in ('paypal')),
+  notes text,
+  updated_by uuid references auth.users(id) on delete set null,
+  updated_at timestamptz not null default timezone('utc', now()),
+  created_at timestamptz not null default timezone('utc', now())
+);
+
+create table if not exists public.payment_feature_settings (
+  id boolean not null default true,
+  manual_payments_enabled boolean not null default true,
+  recurring_payments_enabled boolean not null default true,
+  updated_by uuid references auth.users(id) on delete set null,
+  updated_at timestamptz not null default timezone('utc', now())
+);
+
 create table if not exists public.project_client_intake (
   project_id uuid primary key references public.projects(id) on delete cascade,
   company_name text,
@@ -420,6 +460,113 @@ check (
   )
 );
 
+alter table public.project_payments
+  add column if not exists project_id uuid references public.projects(id) on delete cascade,
+  add column if not exists provider text not null default 'paypal',
+  add column if not exists provider_order_id text,
+  add column if not exists provider_capture_id text,
+  add column if not exists status text not null default 'created',
+  add column if not exists amount numeric(12, 2) not null default 0,
+  add column if not exists currency_code text not null default 'USD',
+  add column if not exists payer_user_id uuid references auth.users(id) on delete set null,
+  add column if not exists payer_email text,
+  add column if not exists provider_payload jsonb,
+  add column if not exists created_at timestamptz not null default timezone('utc', now()),
+  add column if not exists updated_at timestamptz not null default timezone('utc', now());
+
+alter table public.project_payments
+  alter column project_id set not null,
+  alter column provider_order_id set not null,
+  alter column amount set not null,
+  alter column currency_code set not null;
+
+alter table public.project_payments drop constraint if exists project_payments_provider_check;
+alter table public.project_payments
+add constraint project_payments_provider_check
+check (provider in ('paypal'));
+
+alter table public.project_payments drop constraint if exists project_payments_status_check;
+alter table public.project_payments
+add constraint project_payments_status_check
+check (status in ('created', 'approved', 'captured', 'voided', 'failed'));
+
+alter table public.project_payments drop constraint if exists project_payments_amount_check;
+alter table public.project_payments
+add constraint project_payments_amount_check
+check (amount >= 0);
+
+alter table public.project_billing_profiles
+  add column if not exists project_id uuid references public.projects(id) on delete cascade,
+  add column if not exists recurring_enabled boolean not null default false,
+  add column if not exists recurring_amount numeric(12, 2),
+  add column if not exists recurring_interval text not null default 'monthly',
+  add column if not exists next_payment_due_at date,
+  add column if not exists autopay_provider text,
+  add column if not exists notes text,
+  add column if not exists updated_by uuid references auth.users(id) on delete set null,
+  add column if not exists updated_at timestamptz not null default timezone('utc', now()),
+  add column if not exists created_at timestamptz not null default timezone('utc', now());
+
+alter table public.project_billing_profiles
+  alter column project_id set not null,
+  alter column recurring_enabled set not null,
+  alter column recurring_interval set not null;
+
+alter table public.project_billing_profiles drop constraint if exists project_billing_profiles_recurring_interval_check;
+alter table public.project_billing_profiles
+add constraint project_billing_profiles_recurring_interval_check
+check (recurring_interval in ('weekly', 'biweekly', 'monthly', 'quarterly', 'yearly'));
+
+alter table public.project_billing_profiles drop constraint if exists project_billing_profiles_recurring_amount_check;
+alter table public.project_billing_profiles
+add constraint project_billing_profiles_recurring_amount_check
+check (recurring_amount is null or recurring_amount > 0);
+
+alter table public.project_billing_profiles drop constraint if exists project_billing_profiles_autopay_provider_check;
+alter table public.project_billing_profiles
+add constraint project_billing_profiles_autopay_provider_check
+check (autopay_provider is null or autopay_provider in ('paypal'));
+
+alter table public.project_billing_profiles drop constraint if exists project_billing_profiles_schedule_check;
+alter table public.project_billing_profiles
+add constraint project_billing_profiles_schedule_check
+check (
+  recurring_enabled = false
+  or (recurring_amount is not null and recurring_amount > 0 and next_payment_due_at is not null)
+);
+
+alter table public.payment_feature_settings
+  add column if not exists id boolean,
+  add column if not exists manual_payments_enabled boolean not null default true,
+  add column if not exists recurring_payments_enabled boolean not null default true,
+  add column if not exists updated_by uuid references auth.users(id) on delete set null,
+  add column if not exists updated_at timestamptz not null default timezone('utc', now());
+
+update public.payment_feature_settings
+set
+  id = coalesce(id, true),
+  manual_payments_enabled = coalesce(manual_payments_enabled, true),
+  recurring_payments_enabled = coalesce(recurring_payments_enabled, true);
+
+alter table public.payment_feature_settings
+  alter column id set default true,
+  alter column id set not null,
+  alter column manual_payments_enabled set default true,
+  alter column manual_payments_enabled set not null,
+  alter column recurring_payments_enabled set default true,
+  alter column recurring_payments_enabled set not null;
+
+alter table public.payment_feature_settings
+drop constraint if exists payment_feature_settings_singleton_check;
+
+alter table public.payment_feature_settings
+add constraint payment_feature_settings_singleton_check check (id = true);
+
+delete from public.payment_feature_settings a
+using public.payment_feature_settings b
+where a.ctid < b.ctid
+  and a.id = b.id;
+
 update public.projects p
 set
   quoted_amount = coalesce(p.quoted_amount, ol.quoted_amount),
@@ -450,6 +597,14 @@ create index if not exists idx_project_questions_project_id_created_at on public
 create index if not exists idx_project_question_messages_project_id_created_at on public.project_question_messages(project_id, created_at asc);
 create index if not exists idx_project_question_messages_question_id_created_at on public.project_question_messages(question_id, created_at asc);
 create index if not exists idx_project_files_project_id_created_at on public.project_files(project_id, created_at desc);
+create index if not exists idx_project_payments_project_created_at on public.project_payments(project_id, created_at desc);
+create unique index if not exists idx_project_payments_provider_order_id on public.project_payments(provider, provider_order_id);
+create unique index if not exists idx_project_payments_provider_capture_id on public.project_payments(provider, provider_capture_id) where provider_capture_id is not null;
+create index if not exists idx_project_billing_profiles_next_due on public.project_billing_profiles(next_payment_due_at) where recurring_enabled = true;
+create unique index if not exists idx_payment_feature_settings_id on public.payment_feature_settings(id);
+insert into public.payment_feature_settings (id, manual_payments_enabled, recurring_payments_enabled)
+values (true, true, true)
+on conflict (id) do nothing;
 create index if not exists idx_project_client_intake_updated_at on public.project_client_intake(updated_at desc);
 create index if not exists idx_project_access_items_project_id_created_at on public.project_access_items(project_id, created_at asc);
 create index if not exists idx_project_milestones_project_id_sort on public.project_milestones(project_id, sort_order asc, created_at asc);
@@ -485,6 +640,21 @@ for each row execute function public.set_updated_at();
 drop trigger if exists project_access_items_set_updated_at on public.project_access_items;
 create trigger project_access_items_set_updated_at
 before update on public.project_access_items
+for each row execute function public.set_updated_at();
+
+drop trigger if exists project_payments_set_updated_at on public.project_payments;
+create trigger project_payments_set_updated_at
+before update on public.project_payments
+for each row execute function public.set_updated_at();
+
+drop trigger if exists project_billing_profiles_set_updated_at on public.project_billing_profiles;
+create trigger project_billing_profiles_set_updated_at
+before update on public.project_billing_profiles
+for each row execute function public.set_updated_at();
+
+drop trigger if exists payment_feature_settings_set_updated_at on public.payment_feature_settings;
+create trigger payment_feature_settings_set_updated_at
+before update on public.payment_feature_settings
 for each row execute function public.set_updated_at();
 
 drop trigger if exists onboarding_leads_set_updated_at on public.onboarding_leads;
@@ -611,6 +781,112 @@ begin
   get diagnostics inserted_count = row_count;
   return inserted_count;
 end;
+$$;
+
+drop function if exists public.record_project_paypal_capture(uuid, text, text, numeric, text, jsonb, text);
+
+create function public.record_project_paypal_capture(
+  project_uuid uuid,
+  provider_order text,
+  provider_capture text,
+  captured_amount numeric,
+  currency text default 'USD',
+  provider_payload_json jsonb default null,
+  payer_email_text text default null
+)
+returns void
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+  existing_status text;
+begin
+  if auth.uid() is null then
+    raise exception 'not_authenticated';
+  end if;
+
+  if not public.is_project_member(project_uuid) then
+    raise exception 'not_authorized';
+  end if;
+
+  if provider_order is null or trim(provider_order) = '' then
+    raise exception 'invalid_order_id';
+  end if;
+
+  if provider_capture is null or trim(provider_capture) = '' then
+    raise exception 'invalid_capture_id';
+  end if;
+
+  if captured_amount is null or captured_amount <= 0 then
+    raise exception 'invalid_amount';
+  end if;
+
+  select pp.status
+  into existing_status
+  from public.project_payments pp
+  where pp.project_id = project_uuid
+    and pp.provider = 'paypal'
+    and pp.provider_order_id = trim(provider_order)
+  for update;
+
+  if existing_status is null then
+    raise exception 'payment_not_found';
+  end if;
+
+  if existing_status = 'captured' then
+    return;
+  end if;
+
+  update public.project_payments
+  set
+    status = 'captured',
+    provider_capture_id = trim(provider_capture),
+    amount = captured_amount,
+    currency_code = coalesce(nullif(trim(upper(currency)), ''), 'USD'),
+    payer_user_id = coalesce(payer_user_id, auth.uid()),
+    payer_email = coalesce(nullif(trim(coalesce(payer_email_text, '')), ''), payer_email),
+    provider_payload = coalesce(provider_payload_json, provider_payload),
+    updated_at = timezone('utc', now())
+  where project_id = project_uuid
+    and provider = 'paypal'
+    and provider_order_id = trim(provider_order);
+
+  update public.projects
+  set amount_paid = coalesce(amount_paid, 0) + captured_amount
+  where id = project_uuid;
+end;
+$$;
+
+create or replace function public.get_payment_feature_flags()
+returns table(
+  manual_payments_enabled boolean,
+  recurring_payments_enabled boolean
+)
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select
+    coalesce(
+      (
+        select pfs.manual_payments_enabled
+        from public.payment_feature_settings pfs
+        where pfs.id = true
+        limit 1
+      ),
+      true
+    ) as manual_payments_enabled,
+    coalesce(
+      (
+        select pfs.recurring_payments_enabled
+        from public.payment_feature_settings pfs
+        where pfs.id = true
+        limit 1
+      ),
+      true
+    ) as recurring_payments_enabled;
 $$;
 
 create or replace function public.handle_project_activity_notifications()
@@ -950,6 +1226,27 @@ as $$
     join auth.users u on u.id = auth.uid()
     where pme.project_id = project_uuid
       and lower(pme.email) = lower(coalesce(u.email, ''))
+      and pme.role in ('manager', 'owner')
+  );
+$$;
+
+create or replace function public.is_portal_manager()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public, auth
+as $$
+  select public.is_bootstrap_manager() or exists (
+    select 1
+    from public.project_members pm
+    where pm.user_id = auth.uid()
+      and pm.role in ('manager', 'owner')
+  ) or exists (
+    select 1
+    from public.project_member_emails pme
+    join auth.users u on u.id = auth.uid()
+    where lower(pme.email) = lower(coalesce(u.email, ''))
       and pme.role in ('manager', 'owner')
   );
 $$;
@@ -1391,6 +1688,9 @@ grant execute on function public.is_project_admin(uuid) to authenticated;
 revoke all on function public.is_bootstrap_manager() from public;
 grant execute on function public.is_bootstrap_manager() to authenticated;
 
+revoke all on function public.is_portal_manager() from public;
+grant execute on function public.is_portal_manager() to authenticated;
+
 revoke all on function public.assign_client_to_project(uuid, text, text) from public;
 grant execute on function public.assign_client_to_project(uuid, text, text) to authenticated;
 
@@ -1406,6 +1706,12 @@ grant execute on function public.create_project_notification(uuid, text, text, t
 revoke all on function public.create_user_notification(uuid, uuid, text, text, text, text) from public;
 grant execute on function public.create_user_notification(uuid, uuid, text, text, text, text) to authenticated;
 
+revoke all on function public.record_project_paypal_capture(uuid, text, text, numeric, text, jsonb, text) from public;
+grant execute on function public.record_project_paypal_capture(uuid, text, text, numeric, text, jsonb, text) to authenticated;
+
+revoke all on function public.get_payment_feature_flags() from public;
+grant execute on function public.get_payment_feature_flags() to authenticated;
+
 revoke all on function public.update_project_summary(uuid, text) from public;
 grant execute on function public.update_project_summary(uuid, text) to authenticated;
 
@@ -1420,6 +1726,9 @@ grant execute on function public.get_project_contacts(uuid) to authenticated;
 
 grant insert on table public.onboarding_leads to anon, authenticated;
 grant select, update, delete on table public.onboarding_leads to authenticated;
+grant select, insert on table public.project_payments to authenticated;
+grant select, insert, update on table public.project_billing_profiles to authenticated;
+grant select, insert, update on table public.payment_feature_settings to authenticated;
 grant insert on table public.lead_magnet_submissions to anon, authenticated;
 grant select, delete on table public.lead_magnet_submissions to authenticated;
 grant select, update on table public.portal_notifications to authenticated;
@@ -1430,6 +1739,9 @@ alter table public.project_updates enable row level security;
 alter table public.project_questions enable row level security;
 alter table public.project_question_messages enable row level security;
 alter table public.project_files enable row level security;
+alter table public.project_payments enable row level security;
+alter table public.project_billing_profiles enable row level security;
+alter table public.payment_feature_settings enable row level security;
 alter table public.project_client_intake enable row level security;
 alter table public.project_access_items enable row level security;
 alter table public.project_milestones enable row level security;
@@ -1575,6 +1887,61 @@ with check (
   public.is_project_member(project_id)
   and uploaded_by = auth.uid()
 );
+
+drop policy if exists "Members can view project payments" on public.project_payments;
+create policy "Members can view project payments"
+on public.project_payments
+for select
+to authenticated
+using (public.is_project_member(project_id));
+
+drop policy if exists "Members can create project payments" on public.project_payments;
+create policy "Members can create project payments"
+on public.project_payments
+for insert
+to authenticated
+with check (
+  public.is_project_member(project_id)
+  and provider = 'paypal'
+  and (payer_user_id is null or payer_user_id = auth.uid())
+);
+
+drop policy if exists "Members can view project billing profiles" on public.project_billing_profiles;
+create policy "Members can view project billing profiles"
+on public.project_billing_profiles
+for select
+to authenticated
+using (public.is_project_member(project_id));
+
+drop policy if exists "Managers can manage project billing profiles" on public.project_billing_profiles;
+create policy "Managers can manage project billing profiles"
+on public.project_billing_profiles
+for all
+to authenticated
+using (public.is_project_admin(project_id))
+with check (public.is_project_admin(project_id));
+
+drop policy if exists "Managers can view payment feature settings" on public.payment_feature_settings;
+create policy "Managers can view payment feature settings"
+on public.payment_feature_settings
+for select
+to authenticated
+using (public.is_portal_manager());
+
+drop policy if exists "Managers can insert payment feature settings" on public.payment_feature_settings;
+create policy "Managers can insert payment feature settings"
+on public.payment_feature_settings
+for insert
+to authenticated
+with check (public.is_portal_manager());
+
+drop policy if exists "Managers can update payment feature settings" on public.payment_feature_settings;
+create policy "Managers can update payment feature settings"
+on public.payment_feature_settings
+for update
+to authenticated
+using (public.is_portal_manager())
+with check (public.is_portal_manager());
 
 drop policy if exists "Members can view intake" on public.project_client_intake;
 create policy "Members can view intake"

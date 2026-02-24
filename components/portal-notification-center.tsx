@@ -48,6 +48,7 @@ export function PortalNotificationCenter({ session, onProjectSelect }: PortalNot
   const triggerButtonRef = useRef<HTMLButtonElement | null>(null);
   const hasInitializedNotificationsRef = useRef(false);
   const seenUnreadNotificationIdsRef = useRef<Set<string>>(new Set());
+  const localReadNotificationIdsRef = useRef<Set<string>>(new Set());
 
   const unreadCount = useMemo(
     () => notifications.reduce((count, item) => count + (item.is_read ? 0 : 1), 0),
@@ -77,7 +78,18 @@ export function PortalNotificationCenter({ session, onProjectSelect }: PortalNot
       return;
     }
 
-    const nextNotifications = (data ?? []) as PortalNotification[];
+    const nextNotificationsRaw = (data ?? []) as PortalNotification[];
+    const nextNotifications = nextNotificationsRaw.map((item) =>
+      localReadNotificationIdsRef.current.has(item.id) ? { ...item, is_read: true } : item
+    );
+
+    for (const id of [...localReadNotificationIdsRef.current]) {
+      const rawNotification = nextNotificationsRaw.find((item) => item.id === id);
+      if (!rawNotification || rawNotification.is_read) {
+        localReadNotificationIdsRef.current.delete(id);
+      }
+    }
+
     const nextUnreadIds = new Set(
       nextNotifications.filter((item) => !item.is_read).map((item) => item.id)
     );
@@ -110,6 +122,7 @@ export function PortalNotificationCenter({ session, onProjectSelect }: PortalNot
       setIncomingAlert(null);
       hasInitializedNotificationsRef.current = false;
       seenUnreadNotificationIdsRef.current = new Set();
+      localReadNotificationIdsRef.current = new Set();
       return;
     }
 
@@ -185,6 +198,7 @@ export function PortalNotificationCenter({ session, onProjectSelect }: PortalNot
       return;
     }
 
+    localReadNotificationIdsRef.current.add(notificationId);
     setNotifications((current) =>
       current.map((item) => (item.id === notificationId ? { ...item, is_read: true } : item))
     );
@@ -196,6 +210,7 @@ export function PortalNotificationCenter({ session, onProjectSelect }: PortalNot
       .eq("user_id", session.user.id);
 
     if (error) {
+      localReadNotificationIdsRef.current.delete(notificationId);
       setErrorMessage(error.message);
       void loadNotifications();
     }
@@ -206,6 +221,8 @@ export function PortalNotificationCenter({ session, onProjectSelect }: PortalNot
       return;
     }
 
+    const unreadIds = notifications.filter((item) => !item.is_read).map((item) => item.id);
+    unreadIds.forEach((id) => localReadNotificationIdsRef.current.add(id));
     setNotifications((current) => current.map((item) => ({ ...item, is_read: true })));
 
     const { error } = await supabase
@@ -215,6 +232,7 @@ export function PortalNotificationCenter({ session, onProjectSelect }: PortalNot
       .eq("is_read", false);
 
     if (error) {
+      unreadIds.forEach((id) => localReadNotificationIdsRef.current.delete(id));
       setErrorMessage(error.message);
       void loadNotifications();
     }

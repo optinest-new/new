@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { ChangeEvent, FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import type { Session } from "@supabase/supabase-js";
 import { createSupabaseBrowserClient, hasSupabasePublicEnv } from "@/lib/supabase-browser";
@@ -43,6 +43,59 @@ type ProjectFile = {
   mime_type: string | null;
   size_bytes: number;
   created_at: string;
+};
+
+type ProjectPaymentStatus = "created" | "approved" | "captured" | "voided" | "failed";
+
+type ProjectPayment = {
+  id: string;
+  project_id: string;
+  provider: "paypal";
+  provider_order_id: string;
+  provider_capture_id: string | null;
+  status: ProjectPaymentStatus;
+  amount: number;
+  currency_code: string;
+  payer_user_id: string | null;
+  payer_email: string | null;
+  created_at: string;
+};
+
+type RecurringInterval = "weekly" | "biweekly" | "monthly" | "quarterly" | "yearly";
+
+type ProjectBillingProfile = {
+  project_id: string;
+  recurring_enabled: boolean;
+  recurring_amount: number | null;
+  recurring_interval: RecurringInterval;
+  next_payment_due_at: string | null;
+  autopay_provider: "paypal" | null;
+  notes: string | null;
+  updated_at: string;
+};
+
+type PaymentFeatureFlags = {
+  manual_payments_enabled: boolean;
+  recurring_payments_enabled: boolean;
+};
+
+type PaymentFeatureSettingsDraft = PaymentFeatureFlags;
+
+type ProjectBillingProfileDraft = {
+  recurring_enabled: boolean;
+  recurring_amount: string;
+  recurring_interval: RecurringInterval;
+  next_payment_due_at: string;
+  notes: string;
+};
+
+type ManagerBillingProjectRow = {
+  project: PortalProject;
+  balance: number | null;
+  capturedPaymentTotal: number;
+  capturedPaymentCount: number;
+  lastPaymentAt: string | null;
+  recurringProfile: ProjectBillingProfile | null;
 };
 
 type ProjectMilestone = {
@@ -213,6 +266,8 @@ type MilestoneStatus = "planned" | "in_progress" | "done";
 type ApprovalStatus = "pending" | "approved" | "changes_requested";
 type PortalWorkspaceTabId =
   | "manager_controls"
+  | "client_billing"
+  | "payment_mode_controls"
   | "active_project"
   | "search_filters"
   | "access_credentials"
@@ -240,6 +295,13 @@ const onboardingStatuses: OnboardingStatus[] = [
 const milestoneStatuses: MilestoneStatus[] = ["planned", "in_progress", "done"];
 const approvalStatuses: ApprovalStatus[] = ["pending", "approved", "changes_requested"];
 const accessItemStatuses: AccessItemStatus[] = ["missing", "submitted", "verified", "not_needed"];
+const recurringIntervalOptions: Array<{ value: RecurringInterval; label: string }> = [
+  { value: "weekly", label: "Weekly" },
+  { value: "biweekly", label: "Biweekly" },
+  { value: "monthly", label: "Monthly" },
+  { value: "quarterly", label: "Quarterly" },
+  { value: "yearly", label: "Yearly" }
+];
 const defaultAccessItemVisibility: AccessItemVisibilityState = {
   login_url: false,
   account_email: false,
@@ -257,10 +319,12 @@ const clientServiceNeedOptions: Array<{ value: ClientServiceNeed; label: string 
 ];
 const portalWorkspaceTabs: PortalWorkspaceTab[] = [
   { id: "manager_controls", label: "Manager Controls", bootstrapOnly: true },
+  { id: "client_billing", label: "Client Billing", bootstrapOnly: true },
   { id: "active_project", label: "Active Project", requiresProject: true },
   { id: "search_filters", label: "Search & Filters", requiresProject: true },
   { id: "access_credentials", label: "Access & Credentials", requiresProject: true },
   { id: "admin_workspace", label: "Admin Workspace", requiresProject: true, adminOnly: true },
+  { id: "payment_mode_controls", label: "Payment Mode Controls", adminOnly: true },
   { id: "timeline_milestones", label: "Timeline & Milestones", requiresProject: true },
   { id: "task_approvals", label: "Task Approvals", requiresProject: true },
   { id: "progress_updates", label: "Progress Updates", requiresProject: true },
@@ -484,6 +548,37 @@ function formatProjectBalance(quotedAmount: number | null, amountPaid: number | 
   return formatUsd(balance);
 }
 
+function formatRecurringInterval(value: RecurringInterval): string {
+  return recurringIntervalOptions.find((option) => option.value === value)?.label || "Monthly";
+}
+
+function formatPaymentStatus(status: ProjectPaymentStatus): string {
+  return status.replace("_", " ");
+}
+
+function toDateInputValue(value: string | null): string {
+  if (!value) {
+    return "";
+  }
+
+  return value.slice(0, 10);
+}
+
+function createBillingProfileDraft(
+  profile: ProjectBillingProfile | null | undefined
+): ProjectBillingProfileDraft {
+  return {
+    recurring_enabled: Boolean(profile?.recurring_enabled),
+    recurring_amount:
+      profile?.recurring_amount !== null && profile?.recurring_amount !== undefined
+        ? String(profile.recurring_amount)
+        : "",
+    recurring_interval: profile?.recurring_interval || "monthly",
+    next_payment_due_at: toDateInputValue(profile?.next_payment_due_at || null),
+    notes: profile?.notes || ""
+  };
+}
+
 function formatBytes(sizeBytes: number): string {
   if (sizeBytes < 1024) {
     return `${sizeBytes} B`;
@@ -533,6 +628,20 @@ function parseProgress(value: string): number | null {
   }
 
   return parsed;
+}
+
+function parseUsdAmount(value: string): number | null {
+  const normalized = value.replace(/[$,\s]/g, "").trim();
+  if (!normalized) {
+    return null;
+  }
+
+  const parsed = Number.parseFloat(normalized);
+  if (Number.isNaN(parsed) || parsed <= 0) {
+    return null;
+  }
+
+  return Number(parsed.toFixed(2));
 }
 
 function normalizeExternalUrl(value: string): string | null {
@@ -806,6 +915,26 @@ export default function PortalPage() {
   const [projectApprovalTasks, setProjectApprovalTasks] = useState<ProjectApprovalTask[]>([]);
   const [projectClientIntake, setProjectClientIntake] = useState<ClientIntakeProfile | null>(null);
   const [projectAccessItems, setProjectAccessItems] = useState<ProjectAccessItem[]>([]);
+  const [projectPayments, setProjectPayments] = useState<ProjectPayment[]>([]);
+  const [projectBillingProfiles, setProjectBillingProfiles] = useState<ProjectBillingProfile[]>([]);
+  const [billingProfileDrafts, setBillingProfileDrafts] = useState<Record<string, ProjectBillingProfileDraft>>({});
+  const [isLoadingManagerBilling, setIsLoadingManagerBilling] = useState(false);
+  const [isSavingBillingProfileByProjectId, setIsSavingBillingProfileByProjectId] = useState<
+    Record<string, boolean>
+  >({});
+  const [managerBillingMessage, setManagerBillingMessage] = useState("");
+  const [paymentFeatureFlags, setPaymentFeatureFlags] = useState<PaymentFeatureFlags>({
+    manual_payments_enabled: true,
+    recurring_payments_enabled: true
+  });
+  const [paymentFeatureSettingsDraft, setPaymentFeatureSettingsDraft] =
+    useState<PaymentFeatureSettingsDraft>({
+      manual_payments_enabled: true,
+      recurring_payments_enabled: true
+    });
+  const [isLoadingPaymentFeatureSettings, setIsLoadingPaymentFeatureSettings] = useState(false);
+  const [isSavingPaymentFeatureSettings, setIsSavingPaymentFeatureSettings] = useState(false);
+  const [paymentFeatureSettingsMessage, setPaymentFeatureSettingsMessage] = useState("");
   const [isLoadingProjectData, setIsLoadingProjectData] = useState(false);
   const [currentRole, setCurrentRole] = useState<MemberRole | null>(null);
   const [isBootstrapManager, setIsBootstrapManager] = useState(false);
@@ -875,7 +1004,7 @@ export default function PortalPage() {
   const [isCreatingProject, setIsCreatingProject] = useState(false);
   const [assignmentMessage, setAssignmentMessage] = useState("");
   const [isManagerProjectsDrawerOpen, setIsManagerProjectsDrawerOpen] = useState(true);
-  const [isManagerControlsOpen, setIsManagerControlsOpen] = useState(false);
+  const [isManagerControlsOpen, setIsManagerControlsOpen] = useState(true);
   const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
   const [replyUrlDrafts, setReplyUrlDrafts] = useState<Record<string, string>>({});
   const [replyFileDrafts, setReplyFileDrafts] = useState<Record<string, File | null>>({});
@@ -917,14 +1046,22 @@ export default function PortalPage() {
   const [isAccessChecklistOpen, setIsAccessChecklistOpen] = useState(false);
   const [expandedAccessItemIds, setExpandedAccessItemIds] = useState<Record<string, boolean>>({});
   const [activeWorkspaceTab, setActiveWorkspaceTab] = useState<PortalWorkspaceTabId>("manager_controls");
+  const [paypalAmountDraft, setPaypalAmountDraft] = useState("");
+  const [isStartingPaypalCheckout, setIsStartingPaypalCheckout] = useState(false);
+  const [isCapturingPaypalCheckout, setIsCapturingPaypalCheckout] = useState(false);
+  const [paypalStatusMessage, setPaypalStatusMessage] = useState("");
+  const handledPaypalOrdersRef = useRef<Record<string, true>>({});
 
   const selectedProject = projects.find((project) => project.id === selectedProjectId) || null;
   const selectedProjectBalance =
     selectedProject && selectedProject.quoted_amount !== null
       ? selectedProject.quoted_amount - (selectedProject.amount_paid ?? 0)
       : null;
+  const manualPaymentsEnabled = paymentFeatureFlags.manual_payments_enabled;
+  const recurringPaymentsEnabled = paymentFeatureFlags.recurring_payments_enabled;
   const effectiveRole: MemberRole | null = isBootstrapManager ? "manager" : currentRole;
   const isProjectAdmin = isBootstrapManager || currentRole === "manager" || currentRole === "owner";
+  const canManagePaymentModeControls = isProjectAdmin;
   const hasSelectedProject = Boolean(selectedProject);
   const activeProjects = useMemo(
     () => projects.filter((project) => project.status !== "completed" && project.status !== "archived"),
@@ -935,6 +1072,80 @@ export default function PortalPage() {
     () => projects.filter((project) => project.status === "completed"),
     [projects]
   );
+  const billingProfileByProjectId = useMemo(() => {
+    const map: Record<string, ProjectBillingProfile> = {};
+    for (const profile of projectBillingProfiles) {
+      map[profile.project_id] = profile;
+    }
+    return map;
+  }, [projectBillingProfiles]);
+  const paymentsByProjectId = useMemo(() => {
+    const map: Record<string, ProjectPayment[]> = {};
+    for (const payment of projectPayments) {
+      if (!map[payment.project_id]) {
+        map[payment.project_id] = [];
+      }
+      map[payment.project_id].push(payment);
+    }
+    return map;
+  }, [projectPayments]);
+  const projectNameById = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const project of projects) {
+      map[project.id] = project.name;
+    }
+    return map;
+  }, [projects]);
+  const managerBillingRows = useMemo<ManagerBillingProjectRow[]>(() => {
+    return projects.map((project) => {
+      const projectPaymentsRows = paymentsByProjectId[project.id] || [];
+      const capturedPayments = projectPaymentsRows.filter((payment) => payment.status === "captured");
+      const capturedPaymentTotal = capturedPayments.reduce((sum, payment) => sum + payment.amount, 0);
+      const balance =
+        project.quoted_amount !== null ? Number((project.quoted_amount - (project.amount_paid ?? 0)).toFixed(2)) : null;
+      const recurringProfile = billingProfileByProjectId[project.id] || null;
+
+      return {
+        project,
+        balance,
+        capturedPaymentTotal,
+        capturedPaymentCount: capturedPayments.length,
+        lastPaymentAt: projectPaymentsRows[0]?.created_at || null,
+        recurringProfile
+      };
+    });
+  }, [billingProfileByProjectId, paymentsByProjectId, projects]);
+  const totalOutstandingBalance = useMemo(() => {
+    return managerBillingRows.reduce((sum, row) => {
+      if (row.balance === null || row.balance <= 0) {
+        return sum;
+      }
+      return sum + row.balance;
+    }, 0);
+  }, [managerBillingRows]);
+  const paidInFullProjectsCount = useMemo(() => {
+    return managerBillingRows.filter((row) => row.balance !== null && row.balance <= 0).length;
+  }, [managerBillingRows]);
+  const totalCapturedPayments = useMemo(() => {
+    return projectPayments.reduce((sum, payment) => {
+      if (payment.status !== "captured") {
+        return sum;
+      }
+      return sum + payment.amount;
+    }, 0);
+  }, [projectPayments]);
+  const nextRecurringPayments = useMemo(() => {
+    return managerBillingRows
+      .filter((row) => row.recurringProfile?.recurring_enabled && row.recurringProfile.next_payment_due_at)
+      .sort((a, b) => {
+        const firstDueAt = a.recurringProfile?.next_payment_due_at || "";
+        const secondDueAt = b.recurringProfile?.next_payment_due_at || "";
+        return firstDueAt.localeCompare(secondDueAt);
+      });
+  }, [managerBillingRows]);
+  const recentProjectPayments = useMemo(() => {
+    return projectPayments.slice(0, 40);
+  }, [projectPayments]);
   const selectedCreateClientSuggestion = useMemo(() => {
     const normalizedEmail = newProjectClientEmail.trim().toLowerCase();
     if (!normalizedEmail) {
@@ -1381,6 +1592,73 @@ export default function PortalPage() {
     [session, supabase]
   );
 
+  useEffect(() => {
+    if (typeof window === "undefined" || !session) {
+      return;
+    }
+
+    const url = new URL(window.location.href);
+    const paypalStatus = url.searchParams.get("paypal");
+    const orderId = url.searchParams.get("token");
+    const projectIdFromUrl = url.searchParams.get("project");
+
+    if (paypalStatus === "cancel") {
+      setPaypalStatusMessage("PayPal checkout was canceled.");
+      url.searchParams.delete("paypal");
+      url.searchParams.delete("token");
+      window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+      return;
+    }
+
+    if (paypalStatus !== "success" || !orderId || !projectIdFromUrl) {
+      return;
+    }
+
+    if (handledPaypalOrdersRef.current[orderId]) {
+      return;
+    }
+
+    handledPaypalOrdersRef.current[orderId] = true;
+
+    void (async () => {
+      setIsCapturingPaypalCheckout(true);
+      setPortalError("");
+
+      try {
+        const response = await fetch("/api/portal/paypal/capture-order", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`
+          },
+          body: JSON.stringify({
+            projectId: projectIdFromUrl,
+            orderId
+          })
+        });
+
+        const payload = (await response.json()) as { error?: string };
+        if (!response.ok) {
+          setPortalError(payload.error || "Unable to confirm PayPal payment.");
+          return;
+        }
+
+        setPaypalStatusMessage("Payment received. Billing summary has been updated.");
+        setSelectedProjectId(projectIdFromUrl);
+        await loadProjects();
+        await loadProjectData(projectIdFromUrl);
+      } catch (error) {
+        setPortalError(error instanceof Error ? error.message : "Unable to confirm PayPal payment.");
+      } finally {
+        setIsCapturingPaypalCheckout(false);
+        const cleanUrl = new URL(window.location.href);
+        cleanUrl.searchParams.delete("paypal");
+        cleanUrl.searchParams.delete("token");
+        window.history.replaceState({}, "", `${cleanUrl.pathname}${cleanUrl.search}${cleanUrl.hash}`);
+      }
+    })();
+  }, [loadProjectData, loadProjects, session]);
+
   const loadOnboardingLeads = useCallback(async () => {
     if (!supabase || !session || !isBootstrapManager) {
       setOnboardingLeads([]);
@@ -1427,6 +1705,93 @@ export default function PortalPage() {
     setConvertingOnboardingLeadById({});
   }, [isBootstrapManager, session, supabase]);
 
+  const loadPaymentFeatureFlags = useCallback(async () => {
+    if (!supabase || !session) {
+      setPaymentFeatureFlags({
+        manual_payments_enabled: true,
+        recurring_payments_enabled: true
+      });
+      setPaymentFeatureSettingsDraft({
+        manual_payments_enabled: true,
+        recurring_payments_enabled: true
+      });
+      setIsLoadingPaymentFeatureSettings(false);
+      setPaymentFeatureSettingsMessage("");
+      return;
+    }
+
+    setIsLoadingPaymentFeatureSettings(true);
+
+    const { data, error } = await supabase.rpc("get_payment_feature_flags");
+
+    setIsLoadingPaymentFeatureSettings(false);
+
+    if (error) {
+      setPortalError(error.message);
+      return;
+    }
+
+    const row = (Array.isArray(data) ? data[0] : null) as
+      | {
+          manual_payments_enabled?: boolean | null;
+          recurring_payments_enabled?: boolean | null;
+        }
+      | null;
+
+    const nextFlags: PaymentFeatureFlags = {
+      manual_payments_enabled: row?.manual_payments_enabled !== false,
+      recurring_payments_enabled: row?.recurring_payments_enabled !== false
+    };
+
+    setPaymentFeatureFlags(nextFlags);
+    setPaymentFeatureSettingsDraft(nextFlags);
+  }, [session, supabase]);
+
+  const loadManagerBillingData = useCallback(async () => {
+    if (!supabase || !session || !isBootstrapManager) {
+      setProjectPayments([]);
+      setProjectBillingProfiles([]);
+      setBillingProfileDrafts({});
+      setIsSavingBillingProfileByProjectId({});
+      setIsLoadingManagerBilling(false);
+      setManagerBillingMessage("");
+      return;
+    }
+
+    setIsLoadingManagerBilling(true);
+    setPortalError("");
+
+    const [paymentsResult, billingProfilesResult] = await Promise.all([
+      supabase
+        .from("project_payments")
+        .select(
+          "id,project_id,provider,provider_order_id,provider_capture_id,status,amount,currency_code,payer_user_id,payer_email,created_at"
+        )
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("project_billing_profiles")
+        .select(
+          "project_id,recurring_enabled,recurring_amount,recurring_interval,next_payment_due_at,autopay_provider,notes,updated_at"
+        )
+        .order("updated_at", { ascending: false })
+    ]);
+
+    setIsLoadingManagerBilling(false);
+
+    if (paymentsResult.error || billingProfilesResult.error) {
+      setPortalError(
+        paymentsResult.error?.message || billingProfilesResult.error?.message || "Unable to load manager billing data."
+      );
+      return;
+    }
+
+    const payments = (paymentsResult.data ?? []) as ProjectPayment[];
+    const billingProfiles = (billingProfilesResult.data ?? []) as ProjectBillingProfile[];
+
+    setProjectPayments(payments);
+    setProjectBillingProfiles(billingProfiles);
+  }, [isBootstrapManager, session, supabase]);
+
   useEffect(() => {
     if (!session) {
       setProjects([]);
@@ -1439,6 +1804,23 @@ export default function PortalPage() {
       setProjectApprovalTasks([]);
       setProjectClientIntake(null);
       setProjectAccessItems([]);
+      setProjectPayments([]);
+      setProjectBillingProfiles([]);
+      setBillingProfileDrafts({});
+      setIsLoadingManagerBilling(false);
+      setIsSavingBillingProfileByProjectId({});
+      setManagerBillingMessage("");
+      setPaymentFeatureFlags({
+        manual_payments_enabled: true,
+        recurring_payments_enabled: true
+      });
+      setPaymentFeatureSettingsDraft({
+        manual_payments_enabled: true,
+        recurring_payments_enabled: true
+      });
+      setIsLoadingPaymentFeatureSettings(false);
+      setIsSavingPaymentFeatureSettings(false);
+      setPaymentFeatureSettingsMessage("");
       setProjectContacts([]);
       setQuestionMessageAttachmentUrls({});
       setMemberRolesByUserId({});
@@ -1494,6 +1876,11 @@ export default function PortalPage() {
       setAssignmentMessage("");
       setIsManagerProjectsDrawerOpen(true);
       setIsManagerControlsOpen(false);
+      setPaypalAmountDraft("");
+      setIsStartingPaypalCheckout(false);
+      setIsCapturingPaypalCheckout(false);
+      setPaypalStatusMessage("");
+      handledPaypalOrdersRef.current = {};
       return;
     }
 
@@ -1530,6 +1917,27 @@ export default function PortalPage() {
       cancelled = true;
     };
   }, [session, supabase]);
+
+  useEffect(() => {
+    void loadManagerBillingData();
+  }, [loadManagerBillingData]);
+
+  useEffect(() => {
+    void loadPaymentFeatureFlags();
+  }, [loadPaymentFeatureFlags]);
+
+  useEffect(() => {
+    if (!isBootstrapManager) {
+      setBillingProfileDrafts({});
+      return;
+    }
+
+    const nextDrafts: Record<string, ProjectBillingProfileDraft> = {};
+    for (const project of projects) {
+      nextDrafts[project.id] = createBillingProfileDraft(billingProfileByProjectId[project.id]);
+    }
+    setBillingProfileDrafts(nextDrafts);
+  }, [billingProfileByProjectId, isBootstrapManager, projects]);
 
   useEffect(() => {
     if (!session || !selectedProjectId) {
@@ -1654,6 +2062,7 @@ export default function PortalPage() {
       setProjectQuotedAmountDraft("");
       setProjectAmountPaidDraft("");
       setIsProjectSnapshotModalOpen(false);
+      setPaypalStatusMessage("");
       return;
     }
 
@@ -1667,6 +2076,15 @@ export default function PortalPage() {
     );
     setProjectAmountPaidDraft(selectedProject.amount_paid !== null ? String(selectedProject.amount_paid) : "");
   }, [selectedProject]);
+
+  useEffect(() => {
+    if (selectedProjectBalance !== null && selectedProjectBalance > 0) {
+      setPaypalAmountDraft(selectedProjectBalance.toFixed(2));
+      return;
+    }
+
+    setPaypalAmountDraft("");
+  }, [selectedProject?.id, selectedProjectBalance]);
 
   useEffect(() => {
     if (!isProjectSnapshotModalOpen) {
@@ -1987,6 +2405,11 @@ export default function PortalPage() {
     setScheduleCallMessage("");
     setScheduleCallError("");
     setPortalError("");
+    setPaypalAmountDraft("");
+    setIsStartingPaypalCheckout(false);
+    setIsCapturingPaypalCheckout(false);
+    setPaypalStatusMessage("");
+    handledPaypalOrdersRef.current = {};
   }
 
   function handleAlertModalClose() {
@@ -2309,6 +2732,191 @@ export default function PortalPage() {
     }
 
     window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+  }
+
+  async function handleStartPayPalCheckout() {
+    if (!session || !selectedProjectId || selectedProjectBalance === null) {
+      return;
+    }
+
+    if (!manualPaymentsEnabled) {
+      setPortalError("Manual payments are currently disabled by your manager.");
+      return;
+    }
+
+    if (selectedProjectBalance <= 0) {
+      setPortalError("This project has no balance due.");
+      return;
+    }
+
+    const amount = parseUsdAmount(paypalAmountDraft);
+    if (amount === null) {
+      setPortalError("Enter a valid payment amount.");
+      return;
+    }
+
+    if (amount > selectedProjectBalance + 0.009) {
+      setPortalError("Payment amount cannot exceed the remaining balance.");
+      return;
+    }
+
+    setIsStartingPaypalCheckout(true);
+    setPortalError("");
+    setPaypalStatusMessage("");
+
+    try {
+      const response = await fetch("/api/portal/paypal/create-order", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          projectId: selectedProjectId,
+          amount
+        })
+      });
+
+      const payload = (await response.json()) as {
+        error?: string;
+        approveUrl?: string;
+      };
+
+      if (!response.ok || !payload.approveUrl) {
+        setPortalError(payload.error || "Unable to start PayPal checkout.");
+        return;
+      }
+
+      window.location.assign(payload.approveUrl);
+    } catch (error) {
+      setPortalError(error instanceof Error ? error.message : "Unable to start PayPal checkout.");
+    } finally {
+      setIsStartingPaypalCheckout(false);
+    }
+  }
+
+  function handlePaymentFeatureDraftChange(field: keyof PaymentFeatureSettingsDraft, value: boolean) {
+    setPaymentFeatureSettingsDraft((current) => ({
+      ...current,
+      [field]: value
+    }));
+  }
+
+  async function handleSavePaymentFeatureSettings() {
+    if (!supabase || !session || !canManagePaymentModeControls) {
+      return;
+    }
+
+    setIsSavingPaymentFeatureSettings(true);
+    setPortalError("");
+    setPaymentFeatureSettingsMessage("");
+
+    const { error } = await supabase.from("payment_feature_settings").upsert(
+      {
+        id: true,
+        manual_payments_enabled: paymentFeatureSettingsDraft.manual_payments_enabled,
+        recurring_payments_enabled: paymentFeatureSettingsDraft.recurring_payments_enabled,
+        updated_by: session.user.id
+      },
+      { onConflict: "id" }
+    );
+
+    setIsSavingPaymentFeatureSettings(false);
+
+    if (error) {
+      setPortalError(error.message);
+      return;
+    }
+
+    setPaymentFeatureSettingsMessage("Payment settings updated.");
+    await loadPaymentFeatureFlags();
+    await loadManagerBillingData();
+  }
+
+  function handleBillingDraftChange(
+    projectId: string,
+    field: keyof ProjectBillingProfileDraft,
+    value: string | boolean
+  ) {
+    setBillingProfileDrafts((current) => {
+      const existing = current[projectId] || createBillingProfileDraft(null);
+      const nextDraft: ProjectBillingProfileDraft = {
+        ...existing,
+        [field]: value
+      } as ProjectBillingProfileDraft;
+
+      if (field === "recurring_enabled" && value === false) {
+        nextDraft.recurring_amount = "";
+        nextDraft.next_payment_due_at = "";
+      }
+
+      return {
+        ...current,
+        [projectId]: nextDraft
+      };
+    });
+  }
+
+  async function handleSaveBillingProfile(projectId: string) {
+    if (!supabase || !session || !isBootstrapManager) {
+      return;
+    }
+
+    const draft = billingProfileDrafts[projectId];
+    if (!draft) {
+      return;
+    }
+
+    let recurringAmount: number | null = null;
+    let nextPaymentDueAt: string | null = null;
+
+    if (draft.recurring_enabled) {
+      if (!recurringPaymentsEnabled) {
+        setPortalError("Automatic/recurring payments are currently disabled in manager settings.");
+        return;
+      }
+
+      recurringAmount = parseUsdAmount(draft.recurring_amount);
+      if (recurringAmount === null) {
+        setPortalError("Recurring amount must be a valid value greater than 0.");
+        return;
+      }
+
+      nextPaymentDueAt = draft.next_payment_due_at.trim();
+      if (!nextPaymentDueAt) {
+        setPortalError("Select the next recurring payment date.");
+        return;
+      }
+    }
+
+    setIsSavingBillingProfileByProjectId((current) => ({ ...current, [projectId]: true }));
+    setPortalError("");
+    setManagerBillingMessage("");
+
+    const { error } = await supabase.from("project_billing_profiles").upsert(
+      {
+        project_id: projectId,
+        recurring_enabled: draft.recurring_enabled,
+        recurring_amount: recurringAmount,
+        recurring_interval: draft.recurring_enabled ? draft.recurring_interval : "monthly",
+        next_payment_due_at: draft.recurring_enabled ? nextPaymentDueAt : null,
+        autopay_provider: draft.recurring_enabled ? "paypal" : null,
+        notes: draft.notes.trim() || null,
+        updated_by: session.user.id
+      },
+      { onConflict: "project_id" }
+    );
+
+    setIsSavingBillingProfileByProjectId((current) => ({ ...current, [projectId]: false }));
+
+    if (error) {
+      setPortalError(error.message);
+      return;
+    }
+
+    setManagerBillingMessage("Recurring billing profile saved.");
+    await loadManagerBillingData();
+    await loadProjects();
   }
 
   async function handleCreateProjectAndAssign(event: FormEvent<HTMLFormElement>) {
@@ -3758,7 +4366,13 @@ export default function PortalPage() {
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={() => void loadProjects()}
+                onClick={() => {
+                  void loadProjects();
+                  if (isBootstrapManager) {
+                    void loadManagerBillingData();
+                  }
+                  void loadPaymentFeatureFlags();
+                }}
                 className="text-xs font-semibold uppercase tracking-[0.12em] text-ink/70 hover:underline"
               >
                 Refresh
@@ -4010,14 +4624,30 @@ export default function PortalPage() {
             <section className="rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6">
               <div className="flex items-center justify-between gap-3">
                 <h2 className="font-display text-xl uppercase text-ink">Manager Controls</h2>
-                <button
-                  type="button"
-                  onClick={() => setIsManagerControlsOpen((current) => !current)}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-full border-2 border-ink bg-white text-xl font-semibold leading-none text-ink transition hover:-translate-y-0.5"
-                  aria-label={isManagerControlsOpen ? "Hide manager controls" : "Show manager controls"}
-                >
-                  {isManagerControlsOpen ? "−" : "+"}
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setActiveWorkspaceTab("payment_mode_controls")}
+                    className="inline-flex items-center rounded-full border border-[#1f56c2] bg-[#2d6cdf] px-3 py-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-white transition hover:bg-[#245cc3]"
+                  >
+                    Payment Mode
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveWorkspaceTab("client_billing")}
+                    className="inline-flex items-center rounded-full border border-[#1f56c2] bg-[#2d6cdf] px-3 py-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-white transition hover:bg-[#245cc3]"
+                  >
+                    Client Billing
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsManagerControlsOpen((current) => !current)}
+                    className="inline-flex h-10 w-10 items-center justify-center rounded-full border-2 border-ink bg-white text-xl font-semibold leading-none text-ink transition hover:-translate-y-0.5"
+                    aria-label={isManagerControlsOpen ? "Hide manager controls" : "Show manager controls"}
+                  >
+                    {isManagerControlsOpen ? "−" : "+"}
+                  </button>
+                </div>
               </div>
 
               {isManagerControlsOpen ? (
@@ -4178,8 +4808,342 @@ export default function PortalPage() {
             </section>
           ) : null}
 
+          {isBootstrapManager && activeWorkspaceTab === "client_billing" ? (
+            <section className="rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h2 className="font-display text-xl uppercase text-ink">Client Transactions & Recurring Billing</h2>
+                  <p className="mt-1 text-sm text-ink/75">
+                    All client balances, paid projects, recent transactions, and next recurring payments.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => void loadManagerBillingData()}
+                  className="inline-flex items-center rounded-full border border-ink/25 bg-white px-3 py-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-ink transition hover:border-ink/45"
+                >
+                  Refresh Billing
+                </button>
+              </div>
+
+              {managerBillingMessage ? (
+                <p className="mt-3 rounded-lg border border-[#84b98d] bg-[#e9f9ec] px-3 py-2 text-xs text-[#1f5c28]">
+                  {managerBillingMessage}
+                </p>
+              ) : null}
+
+              {isLoadingManagerBilling ? (
+                <p className="mt-3 rounded-lg border border-ink/20 bg-mist px-3 py-2 text-xs text-ink/70">
+                  Loading manager billing data...
+                </p>
+              ) : null}
+
+              {!recurringPaymentsEnabled ? (
+                <p className="mt-3 rounded-lg border border-[#e3b36d] bg-[#fff8ec] px-3 py-2 text-xs text-[#8a5a00]">
+                  Automatic/recurring payments are currently disabled in manager settings.
+                </p>
+              ) : null}
+
+              <div className="mt-3 grid gap-2 grid-cols-2 xl:grid-cols-4">
+                <div className="rounded-lg border border-ink/20 bg-white px-3 py-2">
+                  <p className="text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-ink/65">
+                    Outstanding Balance
+                  </p>
+                  <p className="mt-1 text-sm font-semibold text-[#8a5a00]">
+                    {formatUsd(Number(totalOutstandingBalance.toFixed(2)))}
+                  </p>
+                </div>
+                <div className="rounded-lg border border-ink/20 bg-white px-3 py-2">
+                  <p className="text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-ink/65">
+                    Captured Payments
+                  </p>
+                  <p className="mt-1 text-sm font-semibold text-[#0b6a40]">
+                    {formatUsd(Number(totalCapturedPayments.toFixed(2)))}
+                  </p>
+                </div>
+                <div className="rounded-lg border border-ink/20 bg-white px-3 py-2">
+                  <p className="text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-ink/65">Paid Projects</p>
+                  <p className="mt-1 text-sm font-semibold text-ink">{paidInFullProjectsCount}</p>
+                </div>
+                <div className="rounded-lg border border-ink/20 bg-white px-3 py-2">
+                  <p className="text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-ink/65">
+                    Next Recurring
+                  </p>
+                  <p className="mt-1 text-sm font-semibold text-ink">{nextRecurringPayments.length}</p>
+                </div>
+              </div>
+
+              <div className="mt-4 grid gap-3 xl:grid-cols-2">
+                {managerBillingRows.length === 0 ? (
+                  <p className="rounded-lg border border-ink/20 bg-white px-3 py-3 text-sm text-ink/65 xl:col-span-2">
+                    No projects available yet.
+                  </p>
+                ) : (
+                  managerBillingRows.map((row) => {
+                    const draft =
+                      billingProfileDrafts[row.project.id] || createBillingProfileDraft(row.recurringProfile);
+                    const isSaving = Boolean(isSavingBillingProfileByProjectId[row.project.id]);
+
+                    return (
+                      <article key={row.project.id} className="rounded-lg border border-ink/20 bg-white p-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <p className="font-semibold text-ink">{row.project.name}</p>
+                            <p className="mt-1 text-[0.68rem] uppercase tracking-[0.08em] text-ink/60">
+                              {row.project.status.replace("_", " ")}
+                            </p>
+                          </div>
+                          {row.lastPaymentAt ? (
+                            <p className="text-[0.68rem] text-ink/65">{formatDateTime(row.lastPaymentAt)}</p>
+                          ) : (
+                            <p className="text-[0.68rem] text-ink/55">No payments yet</p>
+                          )}
+                        </div>
+
+                        <div className="mt-3 grid gap-2 text-xs text-ink/80 sm:grid-cols-2">
+                          <p>Quoted: <span className="font-semibold text-ink">{formatUsd(row.project.quoted_amount)}</span></p>
+                          <p>Paid: <span className="font-semibold text-ink">{formatUsd(row.project.amount_paid)}</span></p>
+                          <p>
+                            Balance:{" "}
+                            <span className="font-semibold text-ink">
+                              {formatProjectBalance(row.project.quoted_amount, row.project.amount_paid)}
+                            </span>
+                          </p>
+                          <p>
+                            Captured:{" "}
+                            <span className="font-semibold text-ink">
+                              {row.capturedPaymentCount} ({formatUsd(Number(row.capturedPaymentTotal.toFixed(2)))})
+                            </span>
+                          </p>
+                        </div>
+
+                        <div className="mt-3 space-y-2 border-t border-ink/15 pt-3">
+                          <label className="flex items-center gap-2 text-[0.68rem] font-semibold uppercase tracking-[0.08em] text-ink/70">
+                            <input
+                              type="checkbox"
+                              checked={draft.recurring_enabled}
+                              onChange={(event) => {
+                                if (event.target.checked && !recurringPaymentsEnabled) {
+                                  return;
+                                }
+                                handleBillingDraftChange(
+                                  row.project.id,
+                                  "recurring_enabled",
+                                  event.target.checked
+                                );
+                              }}
+                            />
+                            Recurring Enabled
+                          </label>
+                          <div className="grid gap-2 sm:grid-cols-2">
+                            <input
+                              type="text"
+                              value={draft.recurring_amount}
+                              onChange={(event) =>
+                                handleBillingDraftChange(row.project.id, "recurring_amount", event.target.value)
+                              }
+                              placeholder="Amount (USD)"
+                              disabled={!recurringPaymentsEnabled || !draft.recurring_enabled}
+                              className="rounded border border-ink/25 bg-white px-2 py-1 text-xs text-ink outline-none disabled:cursor-not-allowed disabled:bg-fog disabled:text-ink/50"
+                            />
+                            <select
+                              value={draft.recurring_interval}
+                              onChange={(event) =>
+                                handleBillingDraftChange(
+                                  row.project.id,
+                                  "recurring_interval",
+                                  event.target.value as RecurringInterval
+                                )
+                              }
+                              disabled={!recurringPaymentsEnabled || !draft.recurring_enabled}
+                              className="rounded border border-ink/25 bg-white px-2 py-1 text-xs text-ink outline-none disabled:cursor-not-allowed disabled:bg-fog disabled:text-ink/50"
+                            >
+                              {recurringIntervalOptions.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                  {option.label}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
+                            <input
+                              type="date"
+                              value={draft.next_payment_due_at}
+                              onChange={(event) =>
+                                handleBillingDraftChange(row.project.id, "next_payment_due_at", event.target.value)
+                              }
+                              disabled={!recurringPaymentsEnabled || !draft.recurring_enabled}
+                              className="rounded border border-ink/25 bg-white px-2 py-1 text-xs text-ink outline-none disabled:cursor-not-allowed disabled:bg-fog disabled:text-ink/50"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => void handleSaveBillingProfile(row.project.id)}
+                              disabled={isSaving}
+                              className="inline-flex items-center rounded-full border border-[#1f56c2] bg-[#2d6cdf] px-3 py-1 text-[0.64rem] font-semibold uppercase tracking-[0.1em] text-white transition hover:bg-[#245cc3] disabled:cursor-not-allowed disabled:opacity-70"
+                            >
+                              {isSaving ? "Saving..." : "Save"}
+                            </button>
+                          </div>
+                          <textarea
+                            rows={2}
+                            value={draft.notes}
+                            onChange={(event) =>
+                              handleBillingDraftChange(row.project.id, "notes", event.target.value)
+                            }
+                            placeholder="Recurring notes"
+                            className="w-full rounded border border-ink/25 bg-white px-2 py-1 text-xs text-ink outline-none"
+                          />
+                        </div>
+                      </article>
+                    );
+                  })
+                )}
+              </div>
+
+              <div className="mt-4 rounded-lg border border-ink/20 bg-white p-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.1em] text-ink/70">
+                  Next Recurring Payments
+                </p>
+                {nextRecurringPayments.length === 0 ? (
+                  <p className="mt-2 text-xs text-ink/65">No recurring schedules configured yet.</p>
+                ) : (
+                  <div className="mt-2 space-y-1 text-xs text-ink/80">
+                    {nextRecurringPayments.slice(0, 8).map((row) => (
+                      <p key={`next-recurring-${row.project.id}`}>
+                        <span className="font-semibold text-ink">{row.project.name}</span>:{" "}
+                        {formatUsd(row.recurringProfile?.recurring_amount ?? null)} on{" "}
+                        {formatDate(row.recurringProfile?.next_payment_due_at || null)} (
+                        {formatRecurringInterval(row.recurringProfile?.recurring_interval || "monthly")})
+                      </p>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-4 sm:hidden space-y-2">
+                {recentProjectPayments.length === 0 ? (
+                  <p className="rounded-lg border border-ink/20 bg-white px-3 py-3 text-sm text-ink/65">
+                    No transactions yet.
+                  </p>
+                ) : (
+                  recentProjectPayments.map((payment) => (
+                    <article key={payment.id} className="rounded-lg border border-ink/20 bg-white px-3 py-2 text-xs">
+                      <p className="font-semibold text-ink">
+                        {projectNameById[payment.project_id] || payment.project_id}
+                      </p>
+                      <p className="mt-1 text-ink/70">{formatDateTime(payment.created_at)}</p>
+                      <p className="mt-1 text-ink/80">
+                        {formatPaymentStatus(payment.status)} · {formatUsd(payment.amount)}
+                      </p>
+                      <p className="mt-1 text-ink/70">{payment.payer_email || "Unknown payer"}</p>
+                    </article>
+                  ))
+                )}
+              </div>
+
+              <div className="mt-4 hidden sm:block overflow-x-auto rounded-lg border border-ink/20">
+                <table className="min-w-[860px] w-full text-left text-xs text-ink/80">
+                  <thead className="bg-mist text-[0.64rem] uppercase tracking-[0.1em] text-ink/65">
+                    <tr>
+                      <th className="px-3 py-2 font-semibold">Date</th>
+                      <th className="px-3 py-2 font-semibold">Project</th>
+                      <th className="px-3 py-2 font-semibold">Status</th>
+                      <th className="px-3 py-2 font-semibold">Amount</th>
+                      <th className="px-3 py-2 font-semibold">Payer</th>
+                      <th className="px-3 py-2 font-semibold">Provider Ref</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {recentProjectPayments.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="px-3 py-3 text-sm text-ink/65">
+                          No transactions yet.
+                        </td>
+                      </tr>
+                    ) : (
+                      recentProjectPayments.map((payment) => (
+                        <tr key={payment.id} className="border-t border-ink/10">
+                          <td className="px-3 py-2">{formatDateTime(payment.created_at)}</td>
+                          <td className="px-3 py-2">{projectNameById[payment.project_id] || payment.project_id}</td>
+                          <td className="px-3 py-2">
+                            <span className="rounded-full border border-ink/20 bg-white px-2 py-0.5 text-[0.62rem] font-semibold uppercase tracking-[0.08em] text-ink/70">
+                              {formatPaymentStatus(payment.status)}
+                            </span>
+                          </td>
+                          <td className="px-3 py-2 font-semibold text-ink">{formatUsd(payment.amount)}</td>
+                          <td className="px-3 py-2">{payment.payer_email || "Unknown"}</td>
+                          <td className="px-3 py-2">{payment.provider_capture_id || payment.provider_order_id}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          ) : null}
+
+          {canManagePaymentModeControls && activeWorkspaceTab === "payment_mode_controls" ? (
+            <section className="rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h2 className="font-display text-xl uppercase text-ink">Payment Mode Controls</h2>
+                  <p className="mt-1 text-sm text-ink/75">
+                    Toggle manual checkout and recurring billing setup globally for the client portal.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => void handleSavePaymentFeatureSettings()}
+                  disabled={isSavingPaymentFeatureSettings}
+                  className="inline-flex items-center rounded-full border border-[#1f56c2] bg-[#2d6cdf] px-3 py-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-white transition hover:bg-[#245cc3] disabled:cursor-not-allowed disabled:opacity-70"
+                >
+                  {isSavingPaymentFeatureSettings ? "Saving..." : "Save Settings"}
+                </button>
+              </div>
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                <label className="flex items-center gap-2 rounded border border-ink/20 bg-white px-3 py-2 text-xs text-ink/80">
+                  <input
+                    type="checkbox"
+                    checked={paymentFeatureSettingsDraft.manual_payments_enabled}
+                    onChange={(event) =>
+                      handlePaymentFeatureDraftChange("manual_payments_enabled", event.target.checked)
+                    }
+                    disabled={isLoadingPaymentFeatureSettings || isSavingPaymentFeatureSettings}
+                  />
+                  Manual Payments (PayPal checkout)
+                </label>
+                <label className="flex items-center gap-2 rounded border border-ink/20 bg-white px-3 py-2 text-xs text-ink/80">
+                  <input
+                    type="checkbox"
+                    checked={paymentFeatureSettingsDraft.recurring_payments_enabled}
+                    onChange={(event) =>
+                      handlePaymentFeatureDraftChange("recurring_payments_enabled", event.target.checked)
+                    }
+                    disabled={isLoadingPaymentFeatureSettings || isSavingPaymentFeatureSettings}
+                  />
+                  Automatic Payments (recurring setup)
+                </label>
+              </div>
+              {paymentFeatureSettingsMessage ? (
+                <p className="mt-3 rounded-lg border border-[#84b98d] bg-[#e9f9ec] px-3 py-2 text-xs text-[#1f5c28]">
+                  {paymentFeatureSettingsMessage}
+                </p>
+              ) : null}
+              <div className="mt-2 text-[0.7rem] text-ink/65">
+                <p>
+                  Live status: Manual{" "}
+                  <span className="font-semibold">{manualPaymentsEnabled ? "enabled" : "disabled"}</span> ·
+                  Automatic{" "}
+                  <span className="font-semibold">{recurringPaymentsEnabled ? "enabled" : "disabled"}</span>
+                </p>
+              </div>
+            </section>
+          ) : null}
+
           {!selectedProject ? (
-            activeWorkspaceTab === "manager_controls" ? null : (
+            activeWorkspaceTab === "manager_controls" ||
+            activeWorkspaceTab === "client_billing" ||
+            activeWorkspaceTab === "payment_mode_controls" ? null : (
               <section className="rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard">
                 <p className="text-sm text-ink/80">Select a project to view details.</p>
                 {isProjectAdmin ? (
@@ -4319,6 +5283,67 @@ export default function PortalPage() {
                         </p>
                       </div>
                       <p className="mt-2 text-xs text-ink/65">Balance = Quoted Amount - Amount Paid</p>
+
+                      {paypalStatusMessage ? (
+                        <p className="mt-3 rounded-md border border-[#84b98d] bg-[#e9f9ec] px-3 py-2 text-xs text-[#1f5c28]">
+                          {paypalStatusMessage}
+                        </p>
+                      ) : null}
+
+                      {isCapturingPaypalCheckout ? (
+                        <p className="mt-3 rounded-md border border-[#a3b2d6] bg-[#eef3ff] px-3 py-2 text-xs text-[#254084]">
+                          Confirming PayPal payment...
+                        </p>
+                      ) : null}
+
+                      {!isProjectAdmin &&
+                      !manualPaymentsEnabled &&
+                      selectedProjectBalance !== null &&
+                      selectedProjectBalance > 0 ? (
+                        <p className="mt-3 rounded-md border border-[#e3b36d] bg-[#fff8ec] px-3 py-2 text-xs text-[#8a5a00]">
+                          Manual payments are currently disabled. Please contact your manager.
+                        </p>
+                      ) : null}
+
+                      {!isProjectAdmin &&
+                      manualPaymentsEnabled &&
+                      selectedProjectBalance !== null &&
+                      selectedProjectBalance > 0 ? (
+                        <form
+                          onSubmit={(event) => {
+                            event.preventDefault();
+                            void handleStartPayPalCheckout();
+                          }}
+                          className="mt-3 rounded-md border border-ink/20 bg-white p-3"
+                        >
+                          <p className="text-xs font-semibold uppercase tracking-[0.1em] text-ink/65">
+                            Pay With PayPal
+                          </p>
+                          <div className="mt-2 flex flex-wrap items-end gap-2">
+                            <label className="text-xs text-ink/70">
+                              Amount (USD)
+                              <input
+                                type="text"
+                                inputMode="decimal"
+                                value={paypalAmountDraft}
+                                onChange={(event) => setPaypalAmountDraft(event.target.value)}
+                                className="mt-1 w-40 rounded-md border border-ink/25 bg-white px-2.5 py-1.5 text-sm text-ink outline-none focus:border-ink/60"
+                                placeholder="0.00"
+                              />
+                            </label>
+                            <button
+                              type="submit"
+                              disabled={isStartingPaypalCheckout || isCapturingPaypalCheckout}
+                              className="inline-flex items-center rounded-full border-2 border-[#0d5d31] bg-[#1d7a46] px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white transition hover:bg-[#17653a] disabled:cursor-not-allowed disabled:opacity-70"
+                            >
+                              {isStartingPaypalCheckout ? "Redirecting..." : "Pay Securely"}
+                            </button>
+                          </div>
+                          <p className="mt-2 text-[0.7rem] text-ink/60">
+                            Max payable now: {formatUsd(selectedProjectBalance)}
+                          </p>
+                        </form>
+                      ) : null}
                     </div>
 
                     <div className="mt-3 border-t border-ink/15 pt-3">
@@ -5069,7 +6094,7 @@ export default function PortalPage() {
                   <div className="mt-4">
                     <form
                       onSubmit={handlePostProgressUpdate}
-                      className="rounded-lg border border-ink/20 bg-white p-3.5"
+                      className="mt-3 rounded-lg border border-ink/20 bg-white p-3.5"
                     >
                       <h4 className="text-sm font-semibold text-ink">Post Progress Update</h4>
                       <div className="mt-3 space-y-3">
