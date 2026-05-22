@@ -506,7 +506,7 @@ export default function CompletedProjectPage() {
 
   if (!isSupabaseConfigured) {
     return (
-      <main className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6">
+      <main className="portal-workspace mx-auto w-full max-w-4xl px-4 py-8 sm:px-6">
         <section className="rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6">
           <h1 className="font-display text-2xl uppercase text-ink">Supabase Not Configured</h1>
           <p className="mt-2 text-sm text-ink/80">
@@ -518,7 +518,7 @@ export default function CompletedProjectPage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6">
+    <main className="portal-workspace mx-auto w-full max-w-5xl px-4 py-8 sm:px-6">
       <header className="rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -603,7 +603,7 @@ export default function CompletedProjectPage() {
                         type="button"
                         onClick={() => void handleReactivateProject()}
                         disabled={isReactivatingProject || isDeletingProject}
-                        className="inline-flex items-center rounded-full border-2 border-[#1f56c2] bg-[#2d6cdf] px-4 py-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-white transition hover:-translate-y-0.5 hover:bg-[#245cc3] disabled:cursor-not-allowed disabled:opacity-70"
+                        className="inline-flex items-center rounded-full border-2 border-[#1f56c2] bg-[#1f56c2] px-4 py-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-white transition hover:-translate-y-0.5 hover:bg-[#1a4aa8] disabled:cursor-not-allowed disabled:opacity-70"
                       >
                         {isReactivatingProject ? "Reactivating..." : "Set Active Again"}
                       </button>
@@ -613,7 +613,7 @@ export default function CompletedProjectPage() {
                         type="button"
                         onClick={() => void handleDeleteProjectPermanently()}
                         disabled={isReactivatingProject || isDeletingProject}
-                        className="inline-flex items-center rounded-full border-2 border-[#7f1010] bg-[#a51616] px-4 py-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-white transition hover:-translate-y-0.5 hover:bg-[#8d1414] disabled:cursor-not-allowed disabled:opacity-70"
+                        className="inline-flex items-center rounded-full border-2 border-[#7f1010] bg-[#7f1010] px-4 py-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-white transition hover:-translate-y-0.5 hover:bg-[#6b0d0d] disabled:cursor-not-allowed disabled:opacity-70"
                       >
                         {isDeletingProject ? "Deleting..." : "Delete Permanently"}
                       </button>

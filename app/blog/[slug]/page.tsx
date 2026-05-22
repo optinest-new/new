@@ -23,22 +23,7 @@ type BlogPostPageProps = {
   params: Promise<{ slug: string }>;
 };
 
-const RESOURCE_TITLE_ACRONYMS = new Set([
-  "AI",
-  "SEO",
-  "UX",
-  "UI",
-  "CRO",
-  "SERP",
-  "CMS",
-  "DNS",
-  "FAQ",
-  "SaaS".toUpperCase(),
-  "B2B",
-  "HVAC",
-  "PPC",
-  "API"
-]);
+const RESOURCE_TITLE_ACRONYMS = new Set(["AI", "SEO", "UX", "UI", "CRO", "SERP", "CMS", "DNS", "FAQ", "SAAS", "B2B", "HVAC", "PPC", "API"]);
 
 function toResourceTitleCase(value: string): string {
   return value
@@ -70,23 +55,19 @@ function toResourceTitleCase(value: string): string {
 
 function normalizeLowercaseListLinkTitles(html: string): string {
   return html.replace(/<li>([\s\S]*?)<\/li>/g, (listItemMatch, listItemBody: string) => {
-    const updatedListItemBody = listItemBody.replace(
-      /<a([^>]*)>([^<]+)<\/a>/g,
-      (anchorMatch, attrs: string, anchorText: string) => {
-        const trimmed = anchorText.trim();
-        if (!trimmed) {
-          return anchorMatch;
-        }
-
-        const isMostlyLowercase =
-          trimmed === trimmed.toLowerCase() && /^[a-z0-9\s\-&/().,'":]+$/.test(trimmed);
-        if (!isMostlyLowercase) {
-          return anchorMatch;
-        }
-
-        return `<a${attrs}>${toResourceTitleCase(trimmed)}</a>`;
+    const updatedListItemBody = listItemBody.replace(/<a([^>]*)>([^<]+)<\/a>/g, (anchorMatch, attrs: string, anchorText: string) => {
+      const trimmed = anchorText.trim();
+      if (!trimmed) {
+        return anchorMatch;
       }
-    );
+
+      const isMostlyLowercase = trimmed === trimmed.toLowerCase() && /^[a-z0-9\s\-&/().,'":]+$/.test(trimmed);
+      if (!isMostlyLowercase) {
+        return anchorMatch;
+      }
+
+      return `<a${attrs}>${toResourceTitleCase(trimmed)}</a>`;
+    });
 
     return `<li>${updatedListItemBody}</li>`;
   });
@@ -206,42 +187,36 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   });
 
   return (
-    <main className="mx-auto w-full max-w-7xl px-4 py-10 pb-28 sm:px-6 md:py-16 md:pb-20">
+    <main className="mx-auto w-full max-w-7xl px-4 py-12 pb-24 sm:px-6 sm:py-16">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
 
-      <nav aria-label="Breadcrumb" className="mb-7 text-xs text-ink/70 sm:mb-8 sm:text-sm">
-        <Link href="/" className="hover:underline">
+      <nav aria-label="Breadcrumb" className="mb-8 font-mono text-[0.68rem] uppercase tracking-[0.16em] text-white/55 sm:text-xs">
+        <Link href="/" className="hover:text-primary">
           Home
         </Link>{" "}
         /{" "}
-        <Link href="/blog" className="hover:underline">
+        <Link href="/blog" className="hover:text-primary">
           Blog
         </Link>{" "}
-        / <span aria-current="page" className="break-words">{post.title}</span>
+        / <span aria-current="page" className="break-words text-primary">{post.title}</span>
       </nav>
 
-      <article className="w-full rounded-2xl border-2 border-ink/80 bg-mist px-4 py-6 shadow-hard sm:px-8 sm:py-7 lg:px-10">
+      <article className="border-2 border-white/85 bg-mist px-4 py-6 shadow-hard sm:px-8 sm:py-8 lg:px-10">
         <header className="mx-auto w-full max-w-[78ch]">
-          <p className="font-mono text-xs uppercase tracking-[0.14em] text-ink/70">{post.category}</p>
-          <h1 className="mt-2 text-balance font-display text-3xl uppercase leading-[0.95] text-ink sm:text-4xl md:text-5xl">
+          <p className="font-mono text-[0.68rem] uppercase tracking-[0.18em] text-primary">{post.category}</p>
+          <h1 className="hero-title mt-4 font-display text-[clamp(2.5rem,7vw,5rem)] uppercase leading-[0.92] tracking-[-0.06em] text-ink">
             {post.title}
           </h1>
-          <p className="mt-3 text-sm text-ink/80 sm:text-base">{post.excerpt}</p>
-          <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 text-[0.78rem] sm:gap-x-5 sm:text-sm">
-            <span className="font-semibold text-[#1f2d5a]">{post.author}</span>
-            <time dateTime={post.date} className="text-ink/65">
-              {post.date}
-            </time>
-            <span className="font-semibold text-[#9a6b00]">{post.readingTime} min read</span>
+          <p className="mt-4 text-base leading-8 text-white/78">{post.excerpt}</p>
+          <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-white/12 pt-4 font-mono text-[0.68rem] uppercase tracking-[0.14em] text-white/55 sm:text-xs">
+            <span className="text-primary">{post.author}</span>
+            <time dateTime={post.date}>{post.date}</time>
+            <span>{post.readingTime} min read</span>
           </div>
         </header>
 
-        <figure className="mt-7">
-          <img
-            src={post.featureImage}
-            alt={`Feature image for ${post.title}`}
-            className="w-full rounded-xl border-2 border-ink/75 bg-white"
-          />
+        <figure className="mx-auto mt-8 max-w-[78ch]">
+          <img src={post.featureImage} alt={`Feature image for ${post.title}`} className="w-full border-2 border-white/75 bg-white" />
         </figure>
 
         <section
@@ -250,26 +225,29 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           aria-label="Blog article content"
         />
 
-        <LeadMagnetCard magnet={leadMagnet} postTitle={post.title} postSlug={post.slug} />
+        <div className="mx-auto mt-10 w-full max-w-[78ch]">
+          <LeadMagnetCard magnet={leadMagnet} postTitle={post.title} postSlug={post.slug} />
+        </div>
 
-        <aside className="mx-auto mt-10 w-full max-w-[78ch] border-t-2 border-ink/20 pt-7" aria-label="Related articles">
-          <h2 className="font-display text-2xl leading-[0.95] text-ink sm:text-3xl">Related Resources</h2>
-          <p className="mt-2 text-xs text-ink/75 sm:text-sm">
-            Keep exploring this topic with related guides from the blog.
-          </p>
-          <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {relatedPosts.map((related) => (
-              <li key={related.slug} className="overflow-hidden rounded-lg border-2 border-ink/20 bg-white">
+        <aside className="mx-auto mt-12 w-full max-w-[78ch] border-t-2 border-white/12 pt-8" aria-label="Related articles">
+          <p className="font-mono text-[0.68rem] uppercase tracking-[0.16em] text-primary">Keep reading</p>
+          <h2 className="mt-3 font-display text-3xl uppercase leading-[0.94] tracking-[-0.04em] text-ink sm:text-4xl">
+            Related resources
+          </h2>
+          <p className="mt-3 text-sm leading-7 text-white/70">Keep exploring this topic with related guides from the blog.</p>
+          <ul className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {relatedPosts.map((related, index) => (
+              <li key={related.slug} className={`overflow-hidden border-2 border-white/75 ${index === 1 ? "bg-primary text-black" : "bg-[#101010] text-ink"}`}>
                 <Link href={`/blog/${related.slug}`} className="block">
                   <img
                     src={related.featureImage}
                     alt={`Feature image for ${related.title}`}
                     loading="lazy"
-                    className="h-32 w-full border-b-2 border-ink/15 bg-white object-cover"
+                    className="h-32 w-full border-b-2 border-black/20 bg-white object-cover"
                   />
                   <div className="p-4">
-                    <p className="text-sm font-semibold text-ink hover:underline">{related.title}</p>
-                    <p className="mt-1 text-xs text-ink/65">{related.primaryKeyword}</p>
+                    <p className="font-display text-2xl uppercase leading-[0.95] tracking-[-0.03em]">{related.title}</p>
+                    <p className="mt-2 font-mono text-[0.64rem] uppercase tracking-[0.14em] opacity-70">{related.primaryKeyword}</p>
                   </div>
                 </Link>
               </li>

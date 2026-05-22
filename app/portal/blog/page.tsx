@@ -1119,7 +1119,7 @@ export default function PortalBlogManagerPage() {
 
   if (!isSupabaseConfigured) {
     return (
-      <main className="mx-auto w-full max-w-4xl px-4 py-12 sm:px-6">
+      <main className="portal-workspace mx-auto w-full max-w-4xl px-4 py-12 sm:px-6">
         <section className="rounded-2xl border-2 border-ink/80 bg-mist p-6 shadow-hard">
           <h1 className="font-display text-3xl uppercase leading-none text-ink">Blog Manager</h1>
           <p className="mt-4 text-sm text-ink/80">
@@ -1133,7 +1133,7 @@ export default function PortalBlogManagerPage() {
 
   if (isLoadingSession || (session && isLoadingManagerStatus)) {
     return (
-      <main className="mx-auto w-full max-w-4xl px-4 py-12 sm:px-6">
+      <main className="portal-workspace mx-auto w-full max-w-4xl px-4 py-12 sm:px-6">
         <section className="rounded-2xl border-2 border-ink/80 bg-mist p-6 shadow-hard">
           <p className="text-sm text-ink/85">Loading manager blog workspace...</p>
         </section>
@@ -1143,7 +1143,7 @@ export default function PortalBlogManagerPage() {
 
   if (!session) {
     return (
-      <main className="mx-auto w-full max-w-4xl px-4 py-12 sm:px-6">
+      <main className="portal-workspace mx-auto w-full max-w-4xl px-4 py-12 sm:px-6">
         <section className="rounded-2xl border-2 border-ink/80 bg-mist p-6 shadow-hard">
           <h1 className="font-display text-3xl uppercase leading-none text-ink">Blog Manager</h1>
           <p className="mt-4 text-sm text-ink/85">Sign in first to access the manager blog workspace.</p>
@@ -1160,7 +1160,7 @@ export default function PortalBlogManagerPage() {
 
   if (!isBootstrapManager) {
     return (
-      <main className="mx-auto w-full max-w-4xl px-4 py-12 sm:px-6">
+      <main className="portal-workspace mx-auto w-full max-w-4xl px-4 py-12 sm:px-6">
         <section className="rounded-2xl border-2 border-ink/80 bg-mist p-6 shadow-hard">
           <h1 className="font-display text-3xl uppercase leading-none text-ink">Blog Manager</h1>
           <p className="mt-4 text-sm text-ink/85">Only the manager can access this page.</p>
@@ -1176,7 +1176,7 @@ export default function PortalBlogManagerPage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6">
+    <main className="portal-workspace mx-auto w-full max-w-7xl px-4 py-8 sm:px-6">
       <header className="rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>

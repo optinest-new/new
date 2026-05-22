@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
-import { createPortal } from "react-dom";
+import { useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { createSupabaseBrowserClient, hasSupabasePublicEnv } from "@/lib/supabase-browser";
+import { Modal, Input, Select, Textarea, Button, StatusMessage } from "@/components/ui";
 
 type ScheduleCallModalProps = {
   label?: string;
   className?: string;
   children?: ReactNode;
+  onOpen?: () => void;
 };
 
 type ScheduleFormValues = {
@@ -24,77 +25,40 @@ type ScheduleFormValues = {
   preferredCallTime: string;
 };
 
+const serviceOptions = [
+  { value: "", label: "Select a service" },
+  { value: "Web Design", label: "Web Design" },
+  { value: "Web Development", label: "Web Development" },
+  { value: "SEO", label: "SEO" },
+  { value: "Web Design + SEO", label: "Web Design + SEO" },
+  { value: "Web Design + Web Development", label: "Web Design + Web Development" },
+  { value: "SEO + Web Development", label: "SEO + Web Development" },
+  { value: "All Three", label: "All Three" }
+];
+
 function mapServiceSelection(value: string): string[] {
-  if (value === "Web Design") {
-    return ["web_design"];
-  }
-
-  if (value === "Web Development") {
-    return ["web_development"];
-  }
-
-  if (value === "SEO") {
-    return ["seo"];
-  }
-
-  if (value === "Web Design + SEO") {
-    return ["web_design", "seo"];
-  }
-
-  if (value === "Web Design + Web Development") {
-    return ["web_design", "web_development"];
-  }
-
-  if (value === "SEO + Web Development") {
-    return ["seo", "web_development"];
-  }
-
-  if (value === "All Three") {
-    return ["web_design", "seo", "web_development"];
-  }
-
-  return [];
+  const map: Record<string, string[]> = {
+    "Web Design": ["web_design"],
+    "Web Development": ["web_development"],
+    "SEO": ["seo"],
+    "Web Design + SEO": ["web_design", "seo"],
+    "Web Design + Web Development": ["web_design", "web_development"],
+    "SEO + Web Development": ["seo", "web_development"],
+    "All Three": ["web_design", "seo", "web_development"]
+  };
+  return map[value] || [];
 }
 
-export function ScheduleCallModal({
-  label = "Schedule a Call",
-  className,
-  children
-}: ScheduleCallModalProps) {
+export function ScheduleCallModal({ label = "Schedule a Call", className, children, onOpen }: ScheduleCallModalProps) {
   const isSupabaseConfigured = hasSupabasePublicEnv();
   const supabase = useMemo(
     () => (isSupabaseConfigured ? createSupabaseBrowserClient() : null),
     [isSupabaseConfigured]
   );
   const [isOpen, setIsOpen] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState("");
   const [submitError, setSubmitError] = useState("");
-
-  useEffect(() => {
-    setIsMounted(true);
-    return () => setIsMounted(false);
-  }, []);
-
-  useEffect(() => {
-    if (!isOpen) {
-      return;
-    }
-
-    const onEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setIsOpen(false);
-      }
-    };
-
-    document.addEventListener("keydown", onEscape);
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onEscape);
-      document.body.style.overflow = "";
-    };
-  }, [isOpen]);
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -115,36 +79,21 @@ export function ScheduleCallModal({
       preferredCallTime: String(data.get("preferredCallTime") ?? "").trim()
     };
 
-    if (!values.name || !values.email) {
-      setSubmitError("Name and email are required.");
-      return;
-    }
-
-    if (!supabase) {
-      setSubmitError("Portal is not configured yet. Please try again later.");
-      return;
-    }
+    if (!values.name || !values.email) { setSubmitError("Name and email are required."); return; }
+    if (!supabase) { setSubmitError("Portal is not configured yet. Please try again later."); return; }
 
     let preferredCallAt: string | null = null;
     if (values.preferredCallTime) {
       const parsed = new Date(values.preferredCallTime);
-      if (Number.isNaN(parsed.getTime())) {
-        setSubmitError("Preferred call time is invalid.");
-        return;
-      }
+      if (Number.isNaN(parsed.getTime())) { setSubmitError("Preferred call time is invalid."); return; }
       preferredCallAt = parsed.toISOString();
     }
 
     const noteParts: string[] = [];
-    if (values.website) {
-      noteParts.push(`Website: ${values.website}`);
-    }
-    if (values.additionalDetails) {
-      noteParts.push(`Additional details: ${values.additionalDetails}`);
-    }
+    if (values.website) noteParts.push(`Website: ${values.website}`);
+    if (values.additionalDetails) noteParts.push(`Additional details: ${values.additionalDetails}`);
 
     const { data: userResult } = await supabase.auth.getUser();
-
     setIsSubmitting(true);
     setSubmitError("");
     setSubmitMessage("");
@@ -165,207 +114,64 @@ export function ScheduleCallModal({
     });
 
     setIsSubmitting(false);
-
-    if (error) {
-      setSubmitError(error.message);
-      return;
-    }
-
+    if (error) { setSubmitError(error.message); return; }
     setSubmitMessage("Call request submitted. We will contact you to confirm the schedule.");
     form.reset();
   };
 
   return (
     <>
-      <button type="button" onClick={() => setIsOpen(true)} className={className}>
-        {label}
-        {children}
+      <button type="button" onClick={() => { setIsOpen(true); onOpen?.(); }} className={className}>
+        {label}{children}
       </button>
 
-      {isMounted && isOpen
-        ? createPortal(
-        <div className="fixed inset-0 z-[80] flex items-start justify-center overflow-y-auto p-3 sm:items-center sm:p-6">
-          <button
-            type="button"
-            aria-label="Close schedule call form"
-            className="absolute inset-0 bg-black/50"
-            onClick={() => setIsOpen(false)}
+      <Modal
+        open={isOpen}
+        onClose={() => setIsOpen(false)}
+        title="Schedule a Call"
+        maxWidth="md"
+        label="Schedule a call form"
+      >
+        <p className="text-sm text-ink/75">Tell us about your project and we will prepare for the call.</p>
+
+        <form onSubmit={onSubmit} className="mt-4 grid gap-3 sm:grid-cols-2">
+          <Input name="name" label="Name" required variant="schedule" />
+          <Input name="email" label="Email" type="email" required variant="schedule" />
+          <Input name="company" label="Company" variant="schedule" />
+          <Input name="website" label="Website" type="url" placeholder="https://" variant="schedule" />
+          <Select
+            name="serviceNeeded"
+            label="Service Needed"
+            variant="schedule"
+            placeholder="Select a service"
+            options={serviceOptions.filter(o => o.value !== "")}
+            required
           />
+          <Input name="estimatedBudget" label="Estimated Budget" placeholder="$2,000 - $5,000" variant="schedule" />
+          <Input name="timeline" label="Timeline" placeholder="2-4 weeks" variant="schedule" />
 
-          <section
-            role="dialog"
-            aria-modal="true"
-            aria-label="Schedule a call form"
-            className="relative z-10 my-3 max-h-[calc(100dvh-1.5rem)] w-full max-w-2xl overflow-y-auto rounded-2xl border-2 border-ink/85 bg-mist p-3 shadow-hard sm:my-0 sm:max-h-[90vh] sm:p-6"
-          >
-            <header className="flex items-start justify-between gap-3 border-b border-ink/20 pb-3">
-              <div>
-                <h2 className="font-display text-2xl uppercase leading-none text-ink sm:text-3xl">
-                  Schedule a Call
-                </h2>
-                <p className="mt-2 text-sm text-ink/75">
-                  Tell us about your project and we will prepare for the call.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsOpen(false)}
-                className="rounded-md border border-ink/40 bg-white px-2 py-1 text-sm font-bold text-ink hover:bg-fog"
-              >
-                ✕
-              </button>
-            </header>
+          <div className="sm:col-span-2">
+            <Textarea name="mainGoals" label="Main Goals" rows={3} required variant="schedule" />
+          </div>
+          <div className="sm:col-span-2">
+            <Textarea name="additionalDetails" label="Additional Details" rows={4} variant="schedule" />
+          </div>
+          <Input name="contactNumber" label="Best Contact Number" type="tel" variant="schedule" />
+          <Input name="preferredCallTime" label="Preferred Call Time" type="datetime-local" variant="schedule" />
 
-            <form onSubmit={onSubmit} className="mt-4 grid gap-3 sm:grid-cols-2">
-              <label className="grid gap-1 text-sm font-semibold text-ink">
-                Name
-                <input
-                  name="name"
-                  required
-                  className="rounded-md border border-ink/35 bg-white px-3 py-2 text-base text-ink outline-none ring-0 focus:border-ink sm:text-sm"
-                />
-              </label>
+          <div className="mt-2 flex flex-wrap items-center gap-2 sm:col-span-2">
+            <Button type="button" variant="ghost" size="md" onClick={() => setIsOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" variant="primary" size="md" disabled={isSubmitting}>
+              {isSubmitting ? "Submitting..." : "Submit Call Request"}
+            </Button>
+          </div>
 
-              <label className="grid gap-1 text-sm font-semibold text-ink">
-                Email
-                <input
-                  name="email"
-                  type="email"
-                  required
-                  className="rounded-md border border-ink/35 bg-white px-3 py-2 text-base text-ink outline-none ring-0 focus:border-ink sm:text-sm"
-                />
-              </label>
-
-              <label className="grid gap-1 text-sm font-semibold text-ink">
-                Company
-                <input
-                  name="company"
-                  className="rounded-md border border-ink/35 bg-white px-3 py-2 text-base text-ink outline-none ring-0 focus:border-ink sm:text-sm"
-                />
-              </label>
-
-              <label className="grid gap-1 text-sm font-semibold text-ink">
-                Website
-                <input
-                  name="website"
-                  type="url"
-                  placeholder="https://"
-                  className="rounded-md border border-ink/35 bg-white px-3 py-2 text-base text-ink outline-none ring-0 focus:border-ink sm:text-sm"
-                />
-              </label>
-
-              <label className="grid gap-1 text-sm font-semibold text-ink">
-                <span className="text-[0.78rem] leading-snug sm:text-sm">
-                  Service Needed (Web Design / Web Development / SEO / Combination)
-                </span>
-                <select
-                  name="serviceNeeded"
-                  defaultValue=""
-                  required
-                  className="rounded-md border border-ink/35 bg-white px-3 py-2 text-base text-ink outline-none ring-0 focus:border-ink sm:text-sm"
-                >
-                  <option value="" disabled>
-                    Select a service
-                  </option>
-                  <option value="Web Design">Web Design</option>
-                  <option value="Web Development">Web Development</option>
-                  <option value="SEO">SEO</option>
-                  <option value="Web Design + SEO">Web Design + SEO</option>
-                  <option value="Web Design + Web Development">Web Design + Web Development</option>
-                  <option value="SEO + Web Development">SEO + Web Development</option>
-                  <option value="All Three">All Three</option>
-                </select>
-              </label>
-
-              <label className="grid gap-1 text-sm font-semibold text-ink">
-                Estimated Budget
-                <input
-                  name="estimatedBudget"
-                  placeholder="$2,000 - $5,000"
-                  className="rounded-md border border-ink/35 bg-white px-3 py-2 text-base text-ink outline-none ring-0 focus:border-ink sm:text-sm"
-                />
-              </label>
-
-              <label className="grid gap-1 text-sm font-semibold text-ink">
-                Timeline
-                <input
-                  name="timeline"
-                  placeholder="2-4 weeks"
-                  className="rounded-md border border-ink/35 bg-white px-3 py-2 text-base text-ink outline-none ring-0 focus:border-ink sm:text-sm"
-                />
-              </label>
-
-              <label className="grid gap-1 text-sm font-semibold text-ink sm:col-span-2">
-                Main Goals
-                <textarea
-                  name="mainGoals"
-                  rows={3}
-                  required
-                  className="rounded-md border border-ink/35 bg-white px-3 py-2 text-base text-ink outline-none ring-0 focus:border-ink sm:text-sm"
-                />
-              </label>
-
-              <label className="grid gap-1 text-sm font-semibold text-ink sm:col-span-2">
-                Additional Details
-                <textarea
-                  name="additionalDetails"
-                  rows={4}
-                  className="rounded-md border border-ink/35 bg-white px-3 py-2 text-base text-ink outline-none ring-0 focus:border-ink sm:text-sm"
-                />
-              </label>
-
-              <label className="grid gap-1 text-sm font-semibold text-ink">
-                Best Contact Number
-                <input
-                  name="contactNumber"
-                  type="tel"
-                  className="rounded-md border border-ink/35 bg-white px-3 py-2 text-base text-ink outline-none ring-0 focus:border-ink sm:text-sm"
-                />
-              </label>
-
-              <label className="grid gap-1 text-sm font-semibold text-ink">
-                Preferred Call Time
-                <input
-                  name="preferredCallTime"
-                  type="datetime-local"
-                  className="rounded-md border border-ink/35 bg-white px-3 py-2 text-base text-ink outline-none ring-0 focus:border-ink sm:text-sm"
-                />
-              </label>
-
-              <div className="mt-2 flex flex-wrap items-center gap-2 sm:col-span-2">
-                <button
-                  type="button"
-                  onClick={() => setIsOpen(false)}
-                  className="rounded-full border border-ink/40 bg-white px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] text-ink hover:bg-fog"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="rounded-full border-2 border-ink bg-ink px-5 py-2 text-xs font-bold uppercase tracking-[0.12em] text-mist hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-70"
-                >
-                  {isSubmitting ? "Submitting..." : "Submit Call Request"}
-                </button>
-              </div>
-
-              {submitError ? (
-                <p className="sm:col-span-2 rounded-md border border-[#d88] bg-[#fff1f1] px-3 py-2 text-sm text-[#7a1f1f]">
-                  {submitError}
-                </p>
-              ) : null}
-              {submitMessage ? (
-                <p className="sm:col-span-2 rounded-md border border-[#84b98d] bg-[#e9f9ec] px-3 py-2 text-sm text-[#1f5c28]">
-                  {submitMessage}
-                </p>
-              ) : null}
-            </form>
-          </section>
-        </div>
-          ,
-          document.body
-        )
-        : null}
+          {submitError ? <StatusMessage tone="error" className="sm:col-span-2">{submitError}</StatusMessage> : null}
+          {submitMessage ? <StatusMessage tone="success" className="sm:col-span-2">{submitMessage}</StatusMessage> : null}
+        </form>
+      </Modal>
     </>
   );
 }

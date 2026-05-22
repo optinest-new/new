@@ -155,7 +155,7 @@ function ClientLogo({ project }: { project: ClientProject }) {
   return (
     <svg
       viewBox="0 0 68 68"
-      className="h-14 w-14 rounded-xl border-2 border-ink/80 shadow-[4px_4px_0_#111]"
+      className="h-14 w-14 border-2 border-ink/80 shadow-[4px_4px_0_#111]"
       aria-label={`${project.name} logo`}
     >
       <rect x="0" y="0" width="68" height="68" fill={project.palette.primary} />
@@ -310,12 +310,12 @@ function WebsiteMockup({ project }: { project: ClientProject }) {
   })();
 
   return (
-    <figure className="mt-5 overflow-hidden rounded-xl border-2 border-ink/80 bg-white shadow-[4px_4px_0_#111]">
-      <div className="flex items-center gap-2 border-b-2 border-ink/20 bg-fog px-3 py-2">
+    <figure className="mt-5 overflow-hidden border-2 border-white/75 bg-[#171717] shadow-[6px_6px_0_rgba(252,187,59,0.55)]">
+      <div className="flex items-center gap-2 border-b-2 border-white/15 bg-[#111111] px-3 py-2">
         <span className="h-2.5 w-2.5 rounded-full bg-red-400" />
         <span className="h-2.5 w-2.5 rounded-full bg-yellow-400" />
         <span className="h-2.5 w-2.5 rounded-full bg-green-400" />
-        <span className="ml-2 truncate rounded bg-white px-2 py-1 text-[0.64rem] font-semibold text-ink/70 sm:text-[0.7rem]">
+        <span className="ml-2 truncate border border-white/10 bg-[#1c1c1c] px-2 py-1 font-mono text-[0.64rem] font-semibold uppercase tracking-[0.12em] text-primary sm:text-[0.7rem]">
           {host}
         </span>
       </div>
@@ -353,22 +353,60 @@ export default function ClientsPage() {
   };
 
   return (
-    <main className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 sm:py-12 md:py-14">
+    <main className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 sm:py-14 md:py-16">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(listSchema) }} />
 
-      <header className="mx-auto max-w-4xl text-center">
-        <p className="eyebrow-pop mx-auto inline-block">Selected Client Work</p>
-        <h1 className="hero-title mt-5 text-balance font-display text-[clamp(2rem,7vw,4.6rem)] uppercase leading-[0.9] tracking-tight">
-          Client Website Showcases
-        </h1>
-        <p className="tagline-pop mx-auto mt-5 max-w-3xl rounded-2xl border-2 border-ink/80 bg-mist/95 px-4 py-4 font-mono text-sm font-bold leading-relaxed sm:px-6 sm:text-base">
-          A snapshot of recent client projects including brand mark, website mockup, business profile, and technology stack used in delivery.
-        </p>
+      <header className="neo-panel relative overflow-hidden px-5 py-6 sm:px-7 sm:py-8">
+        <div className="checker-bg" />
+        <div className="relative grid gap-6 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-end">
+          <div>
+            <p className="eyebrow-pop w-fit">Selected Client Work</p>
+            <h1 className="hero-title mt-5 text-balance font-display text-[clamp(2.25rem,6vw,5rem)] uppercase leading-[0.88] tracking-tight text-ink">
+              Client Website Showcases
+            </h1>
+            <p className="mt-4 max-w-3xl text-base leading-7 text-ink/80 sm:text-lg">
+              A sharper proof wall of recent SEO, web design, and web development engagements — including brand marks, interface concepts, technology choices, and measurable outcomes.
+            </p>
+          </div>
+
+          <div className="neo-muted-panel grid gap-3 px-4 py-4 sm:px-5">
+            <p className="font-mono text-[0.66rem] uppercase tracking-[0.16em] text-primary/80">Proof stack</p>
+            <div className="grid grid-cols-3 gap-2">
+              <div className="border border-white/12 bg-[#171717] px-3 py-3 text-center">
+                <p className="font-display text-2xl uppercase text-ink">6</p>
+                <p className="mt-1 font-mono text-[0.62rem] uppercase tracking-[0.14em] text-ink/62">Showcases</p>
+              </div>
+              <div className="border border-white/12 bg-[#171717] px-3 py-3 text-center">
+                <p className="font-display text-2xl uppercase text-ink">4</p>
+                <p className="mt-1 font-mono text-[0.62rem] uppercase tracking-[0.14em] text-ink/62">Industries</p>
+              </div>
+              <div className="border border-white/12 bg-[#171717] px-3 py-3 text-center">
+                <p className="font-display text-2xl uppercase text-ink">100%</p>
+                <p className="mt-1 font-mono text-[0.62rem] uppercase tracking-[0.14em] text-ink/62">Custom</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </header>
 
-      <section aria-label="Client showcase cards" className="mt-10 grid gap-5 sm:mt-12 sm:grid-cols-2">
+      <section className="portal-summary-strip mt-6 grid gap-3 px-4 py-4 sm:grid-cols-3 sm:px-5">
+        <div>
+          <p className="font-mono text-[0.68rem] uppercase tracking-[0.14em] text-primary/80">Design direction</p>
+          <p className="mt-2 text-sm leading-6 text-ink/78">Dark neo-brutalist proof cards with stronger hierarchy, sharper containers, and cleaner mobile spacing.</p>
+        </div>
+        <div>
+          <p className="font-mono text-[0.68rem] uppercase tracking-[0.14em] text-primary/80">What is shown</p>
+          <p className="mt-2 text-sm leading-6 text-ink/78">Industry, stack, mockup concept, challenge, solution, and headline outcomes for each engagement.</p>
+        </div>
+        <div>
+          <p className="font-mono text-[0.68rem] uppercase tracking-[0.14em] text-primary/80">Why it matters</p>
+          <p className="mt-2 text-sm leading-6 text-ink/78">The page now reads more like a proof system than a gallery, making it easier to scan on desktop and mobile.</p>
+        </div>
+      </section>
+
+      <section aria-label="Client showcase cards" className="mt-8 grid gap-5 lg:grid-cols-2">
         {clients.map((project) => (
-          <article key={project.name} className="rounded-2xl border-2 border-ink/80 bg-mist p-4 shadow-hard sm:p-5">
+          <article key={project.name} className="neo-panel flex h-full flex-col p-4 sm:p-5">
             <header className="flex items-start gap-3">
               <ClientLogo project={project} />
               <div>
@@ -381,12 +419,12 @@ export default function ClientsPage() {
             <WebsiteMockup project={project} />
 
             <div className="mt-4">
-              <h3 className="font-mono text-[0.72rem] uppercase tracking-[0.16em] text-ink/70">Technology Used</h3>
+              <h3 className="font-mono text-[0.72rem] uppercase tracking-[0.16em] text-primary/80">Technology Used</h3>
               <ul className="mt-2 flex flex-wrap gap-2">
                 {project.technologies.map((tech) => (
                   <li
                     key={tech}
-                    className="rounded-full border border-ink/30 bg-white px-2.5 py-1 text-[0.68rem] font-semibold text-ink/80"
+                    className="border border-white/14 bg-[#171717] px-2.5 py-1 font-mono text-[0.68rem] font-semibold uppercase tracking-[0.08em] text-ink/80"
                   >
                     {tech}
                   </li>
@@ -394,9 +432,9 @@ export default function ClientsPage() {
               </ul>
             </div>
 
-            <section className="mt-4 rounded-lg border border-ink/20 bg-white p-3.5" aria-label={`${project.name} case study`}>
+            <section className="mt-4 border border-white/14 bg-[#171717] p-3.5" aria-label={`${project.name} case study`}>
               <h3 className="font-display text-base uppercase leading-none text-ink">Case Study Snapshot</h3>
-              <dl className="mt-3 space-y-2.5 text-[0.82rem] leading-relaxed text-ink/85 sm:text-[0.86rem]">
+              <dl className="mt-3 space-y-2.5 text-[0.82rem] leading-relaxed text-ink/82 sm:text-[0.86rem]">
                 <div>
                   <dt className="font-mono text-[0.65rem] uppercase tracking-[0.14em] text-ink/65">Challenge</dt>
                   <dd className="mt-1">{project.caseStudy.challenge}</dd>

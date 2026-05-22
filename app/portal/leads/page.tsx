@@ -356,7 +356,7 @@ export default function LeadMagnetSubmissionsPage() {
 
   if (!isSupabaseConfigured) {
     return (
-      <main className="mx-auto w-full max-w-4xl px-4 py-10 sm:px-6">
+      <main className="portal-workspace mx-auto w-full max-w-4xl px-4 py-10 sm:px-6">
         <section className="rounded-2xl border-2 border-ink/80 bg-mist p-6 shadow-hard">
           <h1 className="font-display text-3xl uppercase leading-none text-ink">
             Lead Magnet Submissions
@@ -371,7 +371,7 @@ export default function LeadMagnetSubmissionsPage() {
 
   if (isLoadingSession) {
     return (
-      <main className="mx-auto w-full max-w-4xl px-4 py-10 sm:px-6">
+      <main className="portal-workspace mx-auto w-full max-w-4xl px-4 py-10 sm:px-6">
         <section className="rounded-2xl border-2 border-ink/80 bg-mist p-6 shadow-hard">
           <p className="text-sm text-ink/85">Loading session...</p>
         </section>
@@ -381,7 +381,7 @@ export default function LeadMagnetSubmissionsPage() {
 
   if (!session) {
     return (
-      <main className="mx-auto w-full max-w-4xl px-4 py-10 sm:px-6">
+      <main className="portal-workspace mx-auto w-full max-w-4xl px-4 py-10 sm:px-6">
         <section className="rounded-2xl border-2 border-ink/80 bg-mist p-6 shadow-hard">
           <h1 className="font-display text-3xl uppercase leading-none text-ink">
             Lead Magnet Submissions
@@ -400,7 +400,7 @@ export default function LeadMagnetSubmissionsPage() {
 
   if (isLoadingManagerStatus) {
     return (
-      <main className="mx-auto w-full max-w-4xl px-4 py-10 sm:px-6">
+      <main className="portal-workspace mx-auto w-full max-w-4xl px-4 py-10 sm:px-6">
         <section className="rounded-2xl border-2 border-ink/80 bg-mist p-6 shadow-hard">
           <p className="text-sm text-ink/85">Checking manager access...</p>
         </section>
@@ -410,7 +410,7 @@ export default function LeadMagnetSubmissionsPage() {
 
   if (!isBootstrapManager) {
     return (
-      <main className="mx-auto w-full max-w-4xl px-4 py-10 sm:px-6">
+      <main className="portal-workspace mx-auto w-full max-w-4xl px-4 py-10 sm:px-6">
         <section className="rounded-2xl border-2 border-ink/80 bg-mist p-6 shadow-hard">
           <h1 className="font-display text-3xl uppercase leading-none text-ink">
             Lead Magnet Submissions
@@ -429,7 +429,7 @@ export default function LeadMagnetSubmissionsPage() {
 
   return (
     <>
-      <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
+      <main className="portal-workspace mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
       <header className="rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>

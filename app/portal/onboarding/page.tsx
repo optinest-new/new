@@ -628,7 +628,7 @@ export default function OnboardingPipelinePage() {
 
   if (!isSupabaseConfigured) {
     return (
-      <main className="mx-auto w-full max-w-4xl px-4 py-10 sm:px-6">
+      <main className="portal-workspace mx-auto w-full max-w-4xl px-4 py-10 sm:px-6">
         <section className="rounded-2xl border-2 border-ink/80 bg-mist p-6 shadow-hard">
           <h1 className="font-display text-3xl uppercase leading-none text-ink">Onboarding Pipeline</h1>
           <p className="mt-4 text-sm text-ink/85">
@@ -641,7 +641,7 @@ export default function OnboardingPipelinePage() {
 
   if (isLoadingSession) {
     return (
-      <main className="mx-auto w-full max-w-4xl px-4 py-10 sm:px-6">
+      <main className="portal-workspace mx-auto w-full max-w-4xl px-4 py-10 sm:px-6">
         <section className="rounded-2xl border-2 border-ink/80 bg-mist p-6 shadow-hard">
           <p className="text-sm text-ink/85">Loading session...</p>
         </section>
@@ -651,7 +651,7 @@ export default function OnboardingPipelinePage() {
 
   if (!session) {
     return (
-      <main className="mx-auto w-full max-w-4xl px-4 py-10 sm:px-6">
+      <main className="portal-workspace mx-auto w-full max-w-4xl px-4 py-10 sm:px-6">
         <section className="rounded-2xl border-2 border-ink/80 bg-mist p-6 shadow-hard">
           <h1 className="font-display text-3xl uppercase leading-none text-ink">Onboarding Pipeline</h1>
           <p className="mt-4 text-sm text-ink/85">Sign in to the portal to continue.</p>
@@ -668,7 +668,7 @@ export default function OnboardingPipelinePage() {
 
   if (isLoadingManagerStatus) {
     return (
-      <main className="mx-auto w-full max-w-4xl px-4 py-10 sm:px-6">
+      <main className="portal-workspace mx-auto w-full max-w-4xl px-4 py-10 sm:px-6">
         <section className="rounded-2xl border-2 border-ink/80 bg-mist p-6 shadow-hard">
           <p className="text-sm text-ink/85">Checking manager access...</p>
         </section>
@@ -678,7 +678,7 @@ export default function OnboardingPipelinePage() {
 
   if (!isBootstrapManager) {
     return (
-      <main className="mx-auto w-full max-w-4xl px-4 py-10 sm:px-6">
+      <main className="portal-workspace mx-auto w-full max-w-4xl px-4 py-10 sm:px-6">
         <section className="rounded-2xl border-2 border-ink/80 bg-mist p-6 shadow-hard">
           <h1 className="font-display text-3xl uppercase leading-none text-ink">Onboarding Pipeline</h1>
           <p className="mt-4 text-sm text-ink/85">Only the manager can access this page.</p>
@@ -695,7 +695,7 @@ export default function OnboardingPipelinePage() {
 
   return (
     <>
-      <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
+      <main className="portal-workspace mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
       <header className="rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
@@ -964,7 +964,7 @@ export default function OnboardingPipelinePage() {
                     <button
                       type="submit"
                       disabled={isSaving}
-                      className="inline-flex items-center rounded-full border-2 border-[#1f56c2] bg-[#2d6cdf] px-3 py-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-white transition hover:bg-[#245cc3] disabled:cursor-not-allowed disabled:opacity-70"
+                      className="inline-flex items-center rounded-full border-2 border-[#1f56c2] bg-[#1f56c2] px-3 py-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-white transition hover:bg-[#1a4aa8] disabled:cursor-not-allowed disabled:opacity-70"
                     >
                       {isSaving ? "Saving..." : "Save Lead"}
                     </button>
@@ -973,7 +973,7 @@ export default function OnboardingPipelinePage() {
                         type="button"
                         onClick={() => void handleConvertOnboardingLeadToProject(lead.id)}
                         disabled={isConverting || isDeleting}
-                        className="inline-flex items-center rounded-full border-2 border-[#0f7663] bg-[#16a085] px-3 py-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-white transition hover:bg-[#0f8d74] disabled:cursor-not-allowed disabled:opacity-70"
+                        className="inline-flex items-center rounded-full border-2 border-[#0f7663] bg-[#0f7663] px-3 py-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-white transition hover:bg-[#0c5f4f] disabled:cursor-not-allowed disabled:opacity-70"
                       >
                         {isConverting ? "Converting..." : "Convert to Project"}
                       </button>
@@ -982,7 +982,7 @@ export default function OnboardingPipelinePage() {
                       type="button"
                       onClick={() => handleDeleteModalOpen(lead.id)}
                       disabled={isDeleting || isSaving || isConverting}
-                      className="inline-flex items-center rounded-full border-2 border-[#b42318] bg-[#d92d20] px-3 py-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-white transition hover:bg-[#b42318] disabled:cursor-not-allowed disabled:opacity-70"
+                      className="inline-flex items-center rounded-full border-2 border-[#b42318] bg-[#b42318] px-3 py-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-white transition hover:bg-[#931d12] disabled:cursor-not-allowed disabled:opacity-70"
                     >
                       {isDeleting ? "Removing..." : "Remove Lead"}
                     </button>
@@ -1030,7 +1030,7 @@ export default function OnboardingPipelinePage() {
                 type="button"
                 onClick={() => void handleDeleteOnboardingLead(pendingDeleteLead.id)}
                 disabled={Boolean(deletingOnboardingLeadById[pendingDeleteLead.id])}
-                className="inline-flex items-center rounded-full border-2 border-[#b42318] bg-[#d92d20] px-4 py-2 text-xs font-semibold uppercase tracking-[0.1em] text-white transition hover:-translate-y-0.5 hover:bg-[#b42318] disabled:cursor-not-allowed disabled:opacity-70"
+                className="inline-flex items-center rounded-full border-2 border-[#b42318] bg-[#b42318] px-4 py-2 text-xs font-semibold uppercase tracking-[0.1em] text-white transition hover:-translate-y-0.5 hover:bg-[#931d12] disabled:cursor-not-allowed disabled:opacity-70"
               >
                 {deletingOnboardingLeadById[pendingDeleteLead.id] ? "Removing..." : "Confirm Remove"}
               </button>

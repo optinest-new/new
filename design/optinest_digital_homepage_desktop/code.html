@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>OPTINEST | Growth-Driven Digital Ecosystems</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "primary-container": "#c98f00",
+                      "on-secondary": "#68000f",
+                      "primary": "#fcbb3b",
+                      "on-error-container": "#ffdad6",
+                      "surface-container-low": "#1b1b1b",
+                      "on-secondary-fixed-variant": "#8c1520",
+                      "on-tertiary-fixed-variant": "#4b482a",
+                      "on-background": "#e2e2e2",
+                      "surface-container": "#1f1f1f",
+                      "error-container": "#93000a",
+                      "on-secondary-container": "#ff9e9b",
+                      "secondary-fixed-dim": "#ffb3b0",
+                      "on-primary": "#422c00",
+                      "alert-coral": "#FF6B6B",
+                      "surface-container-high": "#2a2a2a",
+                      "background": "#131313",
+                      "tertiary-fixed-dim": "#cec7a1",
+                      "inverse-primary": "#7d5800",
+                      "secondary": "#ffb3b0",
+                      "secondary-container": "#901822",
+                      "inverse-on-surface": "#303030",
+                      "surface-bright": "#393939",
+                      "surface-dim": "#131313",
+                      "outline": "#9d8f7a",
+                      "primary-fixed-dim": "#fcbb3b",
+                      "on-error": "#690005",
+                      "on-secondary-fixed": "#410006",
+                      "on-primary-fixed": "#271900",
+                      "primary-fixed": "#ffdea9",
+                      "surface-container-highest": "#353535",
+                      "on-tertiary-fixed": "#1f1c04",
+                      "outline-variant": "#504534",
+                      "on-tertiary": "#343116",
+                      "error": "#ffb4ab",
+                      "inverse-surface": "#e2e2e2",
+                      "on-tertiary-container": "#434023",
+                      "secondary-fixed": "#ffdad8",
+                      "on-primary-container": "#432e00",
+                      "on-surface": "#e2e2e2",
+                      "tertiary": "#cec7a1",
+                      "growth-orange": "#C98F00",
+                      "ink-black": "#000000",
+                      "tertiary-container": "#b2ac87",
+                      "surface-tint": "#fcbb3b",
+                      "surface": "#131313",
+                      "on-surface-variant": "#d4c4ae",
+                      "surface-base": "#F5F6EF",
+                      "surface-container-lowest": "#0e0e0e",
+                      "surface-variant": "#353535",
+                      "on-primary-fixed-variant": "#5f4100",
+                      "tertiary-fixed": "#eae3bc"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "stack-sm": "0.5rem",
+                      "grid-margin": "2rem",
+                      "grid-gutter": "1.5rem",
+                      "stack-md": "1.5rem",
+                      "stack-lg": "4rem",
+                      "section-padding": "8rem"
+              },
+              "fontFamily": {
+                      "body-lg": ["Inter"],
+                      "body-md": ["Inter"],
+                      "label-mono": ["JetBrains Mono"],
+                      "display-xl": ["Space Grotesk"],
+                      "display-xl-mobile": ["Space Grotesk"],
+                      "headline-md": ["Space Grotesk"],
+                      "headline-lg": ["Space Grotesk"]
+              },
+              "fontSize": {
+                      "body-lg": ["20px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                      "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                      "label-mono": ["14px", {"lineHeight": "1.0", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                      "display-xl": ["96px", {"lineHeight": "1.0", "letterSpacing": "-0.04em", "fontWeight": "700"}],
+                      "display-xl-mobile": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "headline-md": ["32px", {"lineHeight": "1.2", "fontWeight": "600"}],
+                      "headline-lg": ["64px", {"lineHeight": "1.1", "fontWeight": "600"}]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+        .neo-shadow { box-shadow: 4px 4px 0px 0px rgba(201, 143, 0, 1); }
+        .neo-shadow-black { box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1); }
+        .hover-lift:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0px 0px rgba(201, 143, 0, 1); }
+        .active-press:active { transform: translate(2px, 2px); box-shadow: 0px 0px 0px 0px rgba(201, 143, 0, 1); }
+        body { cursor: crosshair; }
+    </style>
+</head>
+<body class="bg-background text-on-background selection:bg-primary selection:text-ink-black">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 flex justify-between items-center h-16 px-4 bg-surface border-b-4 border-ink-black dark:border-surface-container-highest shadow-[4px_4px_0px_0px_rgba(252,187,59,1)]">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary cursor-pointer" data-icon="menu">menu</span>
+<h1 class="font-headline-md text-headline-md font-bold tracking-tighter text-on-surface">OPTINEST</h1>
+</div>
+<nav class="hidden md:flex gap-8">
+<a class="font-label-mono text-label-mono text-primary font-bold" href="#">HOME</a>
+<a class="font-label-mono text-label-mono text-on-surface-variant hover:text-primary transition-colors" href="#">WORK</a>
+<a class="font-label-mono text-label-mono text-on-surface-variant hover:text-primary transition-colors" href="#">RESULTS</a>
+<a class="font-label-mono text-label-mono text-on-surface-variant hover:text-primary transition-colors" href="#">SERVICES</a>
+</nav>
+<button class="bg-primary text-on-primary font-label-mono text-label-mono px-6 py-2 border-2 border-ink-black font-bold active:translate-y-1 active:shadow-none transition-all">BOOK NOW</button>
+</header>
+<main class="pt-16">
+<!-- Hero Section -->
+<section class="min-h-[819px] flex flex-col justify-center px-grid-margin border-b-4 border-ink-black relative overflow-hidden bg-surface-container-lowest">
+<!-- Background Decorative Grid -->
+<div class="absolute inset-0 opacity-5 pointer-events-none" style="background-image: radial-gradient(#fcbb3b 1px, transparent 1px); background-size: 32px 32px;"></div>
+<div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative z-10">
+<div class="flex flex-col gap-stack-md">
+<div class="inline-block bg-tertiary text-on-tertiary px-3 py-1 font-label-mono text-label-mono w-fit uppercase">Modern Digital Growth Agency</div>
+<h2 class="font-display-xl text-display-xl leading-none">WEB DESIGN &amp; SEO THAT DRIVES GROWTH</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-xl">
+                        We build fast, SEO-friendly websites that help growing brands attract qualified traffic and turn visits into leads. Precision engineering meets aggressive marketing.
+                    </p>
+<div class="flex flex-wrap gap-4 mt-4">
+<button class="bg-growth-orange text-ink-black font-label-mono text-label-mono px-8 py-4 border-2 border-ink-black font-bold flex items-center gap-2 neo-shadow hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all group">
+                            BOOK A STRATEGY CALL 
+                            <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+<!-- Social Proof -->
+<div class="flex items-center gap-4 mt-8 pt-8 border-t-2 border-surface-container-highest">
+<div class="flex -space-x-4">
+<img alt="Client 1" class="w-12 h-12 rounded-full border-2 border-ink-black" data-alt="Close-up portrait of a professional woman with a confident expression, set against a dark, minimalist architectural background. The lighting is sharp and cinematic, with a high-contrast Neo-Brutalist color palette of deep blacks and warm amber highlights, suggesting a high-end corporate environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC0aVmq8ptFreRGRdZyYhHqm9d7z4n5HMUkboOC_JE_WyU9Ie7KP9ZRggqUOUj2JLaNWKSsYasjJoAbWCtgwG39PMfUJJueQus9yErjhfwF9VI08PHRRHBHIIIhT6wH8Vfk4UoHgL1OFDO154Sdf9z2ofl1HaCb3MxWNYwepQWqkx_t_iXaMDQqD70NSVNWB2trZaI686WReTxNlTLDcAB3ASZJa_NfGY-J8SiVDr4efdjyiFCyE4UHfY8VZHyYCKnsVGv_MNB07hU"/>
+<img alt="Client 2" class="w-12 h-12 rounded-full border-2 border-ink-black" data-alt="A portrait of a male tech entrepreneur in a dark, sleek workspace. Soft, focused amber lighting illuminates his face against a background of dark metallic surfaces and clean lines. The atmosphere is sophisticated and authoritative, reflecting the professional and polished aesthetic of a modern digital agency." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDhfZT8a1WW3Utjjyz_9psA7Fk0A2LmU3lsT-vwWo23RF4dZZ0xu9zVOscmxmGV4iMAoXqLsToqqydZMiX3R6ehk9V13axPQ-IsGwqSLrtos1AgRjyeCUGhjNqMpKQPUjDrOxDsKDyKVZ2ZMRMM34mgNQkIAAZfgeNWcLScyuAKQeFWAZyiue9Cim4tiQFGwstAiFSnPTykr7b-VLbzdj8ylvXm9ihpgZBADQfnSCO7A0YXUCubucjrH7-_tHBol1gDQl1LF9Iwm18"/>
+<img alt="Client 3" class="w-12 h-12 rounded-full border-2 border-ink-black" data-alt="High-contrast studio portrait of a female creative professional in a dark-mode inspired setting. The visual style uses sharp lighting to create deep shadows and bright golden accents, maintaining a professional yet edgy aesthetic. The background is a clean, dark-grey matte finish that emphasizes the subject's modern and focused persona." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCdeBRfLayOW47NDL5k3LMMPwL-Ew35hoKRJC1AywB6PzJ27RoOs5lAEKyiANyBYqIf0HbLGzYOVyHhJL0GYfb2uDSDNb7XZ_liUhBKNzMchDbziEWOxQVCJ9ZW1-TstPvxV00XE78tLjdJLazxwm4tfIJhAuuLa-lzo93sNWKTBsqnHtqrxQpizbDQhrApCO0eeB_HA4AVEb1EyQc0dGZa1qCAHQXTFpxL_FcxPXMmyfT0EoE_s2Lx4WM-HNz7X0Qo5wjrO3BTs3o"/>
+</div>
+<span class="font-label-mono text-label-mono text-on-surface">JOIN 50+ SCALING BRANDS</span>
+</div>
+</div>
+<div class="hidden lg:block">
+<div class="relative p-4 border-4 border-ink-black bg-surface-container-high neo-shadow">
+<div class="aspect-square bg-ink-black overflow-hidden relative">
+<img alt="Dashboard" class="w-full h-full object-cover opacity-60 grayscale hover:grayscale-0 transition-all duration-700" data-alt="A high-tech digital dashboard displaying vibrant orange growth charts and data analytics against a dark, monochromatic user interface. The image features a shallow depth of field, with sharp focus on the rising metrics. The lighting is low-key with intense amber glowing elements, embodying the aggressively professional and technical authority of a growth agency." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCkXVpPWIqgepvmgn3cJw084sdQD_TKUFSDXfBmntiyDUvCrh5THaEIFfqksg9iqY5O6GIGxB5IZ-NmSura-ndHd8fp6CIDv6927jSu4DfLbVc-D7bOxYJ_L7LMUWY3HQFfGB1xhb2ydOwDzkR7cGXcPXp3lU6_-OhU3CaoR5VcWcAvFF8I_FopRy1GoPBydBooqZJDNWgFjdT6uEkMglO35jX33U2UBW3y03XIHBb-ZTS7s54XOaF-PC9cgeN6q603rdtgs2rrdB8"/>
+<div class="absolute inset-0 flex items-center justify-center">
+<div class="bg-primary text-ink-black font-display-xl text-headline-lg px-6 py-2 border-4 border-ink-black -rotate-3">SCALING</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Trust Bar / Growth Metrics -->
+<section class="bg-ink-black py-12 px-grid-margin grid grid-cols-1 md:grid-cols-3 divide-y-2 md:divide-y-0 md:divide-x-2 divide-surface-container-highest border-b-4 border-ink-black">
+<div class="flex flex-col items-center justify-center p-8 gap-2 group">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-4xl" data-icon="trending_up">trending_up</span>
+<span class="font-display-xl text-headline-lg text-primary">+150%</span>
+</div>
+<span class="font-label-mono text-label-mono text-on-surface-variant uppercase tracking-widest">Average Lead Growth</span>
+</div>
+<div class="flex flex-col items-center justify-center p-8 gap-2">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface text-4xl" data-icon="speed">speed</span>
+<span class="font-display-xl text-headline-lg text-on-surface">0.8s</span>
+</div>
+<span class="font-label-mono text-label-mono text-on-surface-variant uppercase tracking-widest">Average Load Speed</span>
+</div>
+<div class="flex flex-col items-center justify-center p-8 gap-2">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface text-4xl" data-icon="monitoring">monitoring</span>
+<span class="font-display-xl text-headline-lg text-on-surface">24/7</span>
+</div>
+<span class="font-label-mono text-label-mono text-on-surface-variant uppercase tracking-widest">SEO Tracking &amp; Ops</span>
+</div>
+</section>
+<!-- Core Expertise (Services) -->
+<section class="py-section-padding px-grid-margin bg-surface">
+<div class="max-w-7xl mx-auto">
+<div class="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-8">
+<div class="max-w-2xl">
+<span class="font-label-mono text-label-mono text-primary uppercase mb-4 block">Our Expertise</span>
+<h2 class="font-display-xl text-headline-lg">PRECISION SERVICES FOR AGGRESSIVE GROWTH</h2>
+</div>
+<div class="h-1 w-24 bg-primary mb-4 hidden md:block"></div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-0 border-2 border-ink-black overflow-hidden">
+<!-- Service 1 -->
+<div class="p-8 border-2 border-ink-black bg-surface-container flex flex-col gap-6 hover:bg-surface-container-high transition-colors group">
+<div class="w-16 h-16 bg-primary flex items-center justify-center border-2 border-ink-black neo-shadow-black group-hover:translate-x-1 group-hover:translate-y-1 group-hover:shadow-none transition-all">
+<span class="material-symbols-outlined text-ink-black text-3xl" data-icon="terminal">terminal</span>
+</div>
+<h3 class="font-headline-md text-headline-md">Web Design</h3>
+<p class="font-body-md text-on-surface-variant">We build high-performance, accessible web platforms that don't just look pretty—they work like industrial machines.</p>
+<div class="flex flex-wrap gap-2 mt-auto">
+<span class="px-2 py-1 bg-tertiary text-ink-black font-label-mono text-xs">UX STRATEGY</span>
+<span class="px-2 py-1 bg-tertiary text-ink-black font-label-mono text-xs">REACT / NEXT.JS</span>
+</div>
+</div>
+<!-- Service 2 -->
+<div class="p-8 border-2 border-ink-black bg-surface-container flex flex-col gap-6 hover:bg-surface-container-high transition-colors group">
+<div class="w-16 h-16 bg-primary flex items-center justify-center border-2 border-ink-black neo-shadow-black group-hover:translate-x-1 group-hover:translate-y-1 group-hover:shadow-none transition-all">
+<span class="material-symbols-outlined text-ink-black text-3xl" data-icon="search_insights">search_insights</span>
+</div>
+<h3 class="font-headline-md text-headline-md">SEO Strategy</h3>
+<p class="font-body-md text-on-surface-variant">Command the search results. Our technical audits and authority-building content ensure you stay ahead of the curve.</p>
+<div class="flex flex-wrap gap-2 mt-auto">
+<span class="px-2 py-1 bg-tertiary text-ink-black font-label-mono text-xs">TECHNICAL AUDITS</span>
+<span class="px-2 py-1 bg-tertiary text-ink-black font-label-mono text-xs">CONTENT OPS</span>
+</div>
+</div>
+<!-- Service 3 -->
+<div class="p-8 border-2 border-ink-black bg-surface-container flex flex-col gap-6 hover:bg-surface-container-high transition-colors group">
+<div class="w-16 h-16 bg-primary flex items-center justify-center border-2 border-ink-black neo-shadow-black group-hover:translate-x-1 group-hover:translate-y-1 group-hover:shadow-none transition-all">
+<span class="material-symbols-outlined text-ink-black text-3xl" data-icon="conversion_path">conversion_path</span>
+</div>
+<h3 class="font-headline-md text-headline-md">Conversion Growth</h3>
+<p class="font-body-md text-on-surface-variant">Turning traffic into revenue through data-backed A/B testing and optimized sales funnel architectures.</p>
+<div class="flex flex-wrap gap-2 mt-auto">
+<span class="px-2 py-1 bg-tertiary text-ink-black font-label-mono text-xs">A/B TESTING</span>
+<span class="px-2 py-1 bg-tertiary text-ink-black font-label-mono text-xs">SALES FUNNELS</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Bottom CTA -->
+<section class="py-section-padding px-grid-margin bg-ink-black relative overflow-hidden">
+<div class="absolute top-0 right-0 p-12 opacity-10">
+<span class="material-symbols-outlined text-[20rem]" data-icon="rocket_launch">rocket_launch</span>
+</div>
+<div class="max-w-4xl mx-auto text-center flex flex-col items-center gap-stack-md relative z-10">
+<h2 class="font-display-xl text-display-xl text-primary leading-tight">READY TO SCALE?</h2>
+<p class="font-body-lg text-on-surface max-w-2xl">
+                    Stop guessing. Start growing with a data-backed digital ecosystem designed for performance and authority.
+                </p>
+<button class="mt-8 bg-growth-orange text-ink-black font-display-xl text-headline-md px-12 py-6 border-4 border-ink-black neo-shadow hover:translate-x-[-4px] hover:translate-y-[-4px] hover:shadow-[8px_8px_0px_0px_rgba(252,187,59,1)] active:translate-x-0 active:translate-y-0 active:shadow-none transition-all">
+                    START YOUR PROJECT
+                </button>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="w-full bg-surface border-t-4 border-ink-black dark:border-surface-container-highest p-grid-margin text-center md:text-left">
+<div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
+<div class="flex flex-col gap-4">
+<h2 class="font-headline-md text-headline-md text-primary font-bold">OPTINEST</h2>
+<p class="font-body-md text-on-surface-variant">Accelerating digital growth through precision engineering and aggressive marketing strategies.</p>
+</div>
+<div class="flex flex-col gap-4">
+<h4 class="font-label-mono text-label-mono text-on-surface font-bold uppercase underline decoration-primary decoration-2 underline-offset-4">SERVICES</h4>
+<ul class="flex flex-col gap-2">
+<li><a class="font-body-md text-on-surface hover:text-growth-orange transition-colors" href="#">Web Design</a></li>
+<li><a class="font-body-md text-on-surface hover:text-growth-orange transition-colors" href="#">SEO Strategy</a></li>
+<li><a class="font-body-md text-on-surface hover:text-growth-orange transition-colors" href="#">Growth Audits</a></li>
+</ul>
+</div>
+<div class="flex flex-col gap-4">
+<h4 class="font-label-mono text-label-mono text-on-surface font-bold uppercase underline decoration-primary decoration-2 underline-offset-4">AGENCY</h4>
+<ul class="flex flex-col gap-2">
+<li><a class="font-body-md text-on-surface hover:text-growth-orange transition-colors" href="#">Case Studies</a></li>
+<li><a class="font-body-md text-on-surface hover:text-growth-orange transition-colors" href="#">Our Process</a></li>
+<li><a class="font-body-md text-on-surface hover:text-growth-orange transition-colors" href="#">Contact</a></li>
+</ul>
+</div>
+<div class="flex flex-col gap-4">
+<h4 class="font-label-mono text-label-mono text-on-surface font-bold uppercase underline decoration-primary decoration-2 underline-offset-4">CONNECT</h4>
+<div class="flex justify-center md:justify-start gap-4">
+<a class="w-10 h-10 border-2 border-ink-black flex items-center justify-center bg-surface-container hover:bg-primary hover:text-ink-black transition-all" href="#"><span class="material-symbols-outlined" data-icon="public">public</span></a>
+<a class="w-10 h-10 border-2 border-ink-black flex items-center justify-center bg-surface-container hover:bg-primary hover:text-ink-black transition-all" href="#"><span class="material-symbols-outlined" data-icon="share">share</span></a>
+<a class="w-10 h-10 border-2 border-ink-black flex items-center justify-center bg-surface-container hover:bg-primary hover:text-ink-black transition-all" href="#"><span class="material-symbols-outlined" data-icon="alternate_email">alternate_email</span></a>
+</div>
+</div>
+</div>
+<div class="pt-8 border-t border-surface-container-highest flex flex-col md:flex-row justify-between items-center gap-4">
+<span class="font-label-mono text-label-mono text-on-surface-variant">© 2024 OPTINEST DIGITAL. ALL RIGHTS RESERVED.</span>
+<div class="flex gap-6">
+<a class="font-label-mono text-label-mono text-on-surface hover:underline" href="#">PRIVACY POLICY</a>
+<a class="font-label-mono text-label-mono text-on-surface hover:underline" href="#">TERMS OF SERVICE</a>
+</div>
+</div>
+</footer>
+<script>
+        // Micro-interactions for the neo-brutalist feel
+        document.querySelectorAll('button, a').forEach(el => {
+            el.addEventListener('mousedown', () => {
+                if (el.classList.contains('neo-shadow')) {
+                    el.style.transform = 'translate(2px, 2px)';
+                    el.style.boxShadow = '2px 2px 0px 0px rgba(0,0,0,1)';
+                }
+            });
+            el.addEventListener('mouseup', () => {
+                if (el.classList.contains('neo-shadow')) {
+                    el.style.transform = '';
+                    el.style.boxShadow = '';
+                }
+            });
+        });
+
+        // Sticky header scroll effect
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('header');
+            if (window.scrollY > 50) {
+                header.classList.add('bg-surface-dim');
+            } else {
+                header.classList.remove('bg-surface-dim');
+            }
+        });
+    </script>
+</body></html>

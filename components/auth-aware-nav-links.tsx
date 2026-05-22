@@ -9,6 +9,7 @@ import { createSupabaseBrowserClient, hasSupabasePublicEnv } from "@/lib/supabas
 
 type AuthAwareNavLinksProps = {
   placement: "header" | "footer";
+  onItemClick?: () => void;
 };
 
 function resolveDisplayName(user: User | null): string {
@@ -36,7 +37,7 @@ function resolveDisplayName(user: User | null): string {
   return "Client";
 }
 
-export function AuthAwareNavLinks({ placement }: AuthAwareNavLinksProps) {
+export function AuthAwareNavLinks({ placement, onItemClick }: AuthAwareNavLinksProps) {
   const isSupabaseConfigured = hasSupabasePublicEnv();
   const pathname = usePathname();
   const supabase = useMemo(
@@ -89,7 +90,7 @@ export function AuthAwareNavLinks({ placement }: AuthAwareNavLinksProps) {
   if (isAuthenticated && placement === "header" && !isPortalPage) {
     return (
       <>
-        <Link href="/portal" className="hover:underline">
+        <Link href="/portal" className="hover:underline" onClick={onItemClick}>
           Go back to Portal
         </Link>
         <span className="inline-flex max-w-[14rem] items-center gap-1.5 rounded-full border border-[#b48400]/35 bg-[#fff1c5] px-2.5 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.06em] text-[#6f4a00] sm:max-w-none">
@@ -107,11 +108,11 @@ export function AuthAwareNavLinks({ placement }: AuthAwareNavLinksProps) {
   }
 
   if (placement === "header") {
-    return <ScheduleCallModal label="Schedule a Call" className="hover:underline" />;
+    return <ScheduleCallModal label="Schedule a Call" className="hover:underline" onOpen={onItemClick} />;
   }
 
   return (
-    <Link href="/portal" className="hover:underline">
+    <Link href="/portal" className="hover:underline" onClick={onItemClick}>
       Portal
     </Link>
   );

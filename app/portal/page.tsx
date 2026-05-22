@@ -6,6 +6,7 @@ import type { Session } from "@supabase/supabase-js";
 import { createSupabaseBrowserClient, hasSupabasePublicEnv } from "@/lib/supabase-browser";
 import { PortalNotificationCenter } from "@/components/portal-notification-center";
 import { PortalAlertModal, type PortalAlertTone } from "@/components/portal-alert-modal";
+import { ManagerControls, ClientBilling, ActiveProject, SearchFilters, AccessCredentials, AdminWorkspace, TimelineMilestones, TaskApprovals, ProgressUpdates, QuestionsThreads, FilesDocuments } from "@/components/portal";
 
 type PortalProject = {
   id: string;
@@ -4199,7 +4200,7 @@ export default function PortalPage() {
 
   if (!isSupabaseConfigured) {
     return (
-      <main className="mx-auto w-full max-w-4xl px-4 py-10 sm:px-6">
+      <main className="portal-workspace mx-auto w-full max-w-4xl px-4 py-10 sm:px-6">
         <section className="rounded-2xl border-2 border-ink/80 bg-mist p-6 shadow-hard">
           <h1 className="font-display text-3xl uppercase leading-none text-ink">Client Portal</h1>
           <p className="mt-4 text-sm text-ink/85">
@@ -4218,7 +4219,7 @@ export default function PortalPage() {
 
   if (isLoadingSession) {
     return (
-      <main className="mx-auto w-full max-w-4xl px-4 py-10 sm:px-6">
+      <main className="portal-workspace mx-auto w-full max-w-4xl px-4 py-10 sm:px-6">
         <section className="rounded-2xl border-2 border-ink/80 bg-mist p-6 shadow-hard">
           <p className="text-sm text-ink/85">Loading portal session...</p>
         </section>
@@ -4228,7 +4229,7 @@ export default function PortalPage() {
 
   if (session && isRecoveryMode) {
     return (
-      <main className="mx-auto w-full max-w-4xl px-4 py-10 sm:px-6">
+      <main className="portal-workspace mx-auto w-full max-w-4xl px-4 py-10 sm:px-6">
         <section className="rounded-2xl border-2 border-ink/80 bg-mist p-6 shadow-hard sm:p-8">
           <h1 className="font-display text-3xl uppercase leading-none text-ink">Reset Password</h1>
           <p className="mt-3 text-sm text-ink/85">
@@ -4596,7 +4597,7 @@ export default function PortalPage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6">
+    <main className="portal-workspace mx-auto w-full max-w-7xl px-4 py-8 sm:px-6">
       <header className="rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -4901,7 +4902,7 @@ export default function PortalPage() {
           ) : null}
 
           {availableWorkspaceTabs.length > 0 ? (
-            <section className="rounded-2xl border-2 border-ink/80 bg-mist p-3 shadow-hard sm:p-4">
+            <section className="rounded-2xl border border-ink/60 bg-mist p-3 shadow-hard sm:p-4">
               <p className="px-1 text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-ink/70">
                 Dashboard Tabs
               </p>
@@ -4914,13 +4915,18 @@ export default function PortalPage() {
                       key={tab.id}
                       type="button"
                       onClick={() => setActiveWorkspaceTab(tab.id)}
-                      className={`inline-flex items-center gap-2 whitespace-nowrap rounded-full border px-3 py-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.1em] transition ${
+                      className={`inline-flex items-center gap-2 whitespace-nowrap rounded-full border px-3 py-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.1em] transition-all duration-150 ${
                         isActive
                           ? "border-[#a87700] bg-[#ffe8a3] text-[#5b3a00] shadow-[2px_2px_0_#a87700]"
-                          : "border-ink/25 bg-white text-ink hover:border-ink/50"
+                          : "border-ink/25 bg-white text-ink hover:border-ink/50 hover:-translate-y-0.5"
                       }`}
                     >
-                      <span>{tab.label}</span>
+                      <span className="flex items-center gap-1.5">
+                        {tabNewCount > 0 ? (
+                          <span className="inline-flex h-2 w-2 rounded-full bg-[#d92d20]" />
+                        ) : null}
+                        {tab.label}
+                      </span>
                       {tabNewCount > 0 ? (
                         <span
                           className={`inline-flex min-w-5 items-center justify-center rounded-full border px-1.5 py-0.5 text-[0.6rem] font-semibold leading-none ${
@@ -4940,476 +4946,51 @@ export default function PortalPage() {
           ) : null}
 
           {isBootstrapManager && activeWorkspaceTab === "manager_controls" ? (
-            <section className="rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6">
-              <div className="flex items-center justify-between gap-3">
-                <h2 className="font-display text-xl uppercase text-ink">Manager Controls</h2>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setActiveWorkspaceTab("payment_mode_controls")}
-                    className="inline-flex items-center rounded-full border border-[#1f56c2] bg-[#2d6cdf] px-3 py-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-white transition hover:bg-[#245cc3]"
-                  >
-                    Payment Mode
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActiveWorkspaceTab("client_billing")}
-                    className="inline-flex items-center rounded-full border border-[#1f56c2] bg-[#2d6cdf] px-3 py-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-white transition hover:bg-[#245cc3]"
-                  >
-                    Client Billing
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setIsManagerControlsOpen((current) => !current)}
-                    className="inline-flex h-10 w-10 items-center justify-center rounded-full border-2 border-ink bg-white text-xl font-semibold leading-none text-ink transition hover:-translate-y-0.5"
-                    aria-label={isManagerControlsOpen ? "Hide manager controls" : "Show manager controls"}
-                  >
-                    {isManagerControlsOpen ? "−" : "+"}
-                  </button>
-                </div>
-              </div>
-
-              {isManagerControlsOpen ? (
-                <>
-                  <p className="mt-3 text-sm text-ink/75">
-                    You are the bootstrap manager. Create projects and assign clients by email.
-                  </p>
-
-                  {assignmentMessage ? (
-                    <p className="mt-3 rounded-lg border border-[#84b98d] bg-[#e9f9ec] px-3 py-2 text-sm text-[#1f5c28]">
-                      {assignmentMessage}
-                    </p>
-                  ) : null}
-
-                  <div className="mt-4">
-                  <form
-                    onSubmit={handleCreateProjectAndAssign}
-                    className="rounded-lg border border-ink/20 bg-white p-3.5"
-                  >
-                    <h3 className="text-sm font-semibold text-ink">Create Project + Assign Client</h3>
-                    <div className="mt-3 space-y-3">
-                      <label className="block text-xs font-semibold uppercase tracking-[0.1em] text-ink/65">
-                        Project Name
-                      </label>
-                      <input
-                        type="text"
-                        value={newProjectName}
-                        onChange={(event) => setNewProjectName(event.target.value)}
-                        className="w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm text-ink outline-none focus:border-ink/60"
-                        placeholder="Client website revamp"
-                        required
-                      />
-                      <label className="block text-xs font-semibold uppercase tracking-[0.1em] text-ink/65">
-                        Client Email
-                      </label>
-                      <input
-                        type="email"
-                        value={newProjectClientEmail}
-                        onChange={(event) => setNewProjectClientEmail(event.target.value)}
-                        autoComplete="email"
-                        className="w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm text-ink outline-none focus:border-ink/60"
-                        placeholder="client@company.com"
-                        required
-                      />
-                      {selectedCreateClientSuggestion?.full_name ? (
-                        <p className="text-xs text-ink/70">
-                          Client name:{" "}
-                          <span className="font-semibold">{selectedCreateClientSuggestion.full_name}</span>
-                        </p>
-                      ) : null}
-                      {isLoadingNewProjectEmailSuggestions ? (
-                        <p className="text-xs text-ink/60">Finding matching emails...</p>
-                      ) : null}
-                      {!isLoadingNewProjectEmailSuggestions &&
-                      newProjectClientEmail.trim().length >= 2 &&
-                      newProjectEmailSuggestions.length > 0 ? (
-                        <div className="max-h-44 overflow-y-auto rounded-lg border border-ink/20 bg-white">
-                          {newProjectEmailSuggestions.map((suggestion) => (
-                            <button
-                              key={suggestion.email}
-                              type="button"
-                              onClick={() => setNewProjectClientEmail(suggestion.email)}
-                              className="block w-full border-b border-ink/10 px-3 py-2 text-left last:border-b-0 hover:bg-mist"
-                            >
-                              <p className="text-xs font-semibold text-ink">
-                                {suggestion.full_name || "Client account"}
-                              </p>
-                              <p className="text-xs text-ink/65">{suggestion.email}</p>
-                            </button>
-                          ))}
-                        </div>
-                      ) : null}
-                      <div className="grid gap-3 sm:grid-cols-2">
-                        <div>
-                          <label className="block text-xs font-semibold uppercase tracking-[0.1em] text-ink/65">
-                            Status
-                          </label>
-                          <select
-                            value={newProjectStatus}
-                            onChange={(event) =>
-                              setNewProjectStatus(event.target.value as ProjectStatus)
-                            }
-                            className="mt-1 w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm text-ink outline-none focus:border-ink/60"
-                          >
-                            {projectStatuses.map((status) => (
-                              <option key={status} value={status}>
-                                {status.replace("_", " ")}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-xs font-semibold uppercase tracking-[0.1em] text-ink/65">
-                            Progress
-                          </label>
-                          <input
-                            type="number"
-                            min={0}
-                            max={100}
-                            value={newProjectProgress}
-                            onChange={(event) => setNewProjectProgress(event.target.value)}
-                            className="mt-1 w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm text-ink outline-none focus:border-ink/60"
-                            required
-                          />
-                        </div>
-                      </div>
-                      <div className="grid gap-3 sm:grid-cols-2">
-                        <div>
-                          <label className="block text-xs font-semibold uppercase tracking-[0.1em] text-ink/65">
-                            Start Date
-                          </label>
-                          <input
-                            type="date"
-                            value={newProjectStartDate}
-                            onChange={(event) => setNewProjectStartDate(event.target.value)}
-                            className="mt-1 w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm text-ink outline-none focus:border-ink/60"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-semibold uppercase tracking-[0.1em] text-ink/65">
-                            Due Date
-                          </label>
-                          <input
-                            type="date"
-                            value={newProjectDueDate}
-                            onChange={(event) => setNewProjectDueDate(event.target.value)}
-                            className="mt-1 w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm text-ink outline-none focus:border-ink/60"
-                          />
-                        </div>
-                      </div>
-                      <label className="block text-xs font-semibold uppercase tracking-[0.1em] text-ink/65">
-                        Project Summary (HTML / Markdown)
-                      </label>
-                      <textarea
-                        rows={3}
-                        value={newProjectSummary}
-                        onChange={(event) => setNewProjectSummary(event.target.value)}
-                        className="w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm text-ink outline-none focus:border-ink/60"
-                        placeholder="Use HTML or Markdown, e.g. ## Launch prep or <p>Launch prep</p>"
-                      />
-                      <button
-                        type="submit"
-                        disabled={isCreatingProject}
-                        className="inline-flex items-center rounded-full border-2 border-[#1f56c2] bg-[#2d6cdf] px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white transition hover:-translate-y-0.5 hover:bg-[#245cc3] disabled:cursor-not-allowed disabled:opacity-70"
-                      >
-                        {isCreatingProject ? "Creating..." : "Create & Assign"}
-                      </button>
-                    </div>
-                  </form>
-                  </div>
-                </>
-              ) : (
-                <p className="mt-3 rounded-lg border border-ink/20 bg-white px-3 py-2 text-sm text-ink/70">
-                  Manager controls drawer is collapsed.
-                </p>
-              )}
-
-            </section>
+            <ManagerControls
+              isManagerControlsOpen={isManagerControlsOpen}
+              newProjectName={newProjectName}
+              newProjectClientEmail={newProjectClientEmail}
+              newProjectStatus={newProjectStatus}
+              newProjectProgress={newProjectProgress}
+              newProjectStartDate={newProjectStartDate}
+              newProjectDueDate={newProjectDueDate}
+              newProjectSummary={newProjectSummary}
+              isCreatingProject={isCreatingProject}
+              assignmentMessage={assignmentMessage}
+              selectedCreateClientSuggestion={selectedCreateClientSuggestion}
+              isLoadingNewProjectEmailSuggestions={isLoadingNewProjectEmailSuggestions}
+              newProjectEmailSuggestions={newProjectEmailSuggestions}
+              onSetNewProjectName={setNewProjectName}
+              onSetNewProjectClientEmail={setNewProjectClientEmail}
+              onSetNewProjectStatus={setNewProjectStatus}
+              onSetNewProjectProgress={setNewProjectProgress}
+              onSetNewProjectStartDate={setNewProjectStartDate}
+              onSetNewProjectDueDate={setNewProjectDueDate}
+              onSetNewProjectSummary={setNewProjectSummary}
+              onSubmitCreateProject={handleCreateProjectAndAssign}
+              onToggleOpen={() => setIsManagerControlsOpen((current) => !current)}
+              onSwitchTab={setActiveWorkspaceTab}
+            />
           ) : null}
 
           {isBootstrapManager && activeWorkspaceTab === "client_billing" ? (
-            <section className="rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <h2 className="font-display text-xl uppercase text-ink">Client Transactions & Recurring Billing</h2>
-                  <p className="mt-1 text-sm text-ink/75">
-                    All client balances, paid projects, recent transactions, and next recurring payments.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => void loadManagerBillingData()}
-                  className="inline-flex items-center rounded-full border border-ink/25 bg-white px-3 py-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-ink transition hover:border-ink/45"
-                >
-                  Refresh Billing
-                </button>
-              </div>
-
-              {managerBillingMessage ? (
-                <p className="mt-3 rounded-lg border border-[#84b98d] bg-[#e9f9ec] px-3 py-2 text-xs text-[#1f5c28]">
-                  {managerBillingMessage}
-                </p>
-              ) : null}
-
-              {isLoadingManagerBilling ? (
-                <p className="mt-3 rounded-lg border border-ink/20 bg-mist px-3 py-2 text-xs text-ink/70">
-                  Loading manager billing data...
-                </p>
-              ) : null}
-
-              {!recurringPaymentsEnabled ? (
-                <p className="mt-3 rounded-lg border border-[#e3b36d] bg-[#fff8ec] px-3 py-2 text-xs text-[#8a5a00]">
-                  Automatic/recurring payments are currently disabled in manager settings.
-                </p>
-              ) : null}
-
-              <div className="mt-3 grid gap-2 grid-cols-2 xl:grid-cols-4">
-                <div className="rounded-lg border border-ink/20 bg-white px-3 py-2">
-                  <p className="text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-ink/65">
-                    Outstanding Balance
-                  </p>
-                  <p className="mt-1 text-sm font-semibold text-[#8a5a00]">
-                    {formatUsd(Number(totalOutstandingBalance.toFixed(2)))}
-                  </p>
-                </div>
-                <div className="rounded-lg border border-ink/20 bg-white px-3 py-2">
-                  <p className="text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-ink/65">
-                    Captured Payments
-                  </p>
-                  <p className="mt-1 text-sm font-semibold text-[#0b6a40]">
-                    {formatUsd(Number(totalCapturedPayments.toFixed(2)))}
-                  </p>
-                </div>
-                <div className="rounded-lg border border-ink/20 bg-white px-3 py-2">
-                  <p className="text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-ink/65">Paid Projects</p>
-                  <p className="mt-1 text-sm font-semibold text-ink">{paidInFullProjectsCount}</p>
-                </div>
-                <div className="rounded-lg border border-ink/20 bg-white px-3 py-2">
-                  <p className="text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-ink/65">
-                    Next Recurring
-                  </p>
-                  <p className="mt-1 text-sm font-semibold text-ink">{nextRecurringPayments.length}</p>
-                </div>
-              </div>
-
-              <div className="mt-4 grid gap-3 xl:grid-cols-2">
-                {managerBillingRows.length === 0 ? (
-                  <p className="rounded-lg border border-ink/20 bg-white px-3 py-3 text-sm text-ink/65 xl:col-span-2">
-                    No projects available yet.
-                  </p>
-                ) : (
-                  managerBillingRows.map((row) => {
-                    const draft =
-                      billingProfileDrafts[row.project.id] || createBillingProfileDraft(row.recurringProfile);
-                    const isSaving = Boolean(isSavingBillingProfileByProjectId[row.project.id]);
-
-                    return (
-                      <article key={row.project.id} className="rounded-lg border border-ink/20 bg-white p-3">
-                        <div className="flex items-start justify-between gap-2">
-                          <div>
-                            <p className="font-semibold text-ink">{row.project.name}</p>
-                            <p className="mt-1 text-[0.68rem] uppercase tracking-[0.08em] text-ink/60">
-                              {row.project.status.replace("_", " ")}
-                            </p>
-                          </div>
-                          {row.lastPaymentAt ? (
-                            <p className="text-[0.68rem] text-ink/65">{formatDateTime(row.lastPaymentAt)}</p>
-                          ) : (
-                            <p className="text-[0.68rem] text-ink/55">No payments yet</p>
-                          )}
-                        </div>
-
-                        <div className="mt-3 grid gap-2 text-xs text-ink/80 sm:grid-cols-2">
-                          <p>Quoted: <span className="font-semibold text-ink">{formatUsd(row.project.quoted_amount)}</span></p>
-                          <p>Paid: <span className="font-semibold text-ink">{formatUsd(row.project.amount_paid)}</span></p>
-                          <p>
-                            Balance:{" "}
-                            <span className="font-semibold text-ink">
-                              {formatProjectBalance(row.project.quoted_amount, row.project.amount_paid)}
-                            </span>
-                          </p>
-                          <p>
-                            Captured:{" "}
-                            <span className="font-semibold text-ink">
-                              {row.capturedPaymentCount} ({formatUsd(Number(row.capturedPaymentTotal.toFixed(2)))})
-                            </span>
-                          </p>
-                        </div>
-
-                        <div className="mt-3 space-y-2 border-t border-ink/15 pt-3">
-                          <label className="flex items-center gap-2 text-[0.68rem] font-semibold uppercase tracking-[0.08em] text-ink/70">
-                            <input
-                              type="checkbox"
-                              checked={draft.recurring_enabled}
-                              onChange={(event) => {
-                                if (event.target.checked && !recurringPaymentsEnabled) {
-                                  return;
-                                }
-                                handleBillingDraftChange(
-                                  row.project.id,
-                                  "recurring_enabled",
-                                  event.target.checked
-                                );
-                              }}
-                            />
-                            Recurring Enabled
-                          </label>
-                          <div className="grid gap-2 sm:grid-cols-2">
-                            <input
-                              type="text"
-                              value={draft.recurring_amount}
-                              onChange={(event) =>
-                                handleBillingDraftChange(row.project.id, "recurring_amount", event.target.value)
-                              }
-                              placeholder="Amount (USD)"
-                              disabled={!recurringPaymentsEnabled || !draft.recurring_enabled}
-                              className="rounded border border-ink/25 bg-white px-2 py-1 text-xs text-ink outline-none disabled:cursor-not-allowed disabled:bg-fog disabled:text-ink/50"
-                            />
-                            <select
-                              value={draft.recurring_interval}
-                              onChange={(event) =>
-                                handleBillingDraftChange(
-                                  row.project.id,
-                                  "recurring_interval",
-                                  event.target.value as RecurringInterval
-                                )
-                              }
-                              disabled={!recurringPaymentsEnabled || !draft.recurring_enabled}
-                              className="rounded border border-ink/25 bg-white px-2 py-1 text-xs text-ink outline-none disabled:cursor-not-allowed disabled:bg-fog disabled:text-ink/50"
-                            >
-                              {recurringIntervalOptions.map((option) => (
-                                <option key={option.value} value={option.value}>
-                                  {option.label}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                          <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
-                            <input
-                              type="date"
-                              value={draft.next_payment_due_at}
-                              onChange={(event) =>
-                                handleBillingDraftChange(row.project.id, "next_payment_due_at", event.target.value)
-                              }
-                              disabled={!recurringPaymentsEnabled || !draft.recurring_enabled}
-                              className="rounded border border-ink/25 bg-white px-2 py-1 text-xs text-ink outline-none disabled:cursor-not-allowed disabled:bg-fog disabled:text-ink/50"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => void handleSaveBillingProfile(row.project.id)}
-                              disabled={isSaving}
-                              className="inline-flex items-center rounded-full border border-[#1f56c2] bg-[#2d6cdf] px-3 py-1 text-[0.64rem] font-semibold uppercase tracking-[0.1em] text-white transition hover:bg-[#245cc3] disabled:cursor-not-allowed disabled:opacity-70"
-                            >
-                              {isSaving ? "Saving..." : "Save"}
-                            </button>
-                          </div>
-                          <textarea
-                            rows={2}
-                            value={draft.notes}
-                            onChange={(event) =>
-                              handleBillingDraftChange(row.project.id, "notes", event.target.value)
-                            }
-                            placeholder="Recurring notes"
-                            className="w-full rounded border border-ink/25 bg-white px-2 py-1 text-xs text-ink outline-none"
-                          />
-                        </div>
-                      </article>
-                    );
-                  })
-                )}
-              </div>
-
-              <div className="mt-4 rounded-lg border border-ink/20 bg-white p-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.1em] text-ink/70">
-                  Next Recurring Payments
-                </p>
-                {nextRecurringPayments.length === 0 ? (
-                  <p className="mt-2 text-xs text-ink/65">No recurring schedules configured yet.</p>
-                ) : (
-                  <div className="mt-2 space-y-1 text-xs text-ink/80">
-                    {nextRecurringPayments.slice(0, 8).map((row) => (
-                      <p key={`next-recurring-${row.project.id}`}>
-                        <span className="font-semibold text-ink">{row.project.name}</span>:{" "}
-                        {formatUsd(row.recurringProfile?.recurring_amount ?? null)} on{" "}
-                        {formatDate(row.recurringProfile?.next_payment_due_at || null)} (
-                        {formatRecurringInterval(row.recurringProfile?.recurring_interval || "monthly")})
-                      </p>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div className="mt-4 sm:hidden space-y-2">
-                {recentProjectPayments.length === 0 ? (
-                  <p className="rounded-lg border border-ink/20 bg-white px-3 py-3 text-sm text-ink/65">
-                    No transactions yet.
-                  </p>
-                ) : (
-                  recentProjectPayments.map((payment) => (
-                    <article key={payment.id} className="rounded-lg border border-ink/20 bg-white px-3 py-2 text-xs">
-                      <p className="font-semibold text-ink">
-                        {projectNameById[payment.project_id] || payment.project_id}
-                      </p>
-                      <p className="mt-1 text-ink/70">{formatDateTime(payment.created_at)}</p>
-                      <p className="mt-1 flex flex-wrap items-center gap-1.5 text-ink/80">
-                        <span
-                          className={`rounded-full border px-1.5 py-0.5 text-[0.62rem] font-semibold uppercase tracking-[0.08em] ${getPaymentStatusBadgeClass(
-                            payment.status
-                          )}`}
-                        >
-                          {formatPaymentStatus(payment.status)}
-                        </span>
-                        <span>{formatUsd(payment.amount)}</span>
-                      </p>
-                      <p className="mt-1 text-ink/70">{payment.payer_email || "Unknown payer"}</p>
-                    </article>
-                  ))
-                )}
-              </div>
-
-              <div className="mt-4 hidden sm:block overflow-x-auto rounded-lg border border-ink/20">
-                <table className="min-w-[860px] w-full text-left text-xs text-ink/80">
-                  <thead className="bg-mist text-[0.64rem] uppercase tracking-[0.1em] text-ink/65">
-                    <tr>
-                      <th className="px-3 py-2 font-semibold">Date</th>
-                      <th className="px-3 py-2 font-semibold">Project</th>
-                      <th className="px-3 py-2 font-semibold">Status</th>
-                      <th className="px-3 py-2 font-semibold">Amount</th>
-                      <th className="px-3 py-2 font-semibold">Payer</th>
-                      <th className="px-3 py-2 font-semibold">Provider Ref</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {recentProjectPayments.length === 0 ? (
-                      <tr>
-                        <td colSpan={6} className="px-3 py-3 text-sm text-ink/65">
-                          No transactions yet.
-                        </td>
-                      </tr>
-                    ) : (
-                      recentProjectPayments.map((payment) => (
-                        <tr key={payment.id} className="border-t border-ink/10">
-                          <td className="px-3 py-2">{formatDateTime(payment.created_at)}</td>
-                          <td className="px-3 py-2">{projectNameById[payment.project_id] || payment.project_id}</td>
-                          <td className="px-3 py-2">
-                            <span
-                              className={`rounded-full border px-2 py-0.5 text-[0.62rem] font-semibold uppercase tracking-[0.08em] ${getPaymentStatusBadgeClass(
-                                payment.status
-                              )}`}
-                            >
-                              {formatPaymentStatus(payment.status)}
-                            </span>
-                          </td>
-                          <td className="px-3 py-2 font-semibold text-ink">{formatUsd(payment.amount)}</td>
-                          <td className="px-3 py-2">{payment.payer_email || "Unknown"}</td>
-                          <td className="px-3 py-2">{payment.provider_capture_id || payment.provider_order_id}</td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </section>
+            <ClientBilling
+              managerBillingMessage={managerBillingMessage}
+              isLoadingManagerBilling={isLoadingManagerBilling}
+              recurringPaymentsEnabled={recurringPaymentsEnabled}
+              totalOutstandingBalance={totalOutstandingBalance}
+              totalCapturedPayments={totalCapturedPayments}
+              paidInFullProjectsCount={paidInFullProjectsCount}
+              nextRecurringPayments={nextRecurringPayments}
+              managerBillingRows={managerBillingRows}
+              billingProfileDrafts={billingProfileDrafts}
+              isSavingBillingProfileByProjectId={isSavingBillingProfileByProjectId}
+              recentProjectPayments={recentProjectPayments}
+              projectNameById={projectNameById}
+              onRefreshBilling={loadManagerBillingData}
+              onBillingDraftChange={handleBillingDraftChange}
+              onSaveBillingProfile={handleSaveBillingProfile}
+            />
           ) : null}
 
           {canManagePaymentModeControls && activeWorkspaceTab === "payment_mode_controls" ? (
@@ -5486,257 +5067,26 @@ export default function PortalPage() {
           ) : (
             <>
               {activeWorkspaceTab === "active_project" ? (
-                <section className="rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <h2 className="font-display text-2xl uppercase leading-none text-ink">
-                      {selectedProject.name}
-                    </h2>
-                    <p className="mt-2 text-sm text-ink/75">
-                      Start {formatDate(selectedProject.start_date)} · Due{" "}
-                      {formatDate(selectedProject.due_date)}
-                    </p>
-                    <p className="mt-1 text-xs font-semibold uppercase tracking-[0.1em] text-ink/60">
-                      Your Access: {formatRole(effectiveRole)}
-                    </p>
-                    {isProjectAdmin ? (
-                      <div className="mt-2 text-xs text-ink/70">
-                        <p className="font-semibold uppercase tracking-[0.1em] text-ink/60">
-                          Project Contacts
-                        </p>
-                        {projectContacts.length === 0 ? (
-                          <p className="mt-1">No project contacts assigned yet.</p>
-                        ) : (
-                          <ul className="mt-1 space-y-1">
-                            {projectContacts.map((contact) => (
-                              <li key={`${contact.email}-${contact.role}`}>
-                                <span className="font-semibold text-ink">
-                                  {contact.full_name || "Project Contact"}
-                                </span>{" "}
-                                <span className="text-ink/65">({contact.email})</span>{" "}
-                                <span className="rounded-full border border-ink/20 bg-white px-1.5 py-0.5 text-[0.62rem] font-semibold uppercase tracking-[0.08em] text-ink/70">
-                                  {formatRole(contact.role)}
-                                </span>
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </div>
-                    ) : null}
-                  </div>
-                  <span
-                    className={`self-start rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] ${
-                      statusStyles[selectedProject.status] || "bg-fog text-ink/70"
-                    }`}
-                  >
-                    {selectedProject.status.replace("_", " ")}
-                  </span>
-                </div>
-
-                <div className="mt-4 rounded-lg border border-ink/20 bg-white p-3">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <p className="text-xs font-semibold uppercase tracking-[0.12em] text-ink/70">
-                      Project Snapshot
-                    </p>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setIsProjectSnapshotModalOpen(true)}
-                        className="inline-flex items-center rounded-full border border-[#475569] bg-[#64748b] px-3 py-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-white transition hover:bg-[#55657c]"
-                      >
-                        {isProjectAdmin ? "Edit Snapshot" : "Edit Summary"}
-                      </button>
-                      {isProjectAdmin && selectedProject.status !== "archived" ? (
-                        <button
-                          type="button"
-                          onClick={() => void handleArchiveProject()}
-                          disabled={isArchivingProject || isDeletingProject}
-                          className="inline-flex items-center rounded-full border border-[#9b1c1c] bg-[#d44444] px-3 py-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-white transition hover:bg-[#bb3636] disabled:cursor-not-allowed disabled:opacity-70"
-                        >
-                          {isArchivingProject ? "Archiving..." : "Archive Project"}
-                        </button>
-                      ) : null}
-                      {isProjectAdmin ? (
-                        <button
-                          type="button"
-                          onClick={() => void handleDeleteProjectPermanently()}
-                          disabled={isArchivingProject || isDeletingProject}
-                          className="inline-flex items-center rounded-full border border-[#7f1010] bg-[#a51616] px-3 py-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-white transition hover:bg-[#8d1414] disabled:cursor-not-allowed disabled:opacity-70"
-                        >
-                          {isDeletingProject ? "Deleting..." : "Delete Permanently"}
-                        </button>
-                      ) : null}
-                    </div>
-                  </div>
-
-                  <p className="mt-2 text-sm text-ink/75">
-                    Status: <span className="font-semibold text-ink">{selectedProject.status.replace("_", " ")}</span>
-                  </p>
-                  <div className="mt-2">
-                    <div className="mb-2 flex items-center justify-between">
-                      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-ink/70">
-                        Project Progress
-                      </p>
-                      <p className="text-sm font-semibold text-ink">{selectedProject.progress}%</p>
-                    </div>
-                    <div className="h-3 overflow-hidden rounded-full border border-ink/20 bg-fog">
-                      <div
-                        className="h-full bg-[#4a83ff] transition-all"
-                        style={{ width: `${Math.max(0, Math.min(100, selectedProject.progress))}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="mt-3 border-t border-ink/15 pt-3">
-                    <div className="rounded-lg border border-ink/20 bg-[#f3f9ff] p-3">
-                      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-ink/70">
-                        Billing Summary
-                      </p>
-                      <div className="mt-2 grid gap-2 text-sm text-ink/80 sm:grid-cols-3">
-                        <p>
-                          Quoted Amount: <span className="font-semibold text-ink">{formatUsd(selectedProject.quoted_amount)}</span>
-                        </p>
-                        <p>
-                          Amount Paid: <span className="font-semibold text-ink">{formatUsd(selectedProject.amount_paid)}</span>
-                        </p>
-                        <p>
-                          Balance:{" "}
-                          <span
-                            className={`font-semibold ${
-                              selectedProjectBalance !== null && selectedProjectBalance > 0
-                                ? "text-[#8a5a00]"
-                                : "text-ink"
-                            }`}
-                          >
-                            {formatProjectBalance(selectedProject.quoted_amount, selectedProject.amount_paid)}
-                          </span>
-                        </p>
-                      </div>
-                      <p className="mt-2 text-xs text-ink/65">Balance = Quoted Amount - Amount Paid</p>
-
-                      {paypalStatusMessage ? (
-                        <p className="mt-3 rounded-md border border-[#84b98d] bg-[#e9f9ec] px-3 py-2 text-xs text-[#1f5c28]">
-                          {paypalStatusMessage}
-                        </p>
-                      ) : null}
-
-                      {isCapturingPaypalCheckout ? (
-                        <p className="mt-3 rounded-md border border-[#a3b2d6] bg-[#eef3ff] px-3 py-2 text-xs text-[#254084]">
-                          Confirming PayPal payment...
-                        </p>
-                      ) : null}
-
-                      {!isProjectAdmin &&
-                      !manualPaymentsEnabled &&
-                      selectedProjectBalance !== null &&
-                      selectedProjectBalance > 0 ? (
-                        <p className="mt-3 rounded-md border border-[#e3b36d] bg-[#fff8ec] px-3 py-2 text-xs text-[#8a5a00]">
-                          Manual payments are currently disabled. Please contact your manager.
-                        </p>
-                      ) : null}
-
-                      {!isProjectAdmin &&
-                      manualPaymentsEnabled &&
-                      selectedProjectBalance !== null &&
-                      selectedProjectBalance > 0 ? (
-                        <form
-                          onSubmit={(event) => {
-                            event.preventDefault();
-                            void handleStartPayPalCheckout();
-                          }}
-                          className="mt-3 rounded-md border border-ink/20 bg-white p-3"
-                        >
-                          <p className="text-xs font-semibold uppercase tracking-[0.1em] text-ink/65">
-                            Pay With PayPal
-                          </p>
-                          <div className="mt-2 flex flex-wrap items-end gap-2">
-                            <label className="text-xs text-ink/70">
-                              Amount (USD)
-                              <input
-                                type="text"
-                                inputMode="decimal"
-                                value={paypalAmountDraft}
-                                onChange={(event) => setPaypalAmountDraft(event.target.value)}
-                                className="mt-1 w-40 rounded-md border border-ink/25 bg-white px-2.5 py-1.5 text-sm text-ink outline-none focus:border-ink/60"
-                                placeholder="0.00"
-                              />
-                            </label>
-                            <button
-                              type="submit"
-                              disabled={isStartingPaypalCheckout || isCapturingPaypalCheckout}
-                              className="inline-flex items-center rounded-full border-2 border-[#0d5d31] bg-[#1d7a46] px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white transition hover:bg-[#17653a] disabled:cursor-not-allowed disabled:opacity-70"
-                            >
-                              {isStartingPaypalCheckout ? "Redirecting..." : "Pay Securely"}
-                            </button>
-                          </div>
-                          <p className="mt-2 text-[0.7rem] text-ink/60">
-                            Max payable now: {formatUsd(selectedProjectBalance)}
-                          </p>
-                        </form>
-                      ) : null}
-
-                      {!isProjectAdmin ? (
-                        <div className="mt-3 rounded-md border border-ink/20 bg-white p-3">
-                          <div className="flex items-center justify-between gap-2">
-                            <p className="text-xs font-semibold uppercase tracking-[0.1em] text-ink/65">
-                              Payment History
-                            </p>
-                            <span className="text-[0.68rem] text-ink/60">
-                              {selectedProjectPayments.length} transaction
-                              {selectedProjectPayments.length === 1 ? "" : "s"}
-                            </span>
-                          </div>
-                          {selectedProjectPayments.length === 0 ? (
-                            <p className="mt-2 text-xs text-ink/65">
-                              No payments have been recorded for this project yet.
-                            </p>
-                          ) : (
-                            <div className="mt-2 space-y-2">
-                              {selectedProjectPayments.map((payment) => (
-                                <article
-                                  key={payment.id}
-                                  className="rounded-md border border-ink/15 bg-mist px-2.5 py-2 text-xs"
-                                >
-                                  <div className="flex flex-wrap items-center justify-between gap-2">
-                                    <span className="font-semibold text-ink">{formatDateTime(payment.created_at)}</span>
-                                    <span className="font-semibold text-ink">{formatUsd(payment.amount)}</span>
-                                  </div>
-                                  <div className="mt-1 flex flex-wrap items-center gap-2 text-ink/70">
-                                    <span
-                                      className={`rounded-full border px-1.5 py-0.5 text-[0.62rem] font-semibold uppercase tracking-[0.08em] ${getPaymentStatusBadgeClass(
-                                        payment.status
-                                      )}`}
-                                    >
-                                      {formatPaymentStatus(payment.status)}
-                                    </span>
-                                    <span>{payment.payer_email || "Unknown payer"}</span>
-                                  </div>
-                                  <p className="mt-1 text-[0.68rem] text-ink/60">
-                                    Ref: {payment.provider_capture_id || payment.provider_order_id}
-                                  </p>
-                                </article>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      ) : null}
-                    </div>
-
-                    <div className="mt-3 border-t border-ink/15 pt-3">
-                    {selectedProject.summary ? (
-                      <div
-                        className="text-sm text-ink/80 [&_a]:text-[#2d5bd1] [&_a]:underline [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_h1]:text-xl [&_h1]:font-semibold [&_h2]:text-lg [&_h2]:font-semibold [&_h3]:font-semibold"
-                        dangerouslySetInnerHTML={{
-                          __html: renderProjectSummaryContent(selectedProject.summary)
-                        }}
-                      />
-                    ) : (
-                      <p className="text-sm text-ink/65">No summary added yet.</p>
-                    )}
-                    </div>
-                  </div>
-                </div>
-                </section>
+                <ActiveProject
+                  selectedProject={selectedProject}
+                  effectiveRole={effectiveRole}
+                  isProjectAdmin={isProjectAdmin}
+                  projectContacts={projectContacts}
+                  selectedProjectBalance={selectedProjectBalance}
+                  paypalStatusMessage={paypalStatusMessage}
+                  isCapturingPaypalCheckout={isCapturingPaypalCheckout}
+                  manualPaymentsEnabled={manualPaymentsEnabled}
+                  paypalAmountDraft={paypalAmountDraft}
+                  isStartingPaypalCheckout={isStartingPaypalCheckout}
+                  selectedProjectPayments={selectedProjectPayments}
+                  isArchivingProject={isArchivingProject}
+                  isDeletingProject={isDeletingProject}
+                  onOpenSnapshotModal={() => setIsProjectSnapshotModalOpen(true)}
+                  onArchiveProject={handleArchiveProject}
+                  onDeleteProjectPermanently={handleDeleteProjectPermanently}
+                  onSetPaypalAmountDraft={setPaypalAmountDraft}
+                  onStartPayPalCheckout={handleStartPayPalCheckout}
+                />
               ) : null}
 
               {isProjectSnapshotModalOpen ? (
@@ -5871,1207 +5221,159 @@ export default function PortalPage() {
               ) : null}
 
               {activeWorkspaceTab === "search_filters" ? (
-                <section className="rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6">
-                <h3 className="font-display text-xl uppercase text-ink">Search & Filters</h3>
-                <div className="mt-3 grid gap-3 md:grid-cols-4">
-                  <input
-                    type="text"
-                    value={contentSearchDraft}
-                    onChange={(event) => setContentSearchDraft(event.target.value)}
-                    placeholder="Search updates, milestones, approvals, access, threads, files..."
-                    className="md:col-span-4 w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm text-ink outline-none focus:border-ink/60"
-                  />
-                  <label className="text-xs font-semibold uppercase tracking-[0.1em] text-ink/65">
-                    Milestone Status
-                    <select
-                      value={milestoneFilterStatus}
-                      onChange={(event) =>
-                        setMilestoneFilterStatus(event.target.value as "all" | MilestoneStatus)
-                      }
-                      className="mt-1 w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm normal-case tracking-normal text-ink outline-none focus:border-ink/60"
-                    >
-                      <option value="all">All</option>
-                      {milestoneStatuses.map((status) => (
-                        <option key={status} value={status}>
-                          {status.replace("_", " ")}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <label className="text-xs font-semibold uppercase tracking-[0.1em] text-ink/65">
-                    Approval Status
-                    <select
-                      value={approvalFilterStatus}
-                      onChange={(event) =>
-                        setApprovalFilterStatus(event.target.value as "all" | ApprovalStatus)
-                      }
-                      className="mt-1 w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm normal-case tracking-normal text-ink outline-none focus:border-ink/60"
-                    >
-                      <option value="all">All</option>
-                      {approvalStatuses.map((status) => (
-                        <option key={status} value={status}>
-                          {status.replace("_", " ")}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <label className="text-xs font-semibold uppercase tracking-[0.1em] text-ink/65">
-                    Access Status
-                    <select
-                      value={accessStatusFilter}
-                      onChange={(event) =>
-                        setAccessStatusFilter(event.target.value as "all" | AccessItemStatus)
-                      }
-                      className="mt-1 w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm normal-case tracking-normal text-ink outline-none focus:border-ink/60"
-                    >
-                      <option value="all">All</option>
-                      {accessItemStatuses.map((status) => (
-                        <option key={status} value={status}>
-                          {status.replace("_", " ")}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                </div>
-                </section>
+                <SearchFilters
+                  contentSearchDraft={contentSearchDraft}
+                  milestoneFilterStatus={milestoneFilterStatus}
+                  approvalFilterStatus={approvalFilterStatus}
+                  accessStatusFilter={accessStatusFilter}
+                  onSetContentSearchDraft={setContentSearchDraft}
+                  onSetMilestoneFilterStatus={setMilestoneFilterStatus}
+                  onSetApprovalFilterStatus={setApprovalFilterStatus}
+                  onSetAccessStatusFilter={setAccessStatusFilter}
+                />
               ) : null}
 
               {activeWorkspaceTab === "access_credentials" ? (
-                <section className="rounded-2xl border-2 border-ink/80 bg-mist p-4 shadow-hard sm:p-5">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <h3 className="font-display text-xl uppercase text-ink">
-                    {isProjectAdmin ? "Access & Credentials Checklist" : "Client Intake & Access"}
-                  </h3>
-                  <span className="text-xs font-semibold uppercase tracking-[0.1em] text-ink/65">
-                    {isProjectAdmin ? "Manager view" : "Compact workspace"}
-                  </span>
-                </div>
-
-                <div className={isProjectAdmin ? "mt-3 grid gap-3" : "mt-3 grid gap-3 xl:grid-cols-2"}>
-                  {!isProjectAdmin ? (
-                    <article className="rounded-lg border border-ink/20 bg-white p-3">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.1em] text-ink/65">
-                          Business Goals & Scope
-                        </p>
-                        <p className="mt-1 text-[0.72rem] text-ink/65">
-                          {projectClientIntake
-                            ? `Last updated ${formatDateTime(projectClientIntake.updated_at)}`
-                            : "No intake saved yet"}
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setIsClientIntakeOpen((current) => !current)}
-                        className="inline-flex items-center rounded-full border border-ink/30 bg-mist px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.08em] text-ink"
-                      >
-                        {isClientIntakeOpen ? "Hide Intake" : "Edit Intake"}
-                      </button>
-                    </div>
-
-                    {!isClientIntakeOpen ? (
-                      <div className="mt-3 space-y-2 text-sm text-ink/80">
-                        <p>
-                          <span className="font-semibold text-ink">Company:</span>{" "}
-                          {intakeCompanyNameDraft.trim() || "Not set"}
-                        </p>
-                        <p>
-                          <span className="font-semibold text-ink">Website:</span>{" "}
-                          {intakeWebsiteUrlDraft.trim() ? (
-                            <a
-                              href={intakeWebsiteUrlDraft}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="underline"
-                            >
-                              {intakeWebsiteUrlDraft}
-                            </a>
-                          ) : (
-                            "Not set"
-                          )}
-                        </p>
-                        <p>
-                          <span className="font-semibold text-ink">Services:</span>{" "}
-                          {intakeServiceNeedsDraft.length > 0
-                            ? intakeServiceNeedsDraft.map((value) => value.replace("_", " ")).join(", ")
-                            : "None selected"}
-                        </p>
-                      </div>
-                    ) : (
-                      <form onSubmit={handleSaveClientIntake} className="mt-3 space-y-3">
-                        <div className="grid gap-2 md:grid-cols-2">
-                          <input
-                            type="text"
-                            value={intakeCompanyNameDraft}
-                            onChange={(event) => setIntakeCompanyNameDraft(event.target.value)}
-                            placeholder="Business name"
-                            className="w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm text-ink outline-none focus:border-ink/60"
-                          />
-                          <input
-                            type="text"
-                            value={intakeWebsiteUrlDraft}
-                            onChange={(event) => setIntakeWebsiteUrlDraft(event.target.value)}
-                            placeholder="Website URL"
-                            className="w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm text-ink outline-none focus:border-ink/60"
-                          />
-                          <textarea
-                            rows={2}
-                            value={intakeTargetAudienceDraft}
-                            onChange={(event) => setIntakeTargetAudienceDraft(event.target.value)}
-                            placeholder="Target audience"
-                            className="md:col-span-2 w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm text-ink outline-none focus:border-ink/60"
-                          />
-                          <textarea
-                            rows={2}
-                            value={intakePrimaryGoalDraft}
-                            onChange={(event) => setIntakePrimaryGoalDraft(event.target.value)}
-                            placeholder="Primary goal"
-                            className="w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm text-ink outline-none focus:border-ink/60"
-                          />
-                          <textarea
-                            rows={2}
-                            value={intakeSecondaryGoalDraft}
-                            onChange={(event) => setIntakeSecondaryGoalDraft(event.target.value)}
-                            placeholder="Secondary goal"
-                            className="w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm text-ink outline-none focus:border-ink/60"
-                          />
-                          <input
-                            type="text"
-                            value={intakeTimelineGoalDraft}
-                            onChange={(event) => setIntakeTimelineGoalDraft(event.target.value)}
-                            placeholder="Timeline goal"
-                            className="w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm text-ink outline-none focus:border-ink/60"
-                          />
-                          <input
-                            type="text"
-                            value={intakeSuccessMetricsDraft}
-                            onChange={(event) => setIntakeSuccessMetricsDraft(event.target.value)}
-                            placeholder="Success metrics"
-                            className="w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm text-ink outline-none focus:border-ink/60"
-                          />
-                          <input
-                            type="text"
-                            value={intakeCmsPlatformDraft}
-                            onChange={(event) => setIntakeCmsPlatformDraft(event.target.value)}
-                            placeholder="CMS platform"
-                            className="w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm text-ink outline-none focus:border-ink/60"
-                          />
-                          <textarea
-                            rows={2}
-                            value={intakeNotesDraft}
-                            onChange={(event) => setIntakeNotesDraft(event.target.value)}
-                            placeholder="Additional notes"
-                            className="w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm text-ink outline-none focus:border-ink/60"
-                          />
-                        </div>
-
-                        <div>
-                          <p className="text-xs font-semibold uppercase tracking-[0.1em] text-ink/65">
-                            Services Needed
-                          </p>
-                          <div className="mt-2 flex flex-wrap gap-2">
-                            {clientServiceNeedOptions.map((option) => {
-                              const isActive = intakeServiceNeedsDraft.includes(option.value);
-                              return (
-                                <button
-                                  key={option.value}
-                                  type="button"
-                                  onClick={() => handleToggleServiceNeed(option.value)}
-                                  className={`rounded-full border px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.08em] transition ${
-                                    isActive
-                                      ? "border-ink/70 bg-ink text-mist"
-                                      : "border-ink/30 bg-white text-ink hover:border-ink/60"
-                                  }`}
-                                >
-                                  {option.label}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-
-                        <div className="flex flex-wrap items-center gap-2">
-                          <button
-                            type="submit"
-                            disabled={isSavingClientIntake}
-                            className="inline-flex items-center rounded-full border border-[#0f7663] bg-[#16a085] px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.1em] text-white transition hover:bg-[#0f8d74] disabled:cursor-not-allowed disabled:opacity-70"
-                          >
-                            {isSavingClientIntake ? "Saving..." : "Save Intake"}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setIsClientIntakeOpen(false)}
-                            className="inline-flex items-center rounded-full border border-ink/30 bg-white px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.1em] text-ink"
-                          >
-                            Collapse
-                          </button>
-                        </div>
-                      </form>
-                    )}
-                    </article>
-                  ) : null}
-
-                  <article className="rounded-lg border border-ink/20 bg-white p-3">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.1em] text-ink/65">
-                          Access & Credentials Checklist
-                        </p>
-                        <p className="mt-1 text-[0.72rem] text-ink/65">
-                          Sensitive fields are visible only to project members.
-                        </p>
-                      </div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => void handleGenerateAccessChecklist()}
-                          disabled={isGeneratingAccessChecklist || intakeServiceNeedsDraft.length === 0}
-                          className="inline-flex items-center rounded-full border border-ink/35 bg-white px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.08em] text-ink disabled:cursor-not-allowed disabled:opacity-70"
-                        >
-                          {isGeneratingAccessChecklist ? "Generating..." : "Generate"}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setIsAccessChecklistOpen((current) => !current)}
-                          className="inline-flex items-center rounded-full border border-ink/30 bg-mist px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.08em] text-ink"
-                        >
-                          {isAccessChecklistOpen ? "Hide List" : "Open List"}
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      <span className="rounded-full bg-[#ffe2e2] px-2 py-0.5 text-[0.62rem] font-semibold uppercase tracking-[0.08em] text-[#892727]">
-                        Missing {accessStatusCounts.missing}
-                      </span>
-                      <span className="rounded-full bg-[#fff5cf] px-2 py-0.5 text-[0.62rem] font-semibold uppercase tracking-[0.08em] text-[#8a5a00]">
-                        Submitted {accessStatusCounts.submitted}
-                      </span>
-                      <span className="rounded-full bg-[#d5f4e2] px-2 py-0.5 text-[0.62rem] font-semibold uppercase tracking-[0.08em] text-[#0b6a40]">
-                        Verified {accessStatusCounts.verified}
-                      </span>
-                      <span className="rounded-full bg-[#e7ecff] px-2 py-0.5 text-[0.62rem] font-semibold uppercase tracking-[0.08em] text-[#254084]">
-                        Not needed {accessStatusCounts.not_needed}
-                      </span>
-                    </div>
-
-                    {isAccessChecklistOpen ? (
-                      <div className="mt-3 space-y-2">
-                        {filteredProjectAccessItems.length === 0 ? (
-                          <p className="rounded-lg border border-ink/20 bg-mist px-3 py-2 text-sm text-ink/75">
-                            {projectAccessItems.length === 0
-                              ? "No access checklist items yet. Save intake and generate checklist."
-                              : "No access items match your current filters."}
-                          </p>
-                        ) : null}
-
-                        {filteredProjectAccessItems.map((item) => {
-                          const draft = accessItemDrafts[item.id];
-                          const isItemOpen = Boolean(expandedAccessItemIds[item.id]);
-                          const accessFieldVisibility =
-                            accessFieldVisibilityById[item.id] ?? defaultAccessItemVisibility;
-                          const savedFields = [
-                            draft?.login_url.trim() ? "URL" : null,
-                            draft?.account_email.trim() ? "Email" : null,
-                            draft?.username.trim() ? "Username" : null,
-                            draft?.secret_value.trim() ? "Password/token" : null,
-                            draft?.secure_link.trim() ? "Secure link" : null
-                          ].filter((value): value is string => Boolean(value));
-                          if (!draft) {
-                            return null;
-                          }
-
-                          return (
-                            <article key={item.id} className="rounded-lg border border-ink/20 bg-mist px-3 py-2">
-                              <div className="flex flex-wrap items-start justify-between gap-2">
-                                <div>
-                                  <p className="text-sm font-semibold text-ink">{item.title}</p>
-                                  <p className="mt-0.5 text-[0.72rem] text-ink/60">
-                                    {item.service_area || "general"} · Updated {formatDateTime(item.updated_at)}
-                                  </p>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <span
-                                    className={`rounded-full px-2 py-0.5 text-[0.62rem] font-semibold uppercase tracking-[0.1em] ${
-                                      accessStatusStyles[draft.status]
-                                    }`}
-                                  >
-                                    {draft.status.replace("_", " ")}
-                                  </span>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleToggleAccessItem(item.id)}
-                                    className="inline-flex items-center rounded-full border border-ink/30 bg-white px-2.5 py-1 text-[0.64rem] font-semibold uppercase tracking-[0.08em] text-ink"
-                                  >
-                                    {isItemOpen ? "Hide" : "Open"}
-                                  </button>
-                                </div>
-                              </div>
-
-                              {item.description ? (
-                                <p className="mt-1 text-xs text-ink/75">{item.description}</p>
-                              ) : null}
-
-                              {!isItemOpen ? (
-                                <p className="mt-1 text-xs text-ink/65">
-                                  {savedFields.length > 0
-                                    ? `Saved fields: ${savedFields.join(", ")}`
-                                    : "No credentials saved yet."}
-                                </p>
-                              ) : (
-                                <>
-                                  <div className="mt-2 grid gap-2 md:grid-cols-3">
-                                    <select
-                                      value={draft.status}
-                                      onChange={(event) =>
-                                        handleAccessDraftChange(
-                                          item.id,
-                                          "status",
-                                          event.target.value as AccessItemStatus
-                                        )
-                                      }
-                                      className="w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm text-ink outline-none focus:border-ink/60"
-                                    >
-                                      {accessItemStatuses.map((status) => (
-                                        <option key={status} value={status}>
-                                          {status.replace("_", " ")}
-                                        </option>
-                                      ))}
-                                    </select>
-                                    <input
-                                      type={accessFieldVisibility.login_url ? "text" : "password"}
-                                      value={draft.login_url}
-                                      onChange={(event) =>
-                                        handleAccessDraftChange(item.id, "login_url", event.target.value)
-                                      }
-                                      placeholder="Login URL"
-                                      autoComplete="new-password"
-                                      className="w-full rounded-lg border border-ink/25 bg-white px-3 py-2 pr-10 text-sm text-ink outline-none focus:border-ink/60"
-                                    />
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        handleToggleAccessFieldVisibility(item.id, "login_url")
-                                      }
-                                      className="absolute right-2 top-1/2 inline-flex -translate-y-1/2 items-center justify-center rounded border border-ink/20 bg-white px-1.5 py-1 text-[0.62rem] text-ink/75"
-                                      aria-label={
-                                        accessFieldVisibility.login_url ? "Hide login URL" : "Show login URL"
-                                      }
-                                      title={accessFieldVisibility.login_url ? "Hide" : "Show"}
-                                    >
-                                      {accessFieldVisibility.login_url ? (
-                                        <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-                                          <path d="M3 3l18 18" />
-                                          <path d="M9.9 5.1A10.9 10.9 0 0112 5c4.5 0 8.3 2.9 9.5 7a11 11 0 01-4.2 5.4" />
-                                          <path d="M6.6 6.6A11.1 11.1 0 002.5 12 11.1 11.1 0 007.6 18" />
-                                        </svg>
-                                      ) : (
-                                        <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-                                          <path d="M2.5 12S6.3 5 12 5s9.5 7 9.5 7-3.8 7-9.5 7S2.5 12 2.5 12z" />
-                                          <circle cx="12" cy="12" r="3" />
-                                        </svg>
-                                      )}
-                                    </button>
-                                  </div>
-                                  <div className="relative">
-                                    <input
-                                      type={accessFieldVisibility.account_email ? "text" : "password"}
-                                      value={draft.account_email}
-                                      onChange={(event) =>
-                                        handleAccessDraftChange(item.id, "account_email", event.target.value)
-                                      }
-                                      placeholder="Account email"
-                                      autoComplete="new-password"
-                                      className="w-full rounded-lg border border-ink/25 bg-white px-3 py-2 pr-10 text-sm text-ink outline-none focus:border-ink/60"
-                                    />
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        handleToggleAccessFieldVisibility(item.id, "account_email")
-                                      }
-                                      className="absolute right-2 top-1/2 inline-flex -translate-y-1/2 items-center justify-center rounded border border-ink/20 bg-white px-1.5 py-1 text-[0.62rem] text-ink/75"
-                                      aria-label={
-                                        accessFieldVisibility.account_email
-                                          ? "Hide account email"
-                                          : "Show account email"
-                                      }
-                                      title={accessFieldVisibility.account_email ? "Hide" : "Show"}
-                                    >
-                                      {accessFieldVisibility.account_email ? (
-                                        <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-                                          <path d="M3 3l18 18" />
-                                          <path d="M9.9 5.1A10.9 10.9 0 0112 5c4.5 0 8.3 2.9 9.5 7a11 11 0 01-4.2 5.4" />
-                                          <path d="M6.6 6.6A11.1 11.1 0 002.5 12 11.1 11.1 0 007.6 18" />
-                                        </svg>
-                                      ) : (
-                                        <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-                                          <path d="M2.5 12S6.3 5 12 5s9.5 7 9.5 7-3.8 7-9.5 7S2.5 12 2.5 12z" />
-                                          <circle cx="12" cy="12" r="3" />
-                                        </svg>
-                                      )}
-                                    </button>
-                                  </div>
-                                  <div className="relative">
-                                    <input
-                                      type={accessFieldVisibility.username ? "text" : "password"}
-                                      value={draft.username}
-                                      onChange={(event) =>
-                                        handleAccessDraftChange(item.id, "username", event.target.value)
-                                      }
-                                      placeholder="Username"
-                                      autoComplete="new-password"
-                                      className="w-full rounded-lg border border-ink/25 bg-white px-3 py-2 pr-10 text-sm text-ink outline-none focus:border-ink/60"
-                                    />
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        handleToggleAccessFieldVisibility(item.id, "username")
-                                      }
-                                      className="absolute right-2 top-1/2 inline-flex -translate-y-1/2 items-center justify-center rounded border border-ink/20 bg-white px-1.5 py-1 text-[0.62rem] text-ink/75"
-                                      aria-label={accessFieldVisibility.username ? "Hide username" : "Show username"}
-                                      title={accessFieldVisibility.username ? "Hide" : "Show"}
-                                    >
-                                      {accessFieldVisibility.username ? (
-                                        <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-                                          <path d="M3 3l18 18" />
-                                          <path d="M9.9 5.1A10.9 10.9 0 0112 5c4.5 0 8.3 2.9 9.5 7a11 11 0 01-4.2 5.4" />
-                                          <path d="M6.6 6.6A11.1 11.1 0 002.5 12 11.1 11.1 0 007.6 18" />
-                                        </svg>
-                                      ) : (
-                                        <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-                                          <path d="M2.5 12S6.3 5 12 5s9.5 7 9.5 7-3.8 7-9.5 7S2.5 12 2.5 12z" />
-                                          <circle cx="12" cy="12" r="3" />
-                                        </svg>
-                                      )}
-                                    </button>
-                                  </div>
-                                  <div className="relative">
-                                    <input
-                                      type={accessFieldVisibility.secret_value ? "text" : "password"}
-                                      value={draft.secret_value}
-                                      onChange={(event) =>
-                                        handleAccessDraftChange(item.id, "secret_value", event.target.value)
-                                      }
-                                      placeholder="Password / token"
-                                      autoComplete="new-password"
-                                      className="w-full rounded-lg border border-ink/25 bg-white px-3 py-2 pr-10 text-sm text-ink outline-none focus:border-ink/60"
-                                    />
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        handleToggleAccessFieldVisibility(item.id, "secret_value")
-                                      }
-                                      className="absolute right-2 top-1/2 inline-flex -translate-y-1/2 items-center justify-center rounded border border-ink/20 bg-white px-1.5 py-1 text-[0.62rem] text-ink/75"
-                                      aria-label={
-                                        accessFieldVisibility.secret_value
-                                          ? "Hide password or token"
-                                          : "Show password or token"
-                                      }
-                                      title={accessFieldVisibility.secret_value ? "Hide" : "Show"}
-                                    >
-                                      {accessFieldVisibility.secret_value ? (
-                                        <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-                                          <path d="M3 3l18 18" />
-                                          <path d="M9.9 5.1A10.9 10.9 0 0112 5c4.5 0 8.3 2.9 9.5 7a11 11 0 01-4.2 5.4" />
-                                          <path d="M6.6 6.6A11.1 11.1 0 002.5 12 11.1 11.1 0 007.6 18" />
-                                        </svg>
-                                      ) : (
-                                        <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-                                          <path d="M2.5 12S6.3 5 12 5s9.5 7 9.5 7-3.8 7-9.5 7S2.5 12 2.5 12z" />
-                                          <circle cx="12" cy="12" r="3" />
-                                        </svg>
-                                      )}
-                                    </button>
-                                  </div>
-                                  <div className="relative">
-                                    <input
-                                      type={accessFieldVisibility.secure_link ? "text" : "password"}
-                                      value={draft.secure_link}
-                                      onChange={(event) =>
-                                        handleAccessDraftChange(item.id, "secure_link", event.target.value)
-                                      }
-                                      placeholder="Secure share link"
-                                      autoComplete="new-password"
-                                      className="w-full rounded-lg border border-ink/25 bg-white px-3 py-2 pr-10 text-sm text-ink outline-none focus:border-ink/60"
-                                    />
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        handleToggleAccessFieldVisibility(item.id, "secure_link")
-                                      }
-                                      className="absolute right-2 top-1/2 inline-flex -translate-y-1/2 items-center justify-center rounded border border-ink/20 bg-white px-1.5 py-1 text-[0.62rem] text-ink/75"
-                                      aria-label={
-                                        accessFieldVisibility.secure_link
-                                          ? "Hide secure share link"
-                                          : "Show secure share link"
-                                      }
-                                      title={accessFieldVisibility.secure_link ? "Hide" : "Show"}
-                                    >
-                                      {accessFieldVisibility.secure_link ? (
-                                        <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-                                          <path d="M3 3l18 18" />
-                                          <path d="M9.9 5.1A10.9 10.9 0 0112 5c4.5 0 8.3 2.9 9.5 7a11 11 0 01-4.2 5.4" />
-                                          <path d="M6.6 6.6A11.1 11.1 0 002.5 12 11.1 11.1 0 007.6 18" />
-                                        </svg>
-                                      ) : (
-                                        <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-                                          <path d="M2.5 12S6.3 5 12 5s9.5 7 9.5 7-3.8 7-9.5 7S2.5 12 2.5 12z" />
-                                          <circle cx="12" cy="12" r="3" />
-                                        </svg>
-                                      )}
-                                    </button>
-                                  </div>
-                                  <textarea
-                                    rows={2}
-                                    value={draft.notes}
-                                    onChange={(event) =>
-                                      handleAccessDraftChange(item.id, "notes", event.target.value)
-                                    }
-                                    placeholder="Notes (permissions, 2FA, owner, backup code location)"
-                                    className="mt-2 w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm text-ink outline-none focus:border-ink/60"
-                                  />
-                                  <div className="mt-2 flex flex-wrap items-center gap-2">
-                                    <button
-                                      type="button"
-                                      onClick={() => void handleSaveAccessItem(item.id)}
-                                      disabled={Boolean(savingAccessItemById[item.id])}
-                                      className="inline-flex items-center rounded-full border border-ink/35 bg-white px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.1em] text-ink disabled:cursor-not-allowed disabled:opacity-70"
-                                    >
-                                      {savingAccessItemById[item.id] ? "Saving..." : "Save Access Item"}
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => handleToggleAccessItem(item.id)}
-                                      className="inline-flex items-center rounded-full border border-ink/30 bg-mist px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.1em] text-ink"
-                                    >
-                                      Collapse
-                                    </button>
-                                  </div>
-                                </>
-                              )}
-                            </article>
-                          );
-                        })}
-                      </div>
-                    ) : null}
-                  </article>
-                </div>
-                </section>
+                <AccessCredentials
+                  isProjectAdmin={isProjectAdmin}
+                  projectClientIntake={projectClientIntake}
+                  isClientIntakeOpen={isClientIntakeOpen}
+                  intakeCompanyNameDraft={intakeCompanyNameDraft}
+                  intakeWebsiteUrlDraft={intakeWebsiteUrlDraft}
+                  intakeTargetAudienceDraft={intakeTargetAudienceDraft}
+                  intakePrimaryGoalDraft={intakePrimaryGoalDraft}
+                  intakeSecondaryGoalDraft={intakeSecondaryGoalDraft}
+                  intakeTimelineGoalDraft={intakeTimelineGoalDraft}
+                  intakeSuccessMetricsDraft={intakeSuccessMetricsDraft}
+                  intakeCmsPlatformDraft={intakeCmsPlatformDraft}
+                  intakeNotesDraft={intakeNotesDraft}
+                  intakeServiceNeedsDraft={intakeServiceNeedsDraft}
+                  isSavingClientIntake={isSavingClientIntake}
+                  isGeneratingAccessChecklist={isGeneratingAccessChecklist}
+                  isAccessChecklistOpen={isAccessChecklistOpen}
+                  accessStatusCounts={accessStatusCounts}
+                  filteredProjectAccessItems={filteredProjectAccessItems}
+                  projectAccessItems={projectAccessItems}
+                  accessItemDrafts={accessItemDrafts}
+                  expandedAccessItemIds={expandedAccessItemIds}
+                  accessFieldVisibilityById={accessFieldVisibilityById}
+                  savingAccessItemById={savingAccessItemById}
+                  onSetIsClientIntakeOpen={setIsClientIntakeOpen}
+                  onSetIntakeCompanyNameDraft={setIntakeCompanyNameDraft}
+                  onSetIntakeWebsiteUrlDraft={setIntakeWebsiteUrlDraft}
+                  onSetIntakeTargetAudienceDraft={setIntakeTargetAudienceDraft}
+                  onSetIntakePrimaryGoalDraft={setIntakePrimaryGoalDraft}
+                  onSetIntakeSecondaryGoalDraft={setIntakeSecondaryGoalDraft}
+                  onSetIntakeTimelineGoalDraft={setIntakeTimelineGoalDraft}
+                  onSetIntakeSuccessMetricsDraft={setIntakeSuccessMetricsDraft}
+                  onSetIntakeCmsPlatformDraft={setIntakeCmsPlatformDraft}
+                  onSetIntakeNotesDraft={setIntakeNotesDraft}
+                  onHandleToggleServiceNeed={handleToggleServiceNeed}
+                  onSaveClientIntake={handleSaveClientIntake}
+                  onGenerateAccessChecklist={handleGenerateAccessChecklist}
+                  onSetIsAccessChecklistOpen={setIsAccessChecklistOpen}
+                  onToggleAccessItem={handleToggleAccessItem}
+                  onAccessDraftChange={handleAccessDraftChange}
+                  onToggleAccessFieldVisibility={handleToggleAccessFieldVisibility}
+                  onSaveAccessItem={handleSaveAccessItem}
+                />
               ) : null}
 
               {isProjectAdmin && activeWorkspaceTab === "admin_workspace" ? (
-                <section className="rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6">
-                  <h3 className="font-display text-xl uppercase text-ink">Admin Workspace</h3>
-                  <p className="mt-2 text-sm text-ink/75">
-                    Manager tools for timeline communication and replying to client questions.
-                  </p>
-
-                  <div className="mt-4">
-                    <form
-                      onSubmit={handlePostProgressUpdate}
-                      className="mt-3 rounded-lg border border-ink/20 bg-white p-3.5"
-                    >
-                      <h4 className="text-sm font-semibold text-ink">Post Progress Update</h4>
-                      <div className="mt-3 space-y-3">
-                        <label className="block text-xs font-semibold uppercase tracking-[0.1em] text-ink/65">
-                          Update Title
-                        </label>
-                        <input
-                          type="text"
-                          value={updateTitleDraft}
-                          onChange={(event) => setUpdateTitleDraft(event.target.value)}
-                          className="w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm text-ink outline-none focus:border-ink/60"
-                          placeholder="Milestone completed"
-                          required
-                        />
-                        <label className="block text-xs font-semibold uppercase tracking-[0.1em] text-ink/65">
-                          Details
-                        </label>
-                        <textarea
-                          rows={4}
-                          value={updateBodyDraft}
-                          onChange={(event) => setUpdateBodyDraft(event.target.value)}
-                          className="w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm text-ink outline-none focus:border-ink/60"
-                          placeholder="What changed, what is next, and what the client should know."
-                          required
-                        />
-                        <label className="block text-xs font-semibold uppercase tracking-[0.1em] text-ink/65">
-                          Progress Override (optional)
-                        </label>
-                        <input
-                          type="number"
-                          min={0}
-                          max={100}
-                          value={updateProgressDraft}
-                          onChange={(event) => setUpdateProgressDraft(event.target.value)}
-                          className="w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm text-ink outline-none focus:border-ink/60"
-                          placeholder="Leave empty to keep current progress"
-                        />
-                        <button
-                          type="submit"
-                          disabled={isPostingUpdate}
-                          className="inline-flex items-center rounded-full border-2 border-[#b45309] bg-[#f59e0b] px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-[#4a2b00] transition hover:-translate-y-0.5 hover:bg-[#e89505] disabled:cursor-not-allowed disabled:opacity-70"
-                        >
-                          {isPostingUpdate ? "Posting..." : "Publish Update"}
-                        </button>
-                      </div>
-                    </form>
-                  </div>
-                </section>
+                <AdminWorkspace
+                  updateTitleDraft={updateTitleDraft}
+                  updateBodyDraft={updateBodyDraft}
+                  updateProgressDraft={updateProgressDraft}
+                  isPostingUpdate={isPostingUpdate}
+                  onSetUpdateTitleDraft={setUpdateTitleDraft}
+                  onSetUpdateBodyDraft={setUpdateBodyDraft}
+                  onSetUpdateProgressDraft={setUpdateProgressDraft}
+                  onPostProgressUpdate={handlePostProgressUpdate}
+                />
               ) : null}
 
               {activeWorkspaceTab === "timeline_milestones" ? (
-                <section className="rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <h3 className="font-display text-xl uppercase text-ink">Project Timeline & Milestones</h3>
-                  <span className="text-xs font-semibold uppercase tracking-[0.1em] text-ink/65">
-                    {filteredProjectMilestones.length} shown
-                  </span>
-                </div>
-
-                {isProjectAdmin ? (
-                  <form onSubmit={handleCreateMilestone} className="mt-3 rounded-lg border border-ink/20 bg-white p-3">
-                    <p className="text-xs font-semibold uppercase tracking-[0.1em] text-ink/65">
-                      Add Milestone
-                    </p>
-                    <div className="mt-2 grid gap-2 md:grid-cols-[1.2fr_1fr_auto]">
-                      <input
-                        type="text"
-                        value={milestoneTitleDraft}
-                        onChange={(event) => setMilestoneTitleDraft(event.target.value)}
-                        placeholder="Milestone title"
-                        className="w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm text-ink outline-none focus:border-ink/60"
-                        required
-                      />
-                      <input
-                        type="date"
-                        value={milestoneDueDateDraft}
-                        onChange={(event) => setMilestoneDueDateDraft(event.target.value)}
-                        className="w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm text-ink outline-none focus:border-ink/60"
-                      />
-                      <button
-                        type="submit"
-                        disabled={isCreatingMilestone}
-                        className="inline-flex items-center justify-center rounded-full border border-[#0f7663] bg-[#d1fae5] px-3 py-2 text-xs font-semibold uppercase tracking-[0.1em] text-[#065f46] transition hover:bg-[#bbf7d0] disabled:cursor-not-allowed disabled:opacity-70"
-                      >
-                        {isCreatingMilestone ? "Adding..." : "Add"}
-                      </button>
-                    </div>
-                    <textarea
-                      rows={2}
-                      value={milestoneDetailsDraft}
-                      onChange={(event) => setMilestoneDetailsDraft(event.target.value)}
-                      placeholder="Optional details"
-                      className="mt-2 w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm text-ink outline-none focus:border-ink/60"
-                    />
-                  </form>
-                ) : null}
-
-                <div className="mt-4 space-y-2">
-                  {filteredProjectMilestones.length === 0 ? (
-                    <p className="rounded-lg border border-ink/20 bg-white px-3 py-2 text-sm text-ink/75">
-                      {projectMilestones.length === 0
-                        ? "No milestones added yet."
-                        : "No milestones match your current filters."}
-                    </p>
-                  ) : null}
-                  {filteredProjectMilestones.map((milestone) => (
-                    <article key={milestone.id} className="rounded-lg border border-ink/20 bg-white p-3">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <p className="text-sm font-semibold text-ink">{milestone.title}</p>
-                        <span
-                          className={`rounded-full px-2 py-0.5 text-[0.62rem] font-semibold uppercase tracking-[0.1em] ${
-                            milestoneStatusStyles[milestone.status]
-                          }`}
-                        >
-                          {milestone.status.replace("_", " ")}
-                        </span>
-                      </div>
-                      <p className="mt-1 text-xs text-ink/60">
-                        Due {formatDate(milestone.due_date)} · Added {formatDateTime(milestone.created_at)}
-                      </p>
-                      {milestone.details ? (
-                        <p className="mt-2 text-sm text-ink/80">{milestone.details}</p>
-                      ) : null}
-                      {isProjectAdmin ? (
-                        <div className="mt-2">
-                          <label className="text-[0.65rem] font-semibold uppercase tracking-[0.1em] text-ink/65">
-                            Status
-                          </label>
-                          <select
-                            value={milestone.status}
-                            onChange={(event) =>
-                              void handleUpdateMilestoneStatus(
-                                milestone.id,
-                                event.target.value as MilestoneStatus
-                              )
-                            }
-                            className="mt-1 w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm text-ink outline-none focus:border-ink/60 sm:max-w-[220px]"
-                          >
-                            {milestoneStatuses.map((status) => (
-                              <option key={status} value={status}>
-                                {status.replace("_", " ")}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      ) : null}
-                    </article>
-                  ))}
-                </div>
-                </section>
+                <TimelineMilestones
+                  projectMilestones={projectMilestones}
+                  filteredProjectMilestones={filteredProjectMilestones}
+                  isProjectAdmin={isProjectAdmin}
+                  milestoneTitleDraft={milestoneTitleDraft}
+                  milestoneDetailsDraft={milestoneDetailsDraft}
+                  milestoneDueDateDraft={milestoneDueDateDraft}
+                  isCreatingMilestone={isCreatingMilestone}
+                  onSetMilestoneTitleDraft={setMilestoneTitleDraft}
+                  onSetMilestoneDetailsDraft={setMilestoneDetailsDraft}
+                  onSetMilestoneDueDateDraft={setMilestoneDueDateDraft}
+                  onCreateMilestone={handleCreateMilestone}
+                  onUpdateMilestoneStatus={handleUpdateMilestoneStatus}
+                />
               ) : null}
 
               {activeWorkspaceTab === "task_approvals" ? (
-                <section className="rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <h3 className="font-display text-xl uppercase text-ink">Task Approvals</h3>
-                  <span className="text-xs font-semibold uppercase tracking-[0.1em] text-ink/65">
-                    {filteredProjectApprovalTasks.length} shown
-                  </span>
-                </div>
-
-                {isProjectAdmin ? (
-                  <form
-                    onSubmit={handleCreateApprovalTask}
-                    className="mt-3 rounded-lg border border-ink/20 bg-white p-3"
-                  >
-                    <p className="text-xs font-semibold uppercase tracking-[0.1em] text-ink/65">
-                      Request Approval
-                    </p>
-                    <input
-                      type="text"
-                      value={approvalTitleDraft}
-                      onChange={(event) => setApprovalTitleDraft(event.target.value)}
-                      placeholder="Deliverable / task title"
-                      className="mt-2 w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm text-ink outline-none focus:border-ink/60"
-                      required
-                    />
-                    <textarea
-                      rows={2}
-                      value={approvalDetailsDraft}
-                      onChange={(event) => setApprovalDetailsDraft(event.target.value)}
-                      placeholder="What should the client approve?"
-                      className="mt-2 w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm text-ink outline-none focus:border-ink/60"
-                    />
-                    <button
-                      type="submit"
-                      disabled={isCreatingApprovalTask}
-                      className="mt-2 inline-flex items-center rounded-full border border-[#b45309] bg-[#fde68a] px-3 py-2 text-xs font-semibold uppercase tracking-[0.1em] text-[#7c2d12] transition hover:bg-[#fcd34d] disabled:cursor-not-allowed disabled:opacity-70"
-                    >
-                      {isCreatingApprovalTask ? "Sending..." : "Send For Approval"}
-                    </button>
-                  </form>
-                ) : null}
-
-                <div className="mt-4 space-y-2">
-                  {filteredProjectApprovalTasks.length === 0 ? (
-                    <p className="rounded-lg border border-ink/20 bg-white px-3 py-2 text-sm text-ink/75">
-                      {projectApprovalTasks.length === 0
-                        ? "No approval tasks yet."
-                        : "No approval tasks match your current filters."}
-                    </p>
-                  ) : null}
-                  {filteredProjectApprovalTasks.map((task) => {
-                    const canRespond = !isProjectAdmin && task.status === "pending";
-
-                    return (
-                      <article key={task.id} className="rounded-lg border border-ink/20 bg-white p-3">
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                          <p className="text-sm font-semibold text-ink">{task.title}</p>
-                          <span
-                            className={`rounded-full px-2 py-0.5 text-[0.62rem] font-semibold uppercase tracking-[0.1em] ${
-                              approvalStatusStyles[task.status]
-                            }`}
-                          >
-                            {task.status.replace("_", " ")}
-                          </span>
-                        </div>
-                        <p className="mt-1 text-xs text-ink/60">Requested {formatDateTime(task.created_at)}</p>
-                        {task.details ? <p className="mt-2 text-sm text-ink/80">{task.details}</p> : null}
-                        {task.client_note ? (
-                          <p className="mt-2 rounded bg-mist px-2 py-1 text-sm text-ink/80">
-                            Client note: {task.client_note}
-                          </p>
-                        ) : null}
-                        {task.decided_at ? (
-                          <p className="mt-1 text-xs text-ink/60">Decision: {formatDateTime(task.decided_at)}</p>
-                        ) : null}
-
-                        {canRespond ? (
-                          <div className="mt-2 space-y-2">
-                            <textarea
-                              rows={2}
-                              value={approvalResponseDrafts[task.id] || ""}
-                              onChange={(event) =>
-                                setApprovalResponseDrafts((current) => ({
-                                  ...current,
-                                  [task.id]: event.target.value
-                                }))
-                              }
-                              placeholder="Optional note for your decision"
-                              className="w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm text-ink outline-none focus:border-ink/60"
-                            />
-                            <div className="flex flex-wrap gap-2">
-                              <button
-                                type="button"
-                                onClick={() => void handleRespondApprovalTask(task.id, "approved")}
-                                disabled={Boolean(approvalSubmittingById[task.id])}
-                                className="inline-flex items-center rounded-full border border-[#0b6a40] bg-[#d5f4e2] px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.1em] text-[#0b6a40] disabled:cursor-not-allowed disabled:opacity-70"
-                              >
-                                Approve
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => void handleRespondApprovalTask(task.id, "changes_requested")}
-                                disabled={Boolean(approvalSubmittingById[task.id])}
-                                className="inline-flex items-center rounded-full border border-[#892727] bg-[#ffe2e2] px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.1em] text-[#892727] disabled:cursor-not-allowed disabled:opacity-70"
-                              >
-                                Request Changes
-                              </button>
-                            </div>
-                          </div>
-                        ) : null}
-
-                        {isProjectAdmin && task.status !== "pending" ? (
-                          <button
-                            type="button"
-                            onClick={() => void handleReopenApprovalTask(task.id)}
-                            disabled={Boolean(approvalSubmittingById[task.id])}
-                            className="mt-2 inline-flex items-center rounded-full border border-ink/30 bg-mist px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.1em] text-ink disabled:cursor-not-allowed disabled:opacity-70"
-                          >
-                            Re-open Approval
-                          </button>
-                        ) : null}
-                      </article>
-                    );
-                  })}
-                </div>
-                </section>
+                <TaskApprovals
+                  projectApprovalTasks={projectApprovalTasks}
+                  filteredProjectApprovalTasks={filteredProjectApprovalTasks}
+                  isProjectAdmin={isProjectAdmin}
+                  approvalTitleDraft={approvalTitleDraft}
+                  approvalDetailsDraft={approvalDetailsDraft}
+                  isCreatingApprovalTask={isCreatingApprovalTask}
+                  approvalResponseDrafts={approvalResponseDrafts}
+                  approvalSubmittingById={approvalSubmittingById}
+                  onSetApprovalTitleDraft={setApprovalTitleDraft}
+                  onSetApprovalDetailsDraft={setApprovalDetailsDraft}
+                  onCreateApprovalTask={handleCreateApprovalTask}
+                  onSetApprovalResponseDrafts={setApprovalResponseDrafts}
+                  onRespondApprovalTask={handleRespondApprovalTask}
+                  onReopenApprovalTask={handleReopenApprovalTask}
+                />
               ) : null}
 
               {activeWorkspaceTab === "progress_updates" ? (
-                <section className="rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6">
-                <h3 className="font-display text-xl uppercase text-ink">Progress Updates</h3>
-                {isLoadingProjectData ? <p className="mt-3 text-sm text-ink/75">Loading...</p> : null}
-                {!isLoadingProjectData && filteredProjectUpdates.length === 0 ? (
-                  <p className="mt-3 rounded-lg border border-ink/20 bg-white px-3 py-2 text-sm text-ink/75">
-                    {projectUpdates.length === 0
-                      ? "No updates posted yet."
-                      : "No updates match your current search/filter."}
-                  </p>
-                ) : null}
-                <div className="mt-4 space-y-3">
-                  {filteredProjectUpdates.map((update) => (
-                    <article key={update.id} className="rounded-lg border border-ink/20 bg-white p-3">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <h4 className="text-sm font-semibold text-ink">{update.title}</h4>
-                        <p className="text-xs text-ink/65">{formatDateTime(update.created_at)}</p>
-                      </div>
-                      {update.progress !== null ? (
-                        <p className="mt-1 text-xs font-semibold uppercase tracking-[0.1em] text-[#2d5bd1]">
-                          Progress: {update.progress}%
-                        </p>
-                      ) : null}
-                      <p className="mt-2 text-sm text-ink/80">{update.body}</p>
-                    </article>
-                  ))}
-                </div>
-                </section>
+                <ProgressUpdates
+                  isLoadingProjectData={isLoadingProjectData}
+                  filteredProjectUpdates={filteredProjectUpdates}
+                  projectUpdates={projectUpdates}
+                />
               ) : null}
 
               {activeWorkspaceTab === "questions_threads" ? (
-                <section className="rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6">
-                <h3 className="font-display text-xl uppercase text-ink">Questions & Threads</h3>
-                <form onSubmit={handleSubmitQuestion} className="mt-3 space-y-3">
-                  <textarea
-                    value={questionDraft}
-                    onChange={(event) => setQuestionDraft(event.target.value)}
-                    placeholder="Ask a question about scope, status, timeline, or deliverables..."
-                    rows={4}
-                    className="w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm text-ink outline-none focus:border-ink/60"
-                    required
-                  />
-                  <input
-                    type="text"
-                    value={questionUrlDraft}
-                    onChange={(event) => setQuestionUrlDraft(event.target.value)}
-                    placeholder="Optional reference URL (https://...)"
-                    className="w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm text-ink outline-none focus:border-ink/60"
-                  />
-                  <label className="inline-flex cursor-pointer items-center rounded-full border border-ink/35 bg-white px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.1em] text-ink transition hover:-translate-y-0.5">
-                    <input
-                      type="file"
-                      onChange={handleQuestionFileChange}
-                      className="sr-only"
-                      disabled={isSubmittingQuestion}
-                    />
-                    Add Attachment
-                  </label>
-                  {questionFileDraft ? (
-                    <p className="text-xs text-ink/65">Selected file: {questionFileDraft.name}</p>
-                  ) : null}
-                  {questionFilePreviewUrl ? (
-                    <a
-                      href={questionFilePreviewUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block max-w-[240px]"
-                    >
-                      <img
-                        src={questionFilePreviewUrl}
-                        alt="Question attachment preview"
-                        className="w-full rounded-lg border border-ink/20 object-cover"
-                      />
-                    </a>
-                  ) : null}
-                  <button
-                    type="submit"
-                    disabled={isSubmittingQuestion}
-                    className="inline-flex items-center rounded-full border-2 border-[#0c6fbe] bg-[#1d9bf0] px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white transition hover:-translate-y-0.5 hover:bg-[#1488d7] disabled:cursor-not-allowed disabled:opacity-70"
-                  >
-                    {isSubmittingQuestion ? "Sending..." : "Start Thread"}
-                  </button>
-                </form>
-
-                <div className="mt-4 space-y-3">
-                  {filteredProjectQuestions.length === 0 ? (
-                    <p className="rounded-lg border border-ink/20 bg-white px-3 py-2 text-sm text-ink/75">
-                      {projectQuestions.length === 0
-                        ? "No questions yet."
-                        : "No threads match your current search/filter."}
-                    </p>
-                  ) : null}
-                  {filteredProjectQuestions.map((question, threadIndex) => {
-                    const threadMessages = messagesByQuestionId[question.id] || [];
-                    const hasThreadAttachment = threadMessages.some(
-                      (message) => Boolean(message.attachment_file_path || message.attachment_url)
-                    );
-
-                    return (
-                    <article key={question.id} className="rounded-lg border border-ink/20 bg-white p-3">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <div className="flex min-w-0 items-center gap-2">
-                          <span
-                            className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border ${
-                              hasThreadAttachment
-                                ? "border-[#9cc9f3] bg-[#d8ecff] text-[#134d7a]"
-                                : "border-[#d2ab19] bg-[#fff1a8] text-[#6f4a00]"
-                            }`}
-                            title={hasThreadAttachment ? "Thread with attachment" : "Thread"}
-                            aria-label={hasThreadAttachment ? "Thread with attachment" : "Thread"}
-                          >
-                            <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 fill-current" aria-hidden="true">
-                              <path d="M4.9 4.5h14.2c1.1 0 1.9.8 1.9 1.9v9.2c0 1.1-.8 1.9-1.9 1.9h-9.7l-4.5 3v-3H4.9c-1.1 0-1.9-.8-1.9-1.9V6.4c0-1.1.8-1.9 1.9-1.9zm.1 2v7.8h1.9v1.8l2.8-1.8h9.4V6.5z" />
-                            </svg>
-                          </span>
-                          <p className="text-sm font-semibold text-ink">{question.question}</p>
-                        </div>
-                        <p className="text-xs text-ink/60">{formatDateTime(question.created_at)}</p>
-                      </div>
-                      <p className="mt-1 text-[0.68rem] font-semibold uppercase tracking-[0.08em] text-ink/55">
-                        Thread {threadIndex + 1}
-                      </p>
-
-                      <div className="mt-3 space-y-2">
-                        {threadMessages.map((message) => {
-                          const isCurrentUserMessage = message.author_id === session.user.id;
-                          const roleLabel = isCurrentUserMessage
-                            ? "you"
-                            : isBootstrapManager
-                              ? memberRolesByUserId[message.author_id] || "manager"
-                              : memberRolesByUserId[message.author_id] || "client";
-
-                          return (
-                            <div
-                              key={message.id}
-                              className={`max-w-[88%] rounded-md border p-2 ${
-                                isCurrentUserMessage
-                                  ? "ml-auto border-[#d2ab19] bg-[#fff1a8]"
-                                  : "mr-auto border-ink/20 bg-mist/70"
-                              }`}
-                            >
-                              <div className="flex items-center justify-between gap-3">
-                                <p className="text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-ink/65">
-                                  {roleLabel}
-                                </p>
-                                <p className="text-[0.68rem] text-ink/55">
-                                  {formatDateTime(message.created_at)}
-                                </p>
-                              </div>
-                              <p className="mt-1 text-sm text-ink/85">{message.message}</p>
-                              {message.attachment_url ? (
-                                <p className="mt-1 text-xs">
-                                  <a
-                                    href={message.attachment_url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="font-semibold text-[#2d5bd1] underline underline-offset-2"
-                                  >
-                                    {message.attachment_url}
-                                  </a>
-                                </p>
-                              ) : null}
-                              {message.attachment_file_path ? (
-                                <div className="mt-1">
-                                  {questionMessageAttachmentUrls[message.id] ? (
-                                    message.attachment_mime_type?.startsWith("image/") ? (
-                                      <a
-                                        href={questionMessageAttachmentUrls[message.id]}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="block max-w-[220px]"
-                                      >
-                                        <img
-                                          src={questionMessageAttachmentUrls[message.id]}
-                                          alt={message.attachment_file_name || "Attached image"}
-                                          className="w-full rounded border border-ink/20 object-cover"
-                                        />
-                                      </a>
-                                    ) : (
-                                      <a
-                                        href={questionMessageAttachmentUrls[message.id]}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="text-xs font-semibold text-[#2d5bd1] underline underline-offset-2"
-                                      >
-                                        {message.attachment_file_name || "View attachment"}
-                                      </a>
-                                    )
-                                  ) : (
-                                    <p className="text-xs text-ink/60">
-                                      {message.attachment_file_name || "Attachment"}
-                                    </p>
-                                  )}
-                                </div>
-                              ) : null}
-                            </div>
-                          );
-                        })}
-                      </div>
-
-                      <form
-                        onSubmit={(event) => void handleSubmitThreadReply(question.id, event)}
-                        className="mt-3 space-y-2 rounded-md border border-ink/15 bg-white p-2"
-                      >
-                        <textarea
-                          rows={2}
-                          value={replyDrafts[question.id] || ""}
-                          onChange={(event) =>
-                            setReplyDrafts((current) => ({
-                              ...current,
-                              [question.id]: event.target.value
-                            }))
-                          }
-                          placeholder="Reply to this thread..."
-                          className="w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm text-ink outline-none focus:border-ink/60"
-                          required
-                        />
-                        <input
-                          type="text"
-                          value={replyUrlDrafts[question.id] || ""}
-                          onChange={(event) =>
-                            setReplyUrlDrafts((current) => ({
-                              ...current,
-                              [question.id]: event.target.value
-                            }))
-                          }
-                          placeholder="Optional URL"
-                          className="w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm text-ink outline-none focus:border-ink/60"
-                        />
-                        <label className="inline-flex cursor-pointer items-center rounded-full border border-ink/35 bg-white px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.1em] text-ink transition hover:-translate-y-0.5">
-                          <input
-                            type="file"
-                            onChange={(event) => handleThreadReplyFileChange(question.id, event)}
-                            className="sr-only"
-                            disabled={Boolean(replySubmittingByQuestionId[question.id])}
-                          />
-                          Add Attachment
-                        </label>
-                        {replyFileDrafts[question.id] ? (
-                          <p className="text-xs text-ink/65">
-                            Selected file: {replyFileDrafts[question.id]?.name}
-                          </p>
-                        ) : null}
-                        {replyFilePreviewUrls[question.id] ? (
-                          <a
-                            href={replyFilePreviewUrls[question.id]}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="block max-w-[220px]"
-                          >
-                            <img
-                              src={replyFilePreviewUrls[question.id]}
-                              alt="Reply attachment preview"
-                              className="w-full rounded border border-ink/20 object-cover"
-                            />
-                          </a>
-                        ) : null}
-                        <button
-                          type="submit"
-                          disabled={Boolean(replySubmittingByQuestionId[question.id])}
-                          className="inline-flex items-center rounded-full border border-[#15803d] bg-[#dcfce7] px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.1em] text-[#166534] transition hover:-translate-y-0.5 hover:bg-[#bbf7d0] disabled:cursor-not-allowed disabled:opacity-70"
-                        >
-                          {replySubmittingByQuestionId[question.id] ? "Sending..." : "Send Reply"}
-                        </button>
-                      </form>
-                    </article>
-                  );
-                  })}
-                </div>
-                </section>
+                <QuestionsThreads
+                  questionDraft={questionDraft}
+                  questionUrlDraft={questionUrlDraft}
+                  questionFileDraft={questionFileDraft}
+                  questionFilePreviewUrl={questionFilePreviewUrl}
+                  isSubmittingQuestion={isSubmittingQuestion}
+                  filteredProjectQuestions={filteredProjectQuestions}
+                  projectQuestions={projectQuestions}
+                  messagesByQuestionId={messagesByQuestionId}
+                  replyDrafts={replyDrafts}
+                  replyUrlDrafts={replyUrlDrafts}
+                  replyFileDrafts={replyFileDrafts}
+                  replyFilePreviewUrls={replyFilePreviewUrls}
+                  replySubmittingByQuestionId={replySubmittingByQuestionId}
+                  questionMessageAttachmentUrls={questionMessageAttachmentUrls}
+                  currentUserId={session.user.id}
+                  isBootstrapManager={isBootstrapManager}
+                  memberRolesByUserId={memberRolesByUserId}
+                  onSubmitQuestion={handleSubmitQuestion}
+                  onSetQuestionDraft={setQuestionDraft}
+                  onSetQuestionUrlDraft={setQuestionUrlDraft}
+                  onQuestionFileChange={handleQuestionFileChange}
+                  onSubmitThreadReply={handleSubmitThreadReply}
+                  onSetReplyDrafts={setReplyDrafts}
+                  onSetReplyUrlDrafts={setReplyUrlDrafts}
+                  onThreadReplyFileChange={handleThreadReplyFileChange}
+                />
               ) : null}
 
               {activeWorkspaceTab === "files_documents" ? (
-                <section className="rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <h3 className="font-display text-xl uppercase text-ink">Files & Documents</h3>
-                  <label className="inline-flex cursor-pointer items-center rounded-full border-2 border-ink bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-ink transition hover:-translate-y-0.5">
-                    <input
-                      type="file"
-                      onChange={(event) => void handleUploadFile(event)}
-                      className="sr-only"
-                      disabled={isUploadingFile}
-                    />
-                    {isUploadingFile ? "Uploading..." : "Upload File"}
-                  </label>
-                </div>
-                <p className="mt-2 text-xs text-ink/65">
-                  Accepted: documents, images, and project assets. Uploaded files are private.
-                </p>
-
-                <div className="mt-4 space-y-2">
-                  {filteredProjectFiles.length === 0 ? (
-                    <p className="rounded-lg border border-ink/20 bg-white px-3 py-2 text-sm text-ink/75">
-                      {projectFiles.length === 0
-                        ? "No files uploaded yet."
-                        : "No files match your current search/filter."}
-                    </p>
-                  ) : null}
-                  {filteredProjectFiles.map((file) => (
-                    <article
-                      key={file.id}
-                      className="flex flex-col gap-2 rounded-lg border border-ink/20 bg-white p-3 sm:flex-row sm:items-center sm:justify-between"
-                    >
-                      <div>
-                        <p className="text-sm font-semibold text-ink">{file.file_name}</p>
-                        <p className="mt-1 text-xs text-ink/65">
-                          {file.mime_type || "Unknown type"} · {formatBytes(file.size_bytes)} ·{" "}
-                          {formatDateTime(file.created_at)}
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => void handleDownloadFile(file.file_path)}
-                        className="inline-flex items-center rounded-full border border-ink/25 bg-mist px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.1em] text-ink hover:border-ink/50"
-                      >
-                        Download
-                      </button>
-                    </article>
-                  ))}
-                </div>
-                </section>
+                <FilesDocuments
+                  filteredProjectFiles={filteredProjectFiles}
+                  projectFiles={projectFiles}
+                  isUploadingFile={isUploadingFile}
+                  onUploadFile={handleUploadFile}
+                  onDownloadFile={handleDownloadFile}
+                />
               ) : null}
             </>
           )}

@@ -24,32 +24,35 @@ export function BlogList({ posts, currentPage, totalPages, title, description }:
   const compactPages = getCompactPages(currentPage, totalPages);
 
   return (
-    <main className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 md:py-16">
-      <header className="mb-8 text-center sm:mb-10">
-        <h1 className="font-display text-4xl uppercase leading-[0.9] text-ink sm:text-5xl md:text-6xl">{title}</h1>
-        <p className="mx-auto mt-3 max-w-3xl text-sm text-ink/80 sm:mt-4 sm:text-base md:text-lg">
+    <main className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 sm:py-16">
+      <header className="mx-auto max-w-4xl text-center">
+        <p className="eyebrow-pop mx-auto">Growth insights</p>
+        <h1 className="hero-title mt-6 font-display text-[clamp(2.6rem,8vw,5.8rem)] uppercase leading-[0.9] tracking-[-0.06em] text-ink">
+          {title}
+        </h1>
+        <p className="tagline-pop mx-auto mt-5 max-w-3xl border-2 border-white/85 px-5 py-5 text-sm leading-7 text-white/80 sm:text-base">
           {description}
         </p>
       </header>
 
-      <section aria-label="Blog posts" className="grid gap-5 sm:gap-6 md:grid-cols-2 md:gap-7 xl:grid-cols-3">
-        {posts.map((post) => (
+      <section aria-label="Blog posts" className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+        {posts.map((post, index) => (
           <article
             key={post.slug}
-            className="overflow-hidden rounded-2xl border-2 border-ink/85 bg-mist shadow-hard transition hover:-translate-y-1"
+            className={`overflow-hidden border-2 border-white/85 ${index % 3 === 0 ? "bg-primary text-black" : "bg-mist text-ink"} shadow-hard transition hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-hard-lg`}
           >
-            <Link href={`/blog/${post.slug}`} className="block">
+            <Link href={`/blog/${post.slug}`} className="block h-full">
               <img
                 src={post.featureImage}
                 alt={`Feature image for ${post.title}`}
                 loading="lazy"
-                className="h-40 w-full border-b-2 border-ink/80 bg-white object-cover sm:h-44"
+                className="h-48 w-full border-b-2 border-black/70 bg-white object-cover"
               />
-              <div className="p-4 sm:p-5">
-                <p className="font-mono text-xs uppercase tracking-[0.16em] text-ink/70">{post.category}</p>
-                <h2 className="mt-2 text-lg font-bold leading-tight text-ink sm:text-xl">{post.title}</h2>
-                <p className="mt-2 text-sm text-ink/75">{post.excerpt}</p>
-                <div className="mt-4 flex items-center justify-between font-mono text-[0.68rem] text-ink/70 sm:text-xs">
+              <div className="p-5">
+                <p className="font-mono text-[0.66rem] uppercase tracking-[0.18em] opacity-75">{post.category}</p>
+                <h2 className="mt-3 font-display text-3xl uppercase leading-[0.94] tracking-[-0.04em]">{post.title}</h2>
+                <p className="mt-3 text-sm leading-7 opacity-80">{post.excerpt}</p>
+                <div className="mt-5 flex items-center justify-between border-t border-black/20 pt-4 font-mono text-[0.66rem] uppercase tracking-[0.14em] opacity-70">
                   <time dateTime={post.date}>{post.date}</time>
                   <span>{post.readingTime} min read</span>
                 </div>
@@ -59,14 +62,14 @@ export function BlogList({ posts, currentPage, totalPages, title, description }:
         ))}
       </section>
 
-      <nav aria-label="Blog pagination" className="mt-12 flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
+      <nav aria-label="Blog pagination" className="mt-12 flex flex-wrap items-center justify-center gap-2">
         <Link
           href={pageHref(Math.max(1, currentPage - 1))}
           aria-disabled={currentPage === 1}
-          className={`rounded-md border-2 px-2.5 py-1.5 text-[0.7rem] font-semibold uppercase tracking-[0.08em] transition sm:px-3 sm:text-xs ${
+          className={`border-2 px-3 py-2 font-mono text-[0.68rem] uppercase tracking-[0.16em] transition ${
             currentPage === 1
-              ? "pointer-events-none border-ink/30 bg-white text-ink/35"
-              : "border-ink/65 bg-white text-ink hover:-translate-y-0.5"
+              ? "pointer-events-none border-white/10 bg-mist text-white/25"
+              : "border-white/80 bg-mist text-ink shadow-hard hover:-translate-x-0.5 hover:-translate-y-0.5"
           }`}
         >
           Prev
@@ -78,19 +81,15 @@ export function BlogList({ posts, currentPage, totalPages, title, description }:
           const active = page === currentPage;
 
           return (
-            <span key={page} className="inline-flex items-center gap-1.5 sm:gap-2">
-              {showEllipsis ? (
-                <span className="px-1 text-xs font-semibold text-ink/55" aria-hidden="true">
-                  ...
-                </span>
-              ) : null}
+            <span key={page} className="inline-flex items-center gap-2">
+              {showEllipsis ? <span className="px-1 text-xs font-semibold text-white/45">...</span> : null}
               <Link
                 href={pageHref(page)}
                 aria-current={active ? "page" : undefined}
-                className={`rounded-md border-2 px-3 py-1.5 text-xs font-semibold transition sm:px-4 sm:py-2 sm:text-sm ${
+                className={`border-2 px-4 py-2 font-mono text-[0.72rem] uppercase tracking-[0.14em] transition ${
                   active
-                    ? "border-ink bg-ink text-mist"
-                    : "border-ink/65 bg-white text-ink hover:-translate-y-0.5"
+                    ? "border-black bg-primary text-black shadow-hard"
+                    : "border-white/80 bg-mist text-ink hover:-translate-x-0.5 hover:-translate-y-0.5 hover:text-primary"
                 }`}
               >
                 {page}
@@ -102,10 +101,10 @@ export function BlogList({ posts, currentPage, totalPages, title, description }:
         <Link
           href={pageHref(Math.min(totalPages, currentPage + 1))}
           aria-disabled={currentPage === totalPages}
-          className={`rounded-md border-2 px-2.5 py-1.5 text-[0.7rem] font-semibold uppercase tracking-[0.08em] transition sm:px-3 sm:text-xs ${
+          className={`border-2 px-3 py-2 font-mono text-[0.68rem] uppercase tracking-[0.16em] transition ${
             currentPage === totalPages
-              ? "pointer-events-none border-ink/30 bg-white text-ink/35"
-              : "border-ink/65 bg-white text-ink hover:-translate-y-0.5"
+              ? "pointer-events-none border-white/10 bg-mist text-white/25"
+              : "border-white/80 bg-mist text-ink shadow-hard hover:-translate-x-0.5 hover:-translate-y-0.5"
           }`}
         >
           Next

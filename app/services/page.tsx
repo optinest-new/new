@@ -3,8 +3,10 @@ import { headers } from "next/headers";
 import Link from "next/link";
 import { FloatingShare } from "@/components/blog/floating-share";
 import { ScheduleCallModal } from "@/components/schedule-call-modal";
+import { Card, PricingTierCard, TechIcon, techBadgeStyles, IconSearch, IconDocument, IconCode, IconCheck, Button } from "@/components/ui";
 import { getCountryCodeFromHeaders } from "@/lib/geo";
 import { getPricingCurrencyByCountry, getPricingTiersForCurrency, serviceDefinitions } from "@/lib/services";
+import type { ServiceDefinition } from "@/lib/services";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://optinestdigital.com";
 const servicesPageTitle = "SEO, Web Design, and Web Development Services";
@@ -31,650 +33,70 @@ type JourneyStep = {
   detail: string;
 };
 
-type ServiceFaq = {
-  question: string;
-  answer: string;
-};
+type ServiceFaq = { question: string; answer: string };
+type StackItem = { category: StackCategory; key: TechKey; label: string; detail: string };
+type TechKey = "nextjs" | "react" | "tailwind" | "supabase" | "ruby" | "javascript" | "php" | "mysql" | "firebase" | "jekyll" | "vercel" | "netlify" | "github-pages" | "astro" | "headless-cms" | "decap-cms" | "ga4" | "search-console" | "tag-manager" | "wordpress";
+type StackCategory = "programming_language" | "frontend_frameworks" | "backend_server" | "hosting_deployment" | "cms_content" | "analytics_seo";
 
 const journeySteps: JourneyStep[] = [
-  {
-    key: "discover",
-    title: "Discover Goals",
-    detail: "We align on business objectives, current constraints, and what a successful engagement should deliver."
-  },
-  {
-    key: "scope",
-    title: "Define Scope",
-    detail: "You get a clear service recommendation, timeline, and investment range before implementation starts."
-  },
-  {
-    key: "execute",
-    title: "Execute Sprints",
-    detail: "We run focused implementation cycles with transparent updates so you always know current status."
-  },
-  {
-    key: "launch",
-    title: "Launch & Improve",
-    detail: "After launch, we validate quality and prioritize next optimizations based on measurable outcomes."
-  }
+  { key: "discover", title: "Discover Goals", detail: "We align on business objectives, current constraints, and what a successful engagement should deliver." },
+  { key: "scope", title: "Define Scope", detail: "You get a clear service recommendation, timeline, and investment range before implementation starts." },
+  { key: "execute", title: "Execute Sprints", detail: "We run focused implementation cycles with transparent updates so you always know current status." },
+  { key: "launch", title: "Launch & Improve", detail: "After launch, we validate quality and prioritize next optimizations based on measurable outcomes." }
 ];
 
 const serviceFaqs: ServiceFaq[] = [
-  {
-    question: "How do I choose between SEO, web design, and web development?",
-    answer:
-      "If your main issue is low qualified traffic, start with SEO. If traffic exists but conversion is weak, start with web design. If your current website is slow or technically limiting growth, start with web development."
-  },
-  {
-    question: "Can we start with one service and expand later?",
-    answer:
-      "Yes. Many projects start with one focused service and expand after initial wins. This keeps scope controlled and improves implementation speed."
-  },
-  {
-    question: "Do you work only in Manila or internationally too?",
-    answer:
-      "Optinest Digital is based in Manila, Philippines, and serves businesses worldwide through structured remote delivery."
-  },
-  {
-    question: "What happens after I schedule a call?",
-    answer:
-      "You get a scope clarification call, a recommended starting path, and next-step implementation guidance based on your goals and timeline."
-  }
+  { question: "How do I choose between SEO, web design, and web development?", answer: "If your main issue is low qualified traffic, start with SEO. If traffic exists but conversion is weak, start with web design. If your current website is slow or technically limiting growth, start with web development." },
+  { question: "Can we start with one service and expand later?", answer: "Yes. Many projects start with one focused service and expand after initial wins. This keeps scope controlled and improves implementation speed." },
+  { question: "Do you work only in Manila or internationally too?", answer: "Optinest Digital is based in Manila, Philippines, and serves businesses worldwide through structured remote delivery." },
+  { question: "What happens after I schedule a call?", answer: "You get a scope clarification call, a recommended starting path, and next-step implementation guidance based on your goals and timeline." }
 ];
 
-type StackItem = {
-  category: StackCategory;
-  key:
-    | "nextjs"
-    | "react"
-    | "tailwind"
-    | "supabase"
-    | "ruby"
-    | "javascript"
-    | "php"
-    | "mysql"
-    | "firebase"
-    | "jekyll"
-    | "vercel"
-    | "netlify"
-    | "github-pages"
-    | "astro"
-    | "headless-cms"
-    | "decap-cms"
-    | "ga4"
-    | "search-console"
-    | "tag-manager"
-    | "wordpress";
-  label: string;
-  detail: string;
-};
-
-type StackCategory =
-  | "programming_language"
-  | "frontend_frameworks"
-  | "backend_server"
-  | "hosting_deployment"
-  | "cms_content"
-  | "analytics_seo";
-
-type StackCategoryBlock = {
-  id: StackCategory;
-  title: string;
-  description: string;
-};
-
-const stackCategoryBlocks: StackCategoryBlock[] = [
-  {
-    id: "programming_language",
-    title: "Programming Language",
-    description: "Foundation for automation and custom growth workflows."
-  },
-  {
-    id: "frontend_frameworks",
-    title: "Frontend & Static Frameworks",
-    description: "Tools we use to deliver fast, modern, conversion-ready websites."
-  },
-  {
-    id: "backend_server",
-    title: "Backend / Server & Data",
-    description: "Systems that power secure portal workflows and project operations."
-  },
-  {
-    id: "hosting_deployment",
-    title: "Hosting & Deployment",
-    description: "Publishing stack for reliable launches and fast production updates."
-  },
-  {
-    id: "cms_content",
-    title: "CMS & Content Operations",
-    description: "Content systems that keep your team agile after launch."
-  },
-  {
-    id: "analytics_seo",
-    title: "Analytics & SEO Measurement",
-    description: "Reporting tools that connect traffic to business results."
-  }
+const stackCategoryBlocks: Array<{ id: StackCategory; title: string; description: string }> = [
+  { id: "programming_language", title: "Programming Language", description: "Foundation for automation and custom growth workflows." },
+  { id: "frontend_frameworks", title: "Frontend & Static Frameworks", description: "Tools we use to deliver fast, modern, conversion-ready websites." },
+  { id: "backend_server", title: "Backend / Server & Data", description: "Systems that power secure portal workflows and project operations." },
+  { id: "hosting_deployment", title: "Hosting & Deployment", description: "Publishing stack for reliable launches and fast production updates." },
+  { id: "cms_content", title: "CMS & Content Operations", description: "Content systems that keep your team agile after launch." },
+  { id: "analytics_seo", title: "Analytics & SEO Measurement", description: "Reporting tools that connect traffic to business results." }
 ];
 
 const stackItems: StackItem[] = [
-  {
-    category: "frontend_frameworks",
-    key: "nextjs",
-    label: "Next.js",
-    detail: "Helps your site load faster so more visitors stay, engage, and convert."
-  },
-  {
-    category: "frontend_frameworks",
-    key: "react",
-    label: "React",
-    detail: "Keeps your website experience consistent and easier to improve as your business grows."
-  },
-  {
-    category: "frontend_frameworks",
-    key: "tailwind",
-    label: "Tailwind CSS",
-    detail: "Delivers clean, consistent design faster so updates go live with less delay."
-  },
-  {
-    category: "backend_server",
-    key: "supabase",
-    label: "Supabase",
-    detail: "Supports secure client portals where projects, files, and updates are centralized."
-  },
-  {
-    category: "programming_language",
-    key: "ruby",
-    label: "Ruby",
-    detail: "Automates repetitive tasks so your team can focus on growth and delivery."
-  },
-  {
-    category: "programming_language",
-    key: "javascript",
-    label: "JavaScript",
-    detail: "Enables interactive experiences that keep visitors engaged and moving toward conversion."
-  },
-  {
-    category: "programming_language",
-    key: "php",
-    label: "PHP",
-    detail: "Supports reliable business websites and custom workflows for content and lead capture."
-  },
-  {
-    category: "backend_server",
-    key: "mysql",
-    label: "MySQL",
-    detail: "Organizes your core business data so reports, forms, and client records stay consistent."
-  },
-  {
-    category: "backend_server",
-    key: "firebase",
-    label: "Firebase",
-    detail: "Accelerates launch with managed backend services for authentication, data, and real-time updates."
-  },
-  {
-    category: "frontend_frameworks",
-    key: "jekyll",
-    label: "Jekyll",
-    detail: "Publishes lightweight pages that are easy to maintain and cost-efficient to run."
-  },
-  {
-    category: "hosting_deployment",
-    key: "vercel",
-    label: "Vercel",
-    detail: "Enables fast, reliable deployments so improvements reach your audience quickly."
-  },
-  {
-    category: "hosting_deployment",
-    key: "netlify",
-    label: "Netlify",
-    detail: "Keeps your website stable and secure while simplifying launch and form workflows."
-  },
-  {
-    category: "hosting_deployment",
-    key: "github-pages",
-    label: "GitHub Pages",
-    detail: "Great for fast, dependable static site publishing with simple version-controlled updates."
-  },
-  {
-    category: "frontend_frameworks",
-    key: "astro",
-    label: "Astro",
-    detail: "Creates high-performance content pages that improve user experience and SEO visibility."
-  },
-  {
-    category: "cms_content",
-    key: "headless-cms",
-    label: "Headless CMS",
-    detail: "Lets your team update content faster without relying on development for every change."
-  },
-  {
-    category: "cms_content",
-    key: "decap-cms",
-    label: "Decap CMS (Netlify CMS)",
-    detail: "Gives non-technical teams an easy editor while keeping content workflows structured."
-  },
-  {
-    category: "analytics_seo",
-    key: "ga4",
-    label: "Google Analytics 4",
-    detail: "Shows which channels and pages drive real leads, not just traffic numbers."
-  },
-  {
-    category: "analytics_seo",
-    key: "search-console",
-    label: "Google Search Console",
-    detail: "Reveals how your site appears on Google and where ranking opportunities exist."
-  },
-  {
-    category: "analytics_seo",
-    key: "tag-manager",
-    label: "Google Tag Manager",
-    detail: "Makes tracking and marketing updates faster without slowing down site releases."
-  },
-  {
-    category: "cms_content",
-    key: "wordpress",
-    label: "WordPress",
-    detail: "Supports easy content publishing and ongoing SEO updates for long-term growth."
-  }
+  { category: "frontend_frameworks", key: "nextjs", label: "Next.js", detail: "Helps your site load faster so more visitors stay, engage, and convert." },
+  { category: "frontend_frameworks", key: "react", label: "React", detail: "Keeps your website experience consistent and easier to improve as your business grows." },
+  { category: "frontend_frameworks", key: "tailwind", label: "Tailwind CSS", detail: "Delivers clean, consistent design faster so updates go live with less delay." },
+  { category: "backend_server", key: "supabase", label: "Supabase", detail: "Supports secure client portals where projects, files, and updates are centralized." },
+  { category: "programming_language", key: "ruby", label: "Ruby", detail: "Automates repetitive tasks so your team can focus on growth and delivery." },
+  { category: "programming_language", key: "javascript", label: "JavaScript", detail: "Enables interactive experiences that keep visitors engaged and moving toward conversion." },
+  { category: "programming_language", key: "php", label: "PHP", detail: "Supports reliable business websites and custom workflows for content and lead capture." },
+  { category: "backend_server", key: "mysql", label: "MySQL", detail: "Organizes your core business data so reports, forms, and client records stay consistent." },
+  { category: "backend_server", key: "firebase", label: "Firebase", detail: "Accelerates launch with managed backend services for authentication, data, and real-time updates." },
+  { category: "frontend_frameworks", key: "jekyll", label: "Jekyll", detail: "Publishes lightweight pages that are easy to maintain and cost-efficient to run." },
+  { category: "hosting_deployment", key: "vercel", label: "Vercel", detail: "Enables fast, reliable deployments so improvements reach your audience quickly." },
+  { category: "hosting_deployment", key: "netlify", label: "Netlify", detail: "Keeps your website stable and secure while simplifying launch and form workflows." },
+  { category: "hosting_deployment", key: "github-pages", label: "GitHub Pages", detail: "Great for fast, dependable static site publishing with simple version-controlled updates." },
+  { category: "frontend_frameworks", key: "astro", label: "Astro", detail: "Creates high-performance content pages that improve user experience and SEO visibility." },
+  { category: "cms_content", key: "headless-cms", label: "Headless CMS", detail: "Lets your team update content faster without relying on development for every change." },
+  { category: "cms_content", key: "decap-cms", label: "Decap CMS (Netlify CMS)", detail: "Gives non-technical teams an easy editor while keeping content workflows structured." },
+  { category: "analytics_seo", key: "ga4", label: "Google Analytics 4", detail: "Shows which channels and pages drive real leads, not just traffic numbers." },
+  { category: "analytics_seo", key: "search-console", label: "Google Search Console", detail: "Reveals how your site appears on Google and where ranking opportunities exist." },
+  { category: "analytics_seo", key: "tag-manager", label: "Google Tag Manager", detail: "Makes tracking and marketing updates faster without slowing down site releases." },
+  { category: "cms_content", key: "wordpress", label: "WordPress", detail: "Supports easy content publishing and ongoing SEO updates for long-term growth." }
 ];
 
-function renderStackIcon(key: StackItem["key"]) {
-  if (key === "nextjs") {
-    return (
-      <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
-        <circle cx="12" cy="12" r="9" />
-        <path d="M8 16V8l8 8V8" />
-      </svg>
-    );
-  }
-
-  if (key === "react") {
-    return (
-      <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
-        <circle cx="12" cy="12" r="1.8" />
-        <ellipse cx="12" cy="12" rx="8" ry="3.2" />
-        <ellipse cx="12" cy="12" rx="8" ry="3.2" transform="rotate(60 12 12)" />
-        <ellipse cx="12" cy="12" rx="8" ry="3.2" transform="rotate(120 12 12)" />
-      </svg>
-    );
-  }
-
-  if (key === "tailwind") {
-    return (
-      <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
-        <path d="M5 9c1.5-2 3-3 5-3 3 0 3.5 2 5.5 2S19 6.5 20 5c-1.2 3.5-3 5-5.5 5-2.8 0-3.2-2-5.5-2S6.2 9.5 5 12" />
-        <path d="M4 15c1.2-1.8 2.6-2.6 4.5-2.6 2.6 0 3 1.8 5 1.8 1.6 0 2.8-.9 4-2.3-1.2 3.3-3 4.8-5.3 4.8-2.4 0-2.8-1.8-5.1-1.8-1.2 0-2.1.5-3.1 1.5" />
-      </svg>
-    );
-  }
-
-  if (key === "supabase") {
-    return (
-      <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
-        <path d="M7 18 13 6h4l-6 12H7Z" />
-        <path d="m11 18 6-12" />
-      </svg>
-    );
-  }
-
-  if (key === "ruby") {
-    return (
-      <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
-        <path d="m12 4 6 4-2 8h-8L6 8l6-4Z" />
-        <path d="M12 4v12" />
-      </svg>
-    );
-  }
-
-  if (key === "javascript") {
-    return (
-      <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
-        <rect x="4" y="4" width="16" height="16" rx="2" />
-        <path d="M10 9v5a2 2 0 0 1-2 2H7" />
-        <path d="M13 15c.4.7 1.2 1 2 1s1.5-.4 1.5-1.1c0-1.8-3.5-.9-3.5-3 0-1 .9-1.9 2.3-1.9.9 0 1.6.3 2.1 1" />
-      </svg>
-    );
-  }
-
-  if (key === "php") {
-    return (
-      <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
-        <ellipse cx="12" cy="12" rx="8.5" ry="5.5" />
-        <path d="M8.5 14V10h1.8a1.6 1.6 0 1 1 0 3.2H8.5" />
-        <path d="M12.5 14V10h1.8a1.6 1.6 0 1 1 0 3.2h-1.8" />
-      </svg>
-    );
-  }
-
-  if (key === "mysql") {
-    return (
-      <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
-        <ellipse cx="12" cy="6.5" rx="6.5" ry="2.5" />
-        <path d="M5.5 6.5v5c0 1.4 2.9 2.5 6.5 2.5s6.5-1.1 6.5-2.5v-5" />
-        <path d="M5.5 11.5v5c0 1.4 2.9 2.5 6.5 2.5s6.5-1.1 6.5-2.5v-5" />
-      </svg>
-    );
-  }
-
-  if (key === "firebase") {
-    return (
-      <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
-        <path d="M6 18 11.5 4l2.6 4.2L6 18Z" />
-        <path d="M18 18 12 5.8 9.8 10 18 18Z" />
-        <path d="M8.4 14.3 12 18l3.6-3.7" />
-      </svg>
-    );
-  }
-
-  if (key === "jekyll") {
-    return (
-      <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
-        <path d="M5 19V7l4-2 4 2v12H5Z" />
-        <path d="M13 19v-9l3-1.5L19 10v9h-6Z" />
-      </svg>
-    );
-  }
-
-  if (key === "vercel") {
-    return (
-      <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
-        <path d="M12 5 5 18h14L12 5Z" />
-      </svg>
-    );
-  }
-
-  if (key === "netlify") {
-    return (
-      <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
-        <rect x="5" y="5" width="6" height="6" rx="1" />
-        <rect x="13" y="13" width="6" height="6" rx="1" />
-        <path d="M11 8h2M8 11v2M16 11v2M11 16h2" />
-      </svg>
-    );
-  }
-
-  if (key === "github-pages") {
-    return (
-      <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
-        <path d="M12 3a8.5 8.5 0 0 0-2.7 16.6v-2.4c-2 .4-2.5-.9-2.5-.9-.4-1-.9-1.3-.9-1.3-.8-.5.1-.5.1-.5.8.1 1.3.9 1.3.9.8 1.3 2.1 1 2.7.8.1-.5.3-.9.6-1.1-1.8-.2-3.8-.9-3.8-4a3.2 3.2 0 0 1 .9-2.2 3 3 0 0 1 .1-2.2s.7-.2 2.3.8a8 8 0 0 1 4.2 0c1.6-1 2.3-.8 2.3-.8a3 3 0 0 1 .1 2.2 3.2 3.2 0 0 1 .9 2.2c0 3.1-2 3.8-3.9 4 .3.2.6.7.6 1.4v2.1A8.5 8.5 0 0 0 12 3Z" />
-      </svg>
-    );
-  }
-
-  if (key === "astro") {
-    return (
-      <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
-        <path d="M8 17c0 1.7 1.8 3 4 3s4-1.3 4-3" />
-        <path d="m7 17 2.2-10h5.6L17 17" />
-      </svg>
-    );
-  }
-
-  if (key === "headless-cms") {
-    return (
-      <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
-        <rect x="4" y="5" width="7" height="6" rx="1.5" />
-        <rect x="13" y="5" width="7" height="6" rx="1.5" />
-        <rect x="4" y="13" width="16" height="6" rx="1.5" />
-      </svg>
-    );
-  }
-
-  if (key === "decap-cms") {
-    return (
-      <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
-        <path d="M5 7h10l4 4v6H5z" />
-        <path d="M15 7v4h4" />
-        <path d="M8 14h8M8 17h5" />
-      </svg>
-    );
-  }
-
-  if (key === "ga4") {
-    return (
-      <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
-        <rect x="5" y="12" width="3" height="7" rx="1" />
-        <rect x="10.5" y="9" width="3" height="10" rx="1" />
-        <rect x="16" y="5" width="3" height="14" rx="1" />
-      </svg>
-    );
-  }
-
-  if (key === "search-console") {
-    return (
-      <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
-        <rect x="4" y="4" width="12" height="14" rx="2" />
-        <path d="M8 8h4M8 11h4M8 14h3" />
-        <path d="m15 15 5 5" />
-        <circle cx="14" cy="14" r="3" />
-      </svg>
-    );
-  }
-
-  if (key === "tag-manager") {
-    return (
-      <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
-        <path d="m6 6 6 6-6 6" />
-        <path d="m12 6 6 6-6 6" />
-      </svg>
-    );
-  }
-
-  return (
-    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
-      <circle cx="12" cy="12" r="8" />
-      <path d="M8 9h8M8 12h8M8 15h5" />
-    </svg>
-  );
-}
-
-function stackIconBadgeClass(key: StackItem["key"]) {
-  if (key === "nextjs") {
-    return "border-[#1f2937]/30 bg-[#f3f4f6] text-[#111827]";
-  }
-  if (key === "react") {
-    return "border-[#0e7490]/30 bg-[#ecfeff] text-[#0891b2]";
-  }
-  if (key === "tailwind") {
-    return "border-[#0c4a6e]/30 bg-[#e0f2fe] text-[#0369a1]";
-  }
-  if (key === "supabase") {
-    return "border-[#166534]/30 bg-[#ecfdf3] text-[#16a34a]";
-  }
-  if (key === "ruby") {
-    return "border-[#9f1239]/30 bg-[#fff1f2] text-[#be123c]";
-  }
-  if (key === "javascript") {
-    return "border-[#a16207]/30 bg-[#fffbeb] text-[#a16207]";
-  }
-  if (key === "php") {
-    return "border-[#4338ca]/30 bg-[#eef2ff] text-[#4338ca]";
-  }
-  if (key === "mysql") {
-    return "border-[#0c4a6e]/30 bg-[#ecfeff] text-[#0e7490]";
-  }
-  if (key === "firebase") {
-    return "border-[#c2410c]/30 bg-[#fff7ed] text-[#ea580c]";
-  }
-  if (key === "jekyll") {
-    return "border-[#991b1b]/30 bg-[#fef2f2] text-[#b91c1c]";
-  }
-  if (key === "vercel") {
-    return "border-[#111827]/30 bg-[#f3f4f6] text-[#111827]";
-  }
-  if (key === "netlify") {
-    return "border-[#0f766e]/30 bg-[#f0fdfa] text-[#0f766e]";
-  }
-  if (key === "github-pages") {
-    return "border-[#111827]/30 bg-[#f8fafc] text-[#111827]";
-  }
-  if (key === "astro") {
-    return "border-[#7c3aed]/30 bg-[#f5f3ff] text-[#7c3aed]";
-  }
-  if (key === "headless-cms") {
-    return "border-[#4338ca]/30 bg-[#eef2ff] text-[#4338ca]";
-  }
-  if (key === "decap-cms") {
-    return "border-[#0f7663]/30 bg-[#ecfdf5] text-[#0f7663]";
-  }
-  if (key === "ga4") {
-    return "border-[#9a6700]/30 bg-[#fffbeb] text-[#a16207]";
-  }
-  if (key === "search-console") {
-    return "border-[#1d4ed8]/30 bg-[#eff6ff] text-[#1d4ed8]";
-  }
-  if (key === "tag-manager") {
-    return "border-[#7e22ce]/30 bg-[#faf5ff] text-[#9333ea]";
-  }
-  return "border-[#0f7663]/30 bg-[#f0fdf4] text-[#15803d]";
-}
-
-function pricingTierStyle(category: string) {
-  const normalized = category.toLowerCase();
-
-  if (normalized.includes("large") || normalized.includes("enterprise") || normalized.includes("custom") || normalized.includes("corporate")) {
-    return {
-      row: "border-[#b42318]/25 bg-[#fff4f2]",
-      badge: "bg-[#f04438] text-white",
-      range: "text-[#7a271a]",
-      iconWrap: "border-[#f04438]/40 bg-[#ffe4e1] text-[#b42318]"
-    };
-  }
-
-  if (normalized.includes("e-commerce") || normalized.includes("mid-sized")) {
-    return {
-      row: "border-[#175cd3]/25 bg-[#eff8ff]",
-      badge: "bg-[#175cd3] text-white",
-      range: "text-[#1849a9]",
-      iconWrap: "border-[#175cd3]/40 bg-[#dbeafe] text-[#175cd3]"
-    };
-  }
-
-  if (normalized.includes("local")) {
-    return {
-      row: "border-[#0e9384]/25 bg-[#ecfdf3]",
-      badge: "bg-[#0e9384] text-white",
-      range: "text-[#0f766e]",
-      iconWrap: "border-[#0e9384]/35 bg-[#ccfbf1] text-[#0f766e]"
-    };
-  }
-
-  if (
-    normalized.includes("small") ||
-    normalized.includes("startup") ||
-    normalized.includes("simple") ||
-    normalized.includes("personal") ||
-    normalized.includes("portfolio")
-  ) {
-    return {
-      row: "border-[#12b76a]/25 bg-[#edfcf2]",
-      badge: "bg-[#12b76a] text-white",
-      range: "text-[#027a48]",
-      iconWrap: "border-[#12b76a]/35 bg-[#dcfce7] text-[#027a48]"
-    };
-  }
-
-  return {
-    row: "border-[#c58a00]/30 bg-[#fff7e0]",
-    badge: "bg-[#b17a00] text-white",
-    range: "text-[#6a4700]",
-    iconWrap: "border-[#b17a00]/35 bg-[#fef3c7] text-[#7a5200]"
-  };
-}
-
-function renderPricingTierIcon(category: string) {
-  const normalized = category.toLowerCase();
-
-  if (normalized.includes("large") || normalized.includes("enterprise") || normalized.includes("aggressive")) {
-    return (
-      <svg aria-hidden="true" viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M6 16V9M12 16V6M18 16v-4" />
-        <path d="M4 18h16" />
-      </svg>
-    );
-  }
-
-  if (normalized.includes("e-commerce")) {
-    return (
-      <svg aria-hidden="true" viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2">
-        <rect x="3.5" y="7" width="17" height="10" rx="2" />
-        <path d="M3.5 11h17" />
-      </svg>
-    );
-  }
-
-  if (normalized.includes("local")) {
-    return (
-      <svg aria-hidden="true" viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M12 21s6-5.2 6-10a6 6 0 1 0-12 0c0 4.8 6 10 6 10Z" />
-        <circle cx="12" cy="11" r="2" />
-      </svg>
-    );
-  }
-
-  if (normalized.includes("small") || normalized.includes("startup") || normalized.includes("simple") || normalized.includes("personal")) {
-    return (
-      <svg aria-hidden="true" viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2">
-        <circle cx="12" cy="12" r="7" />
-        <path d="M12 8v8M9.5 10.5c.3-1 1.1-1.5 2.5-1.5 1.5 0 2.5.7 2.5 1.8 0 1-1 1.5-2.5 1.8-1.3.3-2.3.7-2.3 1.8 0 1 .8 1.8 2.3 1.8 1.4 0 2.2-.6 2.5-1.6" />
-      </svg>
-    );
-  }
-
-  return (
-    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M4 8h16v8H4z" />
-      <path d="M8 12h8" />
-    </svg>
-  );
-}
-
-function renderJourneyIcon(stepKey: JourneyStep["key"]) {
-  if (stepKey === "discover") {
-    return (
-      <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
-        <circle cx="11" cy="11" r="6" />
-        <path d="m20 20-3-3" />
-      </svg>
-    );
-  }
-
-  if (stepKey === "scope") {
-    return (
-      <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M4 5h16v14H4z" />
-        <path d="M8 9h8M8 13h5" />
-      </svg>
-    );
-  }
-
-  if (stepKey === "execute") {
-    return (
-      <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="m8 7-4 5 4 5M16 7l4 5-4 5M13 5l-2 14" />
-      </svg>
-    );
-  }
-
-  return (
-    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="m5 12 4 4 10-10" />
-    </svg>
-  );
-}
+const journeyIcons: Record<string, typeof IconSearch> = {
+  discover: IconSearch,
+  scope: IconDocument,
+  execute: IconCode,
+  launch: IconCheck
+};
 
 export const metadata: Metadata = {
   title: servicesPageTitle,
   description: servicesPageDescription,
   keywords: servicesPageKeywords,
-  alternates: {
-    canonical: "/services"
-  },
-  robots: {
-    index: true,
-    follow: true
-  },
+  alternates: { canonical: "/services" },
+  robots: { index: true, follow: true },
   openGraph: {
     type: "website",
     url: `${siteUrl}/services`,
@@ -695,236 +117,165 @@ export default async function ServicesPage() {
   const countryCode = getCountryCodeFromHeaders(requestHeaders);
   const pricingCurrency = getPricingCurrencyByCountry(countryCode);
 
-  const servicesPageStructuredData = {
-    "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "WebPage",
-        "@id": `${siteUrl}/services#webpage`,
-        url: `${siteUrl}/services`,
-        name: servicesPageTitle,
-        description: servicesPageDescription,
-        isPartOf: {
-          "@id": `${siteUrl}/#website`
-        }
-      },
-      {
-        "@type": "BreadcrumbList",
-        itemListElement: [
-          {
-            "@type": "ListItem",
-            position: 1,
-            name: "Home",
-            item: siteUrl
-          },
-          {
-            "@type": "ListItem",
-            position: 2,
-            name: "Services",
-            item: `${siteUrl}/services`
-          }
-        ]
-      },
-      {
-        "@type": "ItemList",
-        name: "Optinest Digital Services",
-        itemListElement: serviceDefinitions.map((service, index) => ({
-          "@type": "ListItem",
-          position: index + 1,
-          name: service.title,
-          url: `${siteUrl}/services/${service.slug}`,
-          description: service.summary
-        }))
-      },
-      {
-        "@type": "FAQPage",
-        "@id": `${siteUrl}/services#faq`,
-        mainEntity: serviceFaqs.map((faq) => ({
-          "@type": "Question",
-          name: faq.question,
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: faq.answer
-          }
-        }))
-      }
-    ]
-  };
-
   return (
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(servicesPageStructuredData) }}
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@graph": [
+              { "@type": "WebPage", "@id": `${siteUrl}/services#webpage`, url: `${siteUrl}/services`, name: servicesPageTitle, description: servicesPageDescription, isPartOf: { "@id": `${siteUrl}/#website` } },
+              { "@type": "BreadcrumbList", itemListElement: [{ "@type": "ListItem", position: 1, name: "Home", item: siteUrl }, { "@type": "ListItem", position: 2, name: "Services", item: `${siteUrl}/services` }] },
+              { "@type": "ItemList", name: "Optinest Digital Services", itemListElement: serviceDefinitions.map((s, i) => ({ "@type": "ListItem", position: i + 1, name: s.title, url: `${siteUrl}/services/${s.slug}`, description: s.summary })) },
+              { "@type": "FAQPage", "@id": `${siteUrl}/services#faq`, mainEntity: serviceFaqs.map((f) => ({ "@type": "Question", name: f.question, acceptedAnswer: { "@type": "Answer", text: f.answer } })) }
+            ]
+          })
+        }}
       />
-      <main className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 md:py-16">
-      <header className="mx-auto max-w-4xl text-center">
-        <p className="eyebrow-pop mx-auto inline-block">Service Stack</p>
-        <h1 className="hero-title mt-5 text-balance font-display text-[clamp(2rem,7vw,4.4rem)] uppercase leading-[0.9] tracking-tight">
-          Services Built For Growth
-        </h1>
-        <p className="tagline-pop mx-auto mt-5 max-w-3xl rounded-2xl border-2 border-ink/80 bg-mist/95 px-4 py-4 font-mono text-sm font-bold leading-relaxed sm:px-6 sm:text-base">
-          Choose focused support for SEO, web design, or web development with transparent scope and practical execution.
-        </p>
-      </header>
+      <main className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 md:py-16">
+        <header className="mx-auto max-w-4xl text-center">
+          <p className="eyebrow-pop mx-auto">Service stack</p>
+          <h1 className="hero-title mt-6 font-display text-[clamp(2.6rem,8vw,5.8rem)] uppercase leading-[0.9] tracking-[-0.06em] text-ink">
+            Services built for technical growth.
+          </h1>
+          <p className="tagline-pop mx-auto mt-5 max-w-3xl border-2 border-white/85 px-5 py-5 text-sm leading-7 text-white/80 sm:text-base">
+            Choose focused support for SEO, web design, or web development with transparent scope, better visual hierarchy, and practical execution.
+          </p>
+        </header>
 
-      <section aria-label="Service cards" className="mt-10 grid gap-5 md:grid-cols-3">
-        {serviceDefinitions.map((service) => {
-          const pricingTiers = getPricingTiersForCurrency(service.pricingTiers, pricingCurrency);
-
-          return (
-            <article key={service.slug} className="flex h-full flex-col rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard">
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-ink/65">{service.shortLabel}</p>
-              <h2 className="mt-2 font-display text-2xl uppercase leading-[0.95] text-ink">{service.title}</h2>
-              <p className="mt-3 text-sm text-ink/80">{service.summary}</p>
-              <p className="mt-4 text-xs font-semibold uppercase tracking-[0.1em] text-[#1f56c2]">{service.timeline}</p>
-              <p className="mt-1 text-[0.68rem] text-ink/65">Timeline assumes timely feedback and content approvals.</p>
-              <div className="mt-2 rounded-xl border-2 border-[#c58a00]/45 bg-[#fff4d6] px-3 py-2">
-                <p className="text-[0.62rem] font-bold uppercase tracking-[0.12em] text-[#7a5200]">Pricing</p>
-                <ul className="mt-2 space-y-2">
-                  {pricingTiers.map((tier) => {
-                    const style = pricingTierStyle(tier.category);
-                    return (
-                      <li key={`${service.slug}-${tier.category}`} className={`rounded-lg border px-2.5 py-2 ${style.row}`}>
-                        <div className="flex items-start gap-2">
-                          <span
-                            className={`mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border ${style.iconWrap}`}
-                          >
-                            {renderPricingTierIcon(tier.category)}
-                          </span>
-                          <div>
-                            <span
-                              className={`inline-flex rounded-full px-2 py-0.5 text-[0.62rem] font-bold uppercase tracking-[0.1em] ${style.badge}`}
-                            >
-                              {tier.category}
-                            </span>
-                            <p className={`mt-1 text-sm font-semibold leading-snug ${style.range}`}>{tier.range}</p>
-                          </div>
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-              <div className="mt-auto flex justify-center pt-5">
-                <Link
-                  href={`/services/${service.slug}`}
-                  className="inline-flex items-center justify-center rounded-full border-2 border-ink bg-ink px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] text-mist transition hover:-translate-y-0.5"
-                >
-                  View Service
-                </Link>
-              </div>
-            </article>
-          );
-        })}
-      </section>
-
-      <section id="how-we-work" className="mt-10 scroll-mt-28 rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6">
-        <h2 className="font-display text-2xl uppercase leading-[0.95] text-ink">How We Work</h2>
-        <p className="mt-2 max-w-3xl text-sm text-ink/80">
-          A simple engagement flow designed to reduce delays, clarify expectations, and keep decisions easy for your team.
-        </p>
-        <ol className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {journeySteps.map((step, index) => (
-            <li key={step.key} className="rounded-xl border border-ink/20 bg-white p-4">
-              <div className="flex items-center justify-between">
-                <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[#1d4ed8]/30 bg-[#edf4ff] text-[#1d4ea5]">
-                  {renderJourneyIcon(step.key)}
-                </span>
-                <span className="text-[0.64rem] font-bold uppercase tracking-[0.12em] text-ink/60">Step {index + 1}</span>
-              </div>
-              <h3 className="mt-3 font-display text-lg uppercase leading-none text-ink">{step.title}</h3>
-              <p className="mt-2 text-xs leading-relaxed text-ink/75">{step.detail}</p>
-            </li>
-          ))}
-        </ol>
-      </section>
-
-      <section className="mt-10 rounded-2xl border-2 border-ink/80 bg-mist p-5 text-center shadow-hard sm:p-6">
-        <p className="text-base font-semibold text-ink/85 sm:text-lg">Need help choosing the right starting point?</p>
-        <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-          <Link
-            href="/services/seo"
-            className="inline-flex rounded-full border border-[#1d4ed8]/40 bg-[#eff6ff] px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-[#1d4ea5]"
-          >
-            I Need More Qualified Traffic
-          </Link>
-          <Link
-            href="/services/web-design"
-            className="inline-flex rounded-full border border-[#7c3aed]/40 bg-[#f5f3ff] px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-[#6d28d9]"
-          >
-            I Need Better Conversion UX
-          </Link>
-          <Link
-            href="/services/web-development"
-            className="inline-flex rounded-full border border-[#0f766e]/40 bg-[#ecfdf5] px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-[#0f766e]"
-          >
-            I Need A Faster, Stronger Build
-          </Link>
-        </div>
-        <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
-          <ScheduleCallModal
-            label="Schedule a Call"
-            className="inline-flex items-center rounded-full border-2 border-[#0f7663] bg-[#16a085] px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white transition hover:-translate-y-0.5 hover:bg-[#0f8d74]"
-          />
-          <Link
-            href="/portal"
-            className="inline-flex items-center rounded-full border-2 border-ink bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-ink transition hover:-translate-y-0.5"
-          >
-            Open Portal
-          </Link>
-        </div>
-      </section>
-
-      <section className="mt-10 rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6">
-        <h2 className="font-display text-2xl uppercase leading-[0.95] text-ink">Stack We Use</h2>
-        <p className="mt-2 text-sm text-ink/80">
-          Core platforms we use across JAMstack builds, SEO execution, analytics, and client portal delivery.
-        </p>
-        <div className="mt-5 space-y-5">
-          {stackCategoryBlocks.map((category) => {
-            const items = stackItems.filter((item) => item.category === category.id);
-            if (items.length === 0) {
-              return null;
-            }
-
-            return (
-              <article key={category.id} className="rounded-xl border border-ink/20 bg-white p-4">
-                <h3 className="font-display text-lg uppercase leading-none text-ink">{category.title}</h3>
-                <p className="mt-1 text-xs text-ink/65">{category.description}</p>
-                <ul className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  {items.map((item) => (
-                    <li key={item.key} className="rounded-xl border border-ink/15 bg-mist p-3">
-                      <span
-                        className={`inline-flex h-10 w-10 items-center justify-center rounded-full border ${stackIconBadgeClass(item.key)}`}
-                      >
-                        {renderStackIcon(item.key)}
-                      </span>
-                      <p className="mt-3 text-sm font-semibold uppercase tracking-[0.08em] text-ink">{item.label}</p>
-                      <p className="mt-1 text-xs text-ink/70">{item.detail}</p>
-                    </li>
-                  ))}
-                </ul>
-              </article>
-            );
+        <section aria-label="Service cards" className="mt-10 grid gap-5 lg:grid-cols-3">
+          {serviceDefinitions.map((service, index) => {
+            const pricingTiers = getPricingTiersForCurrency(service.pricingTiers, pricingCurrency);
+            return <ServiceCard key={service.slug} service={service} pricingTiers={pricingTiers} highlighted={index === 1} />;
           })}
-        </div>
-      </section>
+        </section>
 
-      <section id="services-faq" className="mt-10 rounded-2xl border-2 border-ink/80 bg-mist p-5 shadow-hard sm:p-6">
-        <h2 className="font-display text-2xl uppercase leading-[0.95] text-ink">Frequently Asked Questions</h2>
-        <div className="mt-4 space-y-3">
-          {serviceFaqs.map((faq) => (
-            <details key={faq.question} className="rounded-xl border border-ink/20 bg-white p-4">
-              <summary className="cursor-pointer text-sm font-semibold uppercase tracking-[0.08em] text-ink">{faq.question}</summary>
-              <p className="mt-2 text-sm text-ink/75">{faq.answer}</p>
-            </details>
-          ))}
-        </div>
-      </section>
+        <section id="how-we-work" className="mt-10 scroll-mt-28" aria-label="How we work">
+          <Card as="div">
+            <p className="font-mono text-[0.66rem] uppercase tracking-[0.18em] text-primary">Execution flow</p>
+            <h2 className="mt-3 font-display text-4xl uppercase leading-[0.92] tracking-[-0.05em] text-ink">How we work</h2>
+            <p className="mt-3 max-w-3xl text-sm leading-7 text-white/72">
+              A simple engagement flow designed to reduce delays, clarify expectations, and keep decisions easy for your team.
+            </p>
+            <ol className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {journeySteps.map((step, index) => {
+                const Icon = journeyIcons[step.key];
+                return (
+                  <li key={step.key} className="border-2 border-white/14 bg-[#101010] p-4">
+                    <div className="flex items-center justify-between">
+                      <span className="inline-flex h-10 w-10 items-center justify-center border-2 border-black bg-primary text-black">
+                        {Icon ? <Icon size={16} /> : null}
+                      </span>
+                      <span className="font-mono text-[0.62rem] uppercase tracking-[0.16em] text-white/42">Step {index + 1}</span>
+                    </div>
+                    <h3 className="mt-4 font-display text-2xl uppercase leading-[0.95] tracking-[-0.03em] text-ink">{step.title}</h3>
+                    <p className="mt-2 text-sm leading-7 text-white/72">{step.detail}</p>
+                  </li>
+                );
+              })}
+            </ol>
+          </Card>
+        </section>
 
-      <FloatingShare title="Services by Optinest Digital" url={`${siteUrl}/services`} label="Share this page" />
+        <section className="mt-10">
+          <Card as="div" className="text-center">
+            <p className="font-mono text-[0.66rem] uppercase tracking-[0.18em] text-primary">Need a direction?</p>
+            <h2 className="mt-3 font-display text-4xl uppercase leading-[0.92] tracking-[-0.05em] text-ink">Choose the right entry point.</h2>
+            <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+              <Link href="/services/seo" className="border border-white/14 bg-[#101010] px-3 py-2 font-mono text-[0.66rem] uppercase tracking-[0.16em] text-ink hover:border-primary hover:text-primary">I need more qualified traffic</Link>
+              <Link href="/services/web-design" className="border border-white/14 bg-[#101010] px-3 py-2 font-mono text-[0.66rem] uppercase tracking-[0.16em] text-ink hover:border-primary hover:text-primary">I need better conversion UX</Link>
+              <Link href="/services/web-development" className="border border-white/14 bg-[#101010] px-3 py-2 font-mono text-[0.66rem] uppercase tracking-[0.16em] text-ink hover:border-primary hover:text-primary">I need a faster build</Link>
+            </div>
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+              <ScheduleCallModal label="Schedule a Call" className="inline-flex items-center border-2 border-black bg-primary px-4 py-3 font-mono text-xs font-semibold uppercase tracking-[0.16em] text-black shadow-hard hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-hard-lg" />
+              <Link href="/portal">
+                <Button variant="secondary" size="md">Open Portal</Button>
+              </Link>
+            </div>
+          </Card>
+        </section>
+
+        <section className="mt-10">
+          <Card as="div">
+            <p className="font-mono text-[0.66rem] uppercase tracking-[0.18em] text-primary">Delivery stack</p>
+            <h2 className="mt-3 font-display text-4xl uppercase leading-[0.92] tracking-[-0.05em] text-ink">Stack we use</h2>
+            <p className="mt-3 text-sm leading-7 text-white/72">Core platforms we use across JAMstack builds, SEO execution, analytics, and client portal delivery.</p>
+            <div className="mt-6 space-y-5">
+              {stackCategoryBlocks.map((category) => {
+                const items = stackItems.filter((item) => item.category === category.id);
+                if (items.length === 0) return null;
+                return (
+                  <article key={category.id} className="border-2 border-white/14 bg-[#101010] p-4">
+                    <h3 className="font-display text-3xl uppercase leading-[0.94] tracking-[-0.04em] text-ink">{category.title}</h3>
+                    <p className="mt-2 text-sm leading-7 text-white/62">{category.description}</p>
+                    <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                      {items.map((item) => (
+                        <li key={item.key} className="border border-white/10 bg-mist p-3">
+                          <span className={`inline-flex h-10 w-10 items-center justify-center border ${techBadgeStyles[item.key]}`}>
+                            <TechIcon tech={item.key} />
+                          </span>
+                          <p className="mt-3 font-display text-xl uppercase leading-none text-ink">{item.label}</p>
+                          <p className="mt-2 text-sm leading-7 text-white/70">{item.detail}</p>
+                        </li>
+                      ))}
+                    </ul>
+                  </article>
+                );
+              })}
+            </div>
+          </Card>
+        </section>
+
+        <section id="services-faq" className="mt-10">
+          <Card as="div">
+            <p className="font-mono text-[0.66rem] uppercase tracking-[0.18em] text-primary">Questions</p>
+            <h2 className="mt-3 font-display text-4xl uppercase leading-[0.92] tracking-[-0.05em] text-ink">Frequently asked questions</h2>
+            <div className="mt-5 space-y-3">
+              {serviceFaqs.map((faq) => (
+                <details key={faq.question} className="border-2 border-white/14 bg-[#101010] p-4">
+                  <summary className="cursor-pointer font-mono text-[0.74rem] uppercase tracking-[0.14em] text-ink">{faq.question}</summary>
+                  <p className="mt-3 text-sm leading-7 text-white/72">{faq.answer}</p>
+                </details>
+              ))}
+            </div>
+          </Card>
+        </section>
+
+        <FloatingShare title="Services by Optinest Digital" url={`${siteUrl}/services`} label="Share this page" />
       </main>
     </>
+  );
+}
+
+function ServiceCard({
+  service,
+  pricingTiers,
+  highlighted
+}: {
+  service: ServiceDefinition;
+  pricingTiers: typeof service.pricingTiers;
+  highlighted?: boolean;
+}) {
+  return (
+    <article className={`flex h-full flex-col border-2 ${highlighted ? "border-black bg-primary text-black" : "border-white/85 bg-mist text-ink"} p-5 shadow-hard`}>
+      <p className="font-mono text-[0.66rem] uppercase tracking-[0.18em] opacity-75">{service.shortLabel}</p>
+      <h2 className="mt-3 font-display text-4xl uppercase leading-[0.92] tracking-[-0.05em]">{service.title}</h2>
+      <p className="mt-3 text-sm leading-7 opacity-80">{service.summary}</p>
+      <p className="mt-4 font-mono text-[0.64rem] uppercase tracking-[0.16em] opacity-75">{service.timeline}</p>
+      <div className={`mt-4 border-2 p-3 ${highlighted ? "border-black/20 bg-black text-primary" : "border-white/12 bg-[#101010] text-ink"}`}>
+        <p className={`font-mono text-[0.62rem] uppercase tracking-[0.16em] ${highlighted ? "text-primary" : "text-primary"}`}>Pricing</p>
+        <ul className="mt-2 space-y-2">
+          {pricingTiers.map((tier) => (
+            <PricingTierCard key={`${service.slug}-${tier.category}`} category={tier.category} range={tier.range} />
+          ))}
+        </ul>
+      </div>
+      <div className="mt-auto pt-5">
+        <Link href={`/services/${service.slug}`} className="inline-flex">
+          <Button variant={highlighted ? "secondary" : "primary"} size="md">View Service</Button>
+        </Link>
+      </div>
+    </article>
   );
 }

@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Optinest Digital | Web Design &amp; SEO</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@500&amp;family=Space+Grotesk:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                "on-tertiary-fixed-variant": "#4b482a",
+                "primary": "#fcbb3b",
+                "on-primary-fixed": "#271900",
+                "on-background": "#e2e2e2",
+                "on-secondary-container": "#ff9e9b",
+                "surface-base": "#F5F6EF",
+                "error": "#ffb4ab",
+                "surface-container-lowest": "#0e0e0e",
+                "inverse-surface": "#e2e2e2",
+                "on-primary-container": "#432e00",
+                "surface-tint": "#fcbb3b",
+                "on-tertiary-container": "#434023",
+                "alert-coral": "#FF6B6B",
+                "outline-variant": "#504534",
+                "inverse-on-surface": "#303030",
+                "on-surface-variant": "#d4c4ae",
+                "error-container": "#93000a",
+                "on-error": "#690005",
+                "on-primary-fixed-variant": "#5f4100",
+                "surface-container": "#1f1f1f",
+                "surface-variant": "#353535",
+                "on-tertiary-fixed": "#1f1c04",
+                "on-secondary-fixed-variant": "#8c1520",
+                "on-secondary-fixed": "#410006",
+                "tertiary-fixed-dim": "#cec7a1",
+                "surface-container-highest": "#353535",
+                "surface-container-low": "#1b1b1b",
+                "ink-black": "#000000",
+                "surface-bright": "#393939",
+                "on-error-container": "#ffdad6",
+                "surface": "#131313",
+                "outline": "#9d8f7a",
+                "primary-container": "#c98f00",
+                "primary-fixed-dim": "#fcbb3b",
+                "tertiary-fixed": "#eae3bc",
+                "secondary-container": "#901822",
+                "growth-orange": "#C98F00",
+                "on-primary": "#422c00",
+                "inverse-primary": "#7d5800",
+                "primary-fixed": "#ffdea9",
+                "secondary": "#ffb3b0",
+                "secondary-fixed-dim": "#ffb3b0",
+                "surface-dim": "#131313",
+                "background": "#131313",
+                "tertiary-container": "#b2ac87",
+                "secondary-fixed": "#ffdad8",
+                "on-secondary": "#68000f",
+                "on-tertiary": "#343116",
+                "tertiary": "#cec7a1",
+                "surface-container-high": "#2a2a2a",
+                "on-surface": "#e2e2e2"
+            },
+            "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+            },
+            "spacing": {
+                "grid-gutter": "1.5rem",
+                "stack-lg": "4rem",
+                "stack-md": "1.5rem",
+                "stack-sm": "0.5rem",
+                "section-padding": "8rem",
+                "grid-margin": "2rem"
+            },
+            "fontFamily": {
+                "body-lg": ["Inter"],
+                "label-mono": ["JetBrains Mono"],
+                "headline-lg": ["Space Grotesk"],
+                "headline-md": ["Space Grotesk"],
+                "display-xl": ["Space Grotesk"],
+                "body-md": ["Inter"],
+                "display-xl-mobile": ["Space Grotesk"]
+            },
+            "fontSize": {
+                "body-lg": ["20px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                "label-mono": ["14px", {"lineHeight": "1.0", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                "headline-lg": ["64px", {"lineHeight": "1.1", "fontWeight": "600"}],
+                "headline-md": ["32px", {"lineHeight": "1.2", "fontWeight": "600"}],
+                "display-xl": ["96px", {"lineHeight": "1.0", "letterSpacing": "-0.04em", "fontWeight": "700"}],
+                "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                "display-xl-mobile": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .neo-shadow {
+            box-shadow: 4px 4px 0px 0px rgba(252, 187, 59, 1);
+        }
+        .neo-shadow-active {
+            box-shadow: 0px 0px 0px 0px rgba(252, 187, 59, 1);
+        }
+        body {
+            cursor: crosshair;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface font-body-md overflow-x-hidden pb-20 md:pb-0">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 flex justify-between items-center h-16 px-4 bg-surface border-b-4 border-ink-black dark:border-surface-container-highest shadow-[4px_4px_0px_0px_rgba(252,187,59,1)]">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" data-icon="menu">menu</span>
+<span class="font-headline-md text-headline-md-mobile font-bold tracking-tighter text-on-surface">OPTINEST</span>
+</div>
+<button class="bg-primary text-on-primary-fixed px-4 py-2 font-label-mono text-label-mono font-bold active:translate-y-1 active:shadow-none transition-all neo-shadow">
+            BOOK NOW
+        </button>
+</header>
+<main class="mt-16">
+<!-- Hero Section -->
+<section class="px-grid-margin py-12 bg-surface flex flex-col gap-6">
+<div class="inline-block px-3 py-1 bg-tertiary text-on-tertiary-fixed font-label-mono text-label-mono uppercase">
+                Digital Growth Agency
+            </div>
+<h1 class="font-display-xl-mobile text-display-xl-mobile text-on-surface uppercase leading-none">
+                WEB DESIGN &amp; <span class="text-primary italic">SEO</span> THAT DRIVES <span class="text-growth-orange underline decoration-4 underline-offset-8">GROWTH</span>
+</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-md">
+                We build fast, SEO-friendly websites that help growing brands attract qualified traffic and turn visits into leads.
+            </p>
+<div class="flex flex-col gap-4 mt-4">
+<button class="bg-primary text-on-primary-fixed p-6 font-headline-md text-headline-md-mobile flex justify-between items-center border-2 border-ink-black active:translate-y-1 active:shadow-none transition-all neo-shadow group">
+                    BOOK A STRATEGY CALL
+                    <span class="material-symbols-outlined group-hover:translate-x-2 transition-transform" data-icon="arrow_forward">arrow_forward</span>
+</button>
+<div class="flex items-center gap-2">
+<div class="flex -space-x-2">
+<div class="w-8 h-8 rounded-full border-2 border-ink-black bg-surface-variant overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A professional headshot of a female digital strategist with a confident expression, set against a dark, minimalist industrial office background with warm orange accent lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCxOr6jXY0crko3KXaPfQV-HSRWV_hlVzHQTzTjiOS1fMs3O-z7qlhRaldgfg-Ep2jHxN4_LAqIVs_CRVNridvvy0FfLFF_PmR1JaWcaa3m-_Edml6EWy00GzHC891QbYnwIId2fM5RlYf6v4jeetADvk_S3VNFvx5EwgBPFkwrSETocmaVhwp_cpjgwwG2vtGmSgw4DyrFO5jNOqjJhOSbuuEAWEyvwDISTYoq_DX6GEvzr-Y58KoVU7A-fj2xG64B2dIM2pmQfpc"/>
+</div>
+<div class="w-8 h-8 rounded-full border-2 border-ink-black bg-surface-variant overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A close-up portrait of a male creative director in a professional setting, featuring low-key lighting that emphasizes architectural shadows and a palette of deep blacks and sharp amber tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAuKeT5h_VmY2UPqkAMqed_D4VQzzeSLGJfRgWUXvWzVdE64mBQjWC8K8MpluHqGWFlabr_EWz7yrNldvWqo5_Mq80zTjtxjNiThjlFp8HwCy2naBgYa2x0ftbrsQJunQt8FmDlGCzopplzuNxwD8PC6EThkppH96QRn0VsHO1wNsNMDDgBGYzT6GHEc4WdBQwYfmmDO2434Ptt_KRyz9vfo-nRB7NJHBtx20-Rnp0bVQ62FExoBCMGeUGPE092PTccU6I3slo6NeE"/>
+</div>
+</div>
+<span class="font-label-mono text-label-mono text-on-surface-variant">JOIN 50+ SCALING BRANDS</span>
+</div>
+</div>
+</section>
+<!-- Social Proof / Growth Metric -->
+<section class="border-y-4 border-ink-black bg-primary-container grid grid-cols-1 gap-0">
+<div class="p-grid-margin border-b-2 border-ink-black flex flex-col gap-2">
+<div class="flex items-baseline gap-4">
+<span class="font-display-xl-mobile text-display-xl-mobile text-on-primary-container leading-none">+150%</span>
+<span class="material-symbols-outlined text-on-primary-container text-4xl" data-icon="trending_up">trending_up</span>
+</div>
+<span class="font-label-mono text-label-mono uppercase text-on-primary-container tracking-widest">Average Lead Growth</span>
+</div>
+<div class="grid grid-cols-2">
+<div class="p-6 border-r-2 border-ink-black flex flex-col items-center justify-center bg-surface">
+<span class="font-headline-md text-headline-md-mobile text-primary">0.8s</span>
+<span class="font-label-mono text-label-mono text-on-surface-variant uppercase text-xs">Load Speed</span>
+</div>
+<div class="p-6 flex flex-col items-center justify-center bg-surface">
+<span class="font-headline-md text-headline-md-mobile text-primary">24/7</span>
+<span class="font-label-mono text-label-mono text-on-surface-variant uppercase text-xs">SEO Tracking</span>
+</div>
+</div>
+</section>
+<!-- Features Bento Section -->
+<section class="px-grid-margin py-stack-lg flex flex-col gap-grid-gutter">
+<div class="flex justify-between items-end">
+<h2 class="font-headline-lg text-headline-md-mobile text-on-surface uppercase max-w-[200px]">Core Expertise</h2>
+<span class="font-label-mono text-label-mono text-primary mb-2">SERVICES</span>
+</div>
+<!-- Card 1 -->
+<div class="bg-surface-container-high border-2 border-ink-black p-6 flex flex-col gap-4 neo-shadow">
+<div class="w-12 h-12 bg-primary flex items-center justify-center border-2 border-ink-black">
+<span class="material-symbols-outlined text-ink-black" data-icon="web">web</span>
+</div>
+<h3 class="font-headline-md text-headline-md-mobile uppercase">Web Design</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">High-performance custom websites built with a conversion-first architecture. Mobile-optimized and lightning fast.</p>
+<div class="flex flex-wrap gap-2">
+<span class="bg-tertiary px-2 py-1 text-on-tertiary-fixed font-label-mono text-[10px] uppercase">UX Strategy</span>
+<span class="bg-tertiary px-2 py-1 text-on-tertiary-fixed font-label-mono text-[10px] uppercase">React / Next.js</span>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-surface-container-high border-2 border-ink-black p-6 flex flex-col gap-4 neo-shadow">
+<div class="w-12 h-12 bg-growth-orange flex items-center justify-center border-2 border-ink-black">
+<span class="material-symbols-outlined text-on-primary" data-icon="search">search</span>
+</div>
+<h3 class="font-headline-md text-headline-md-mobile uppercase">SEO Strategy</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Dominate search results with technical audits, keyword authority, and data-driven content mapping.</p>
+<div class="flex flex-wrap gap-2">
+<span class="bg-tertiary px-2 py-1 text-on-tertiary-fixed font-label-mono text-[10px] uppercase">Tech Audits</span>
+<span class="bg-tertiary px-2 py-1 text-on-tertiary-fixed font-label-mono text-[10px] uppercase">Ranking</span>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="bg-primary border-2 border-ink-black p-6 flex flex-col gap-4 neo-shadow">
+<div class="w-12 h-12 bg-ink-black flex items-center justify-center border-2 border-primary">
+<span class="material-symbols-outlined text-primary" data-icon="bolt">bolt</span>
+</div>
+<h3 class="font-headline-md text-headline-md-mobile text-ink-black uppercase">Conversion Growth</h3>
+<p class="font-body-md text-body-md text-on-primary">Turning traffic into revenue through A/B testing, heatmaps, and psychological trigger implementation.</p>
+<div class="flex flex-wrap gap-2">
+<span class="bg-ink-black px-2 py-1 text-primary font-label-mono text-[10px] uppercase">CRO</span>
+<span class="bg-ink-black px-2 py-1 text-primary font-label-mono text-[10px] uppercase">Sales Funnels</span>
+</div>
+</div>
+</section>
+<!-- Contact Teaser -->
+<section class="bg-ink-black py-16 px-grid-margin text-center">
+<h2 class="font-headline-lg text-headline-md-mobile text-primary uppercase mb-6">Ready to scale?</h2>
+<p class="font-body-lg text-body-lg text-on-surface mb-8">Stop guessing. Start growing with a data-backed digital ecosystem.</p>
+<button class="w-full bg-white text-ink-black p-6 font-headline-md text-headline-md-mobile border-2 border-primary flex items-center justify-center gap-4 hover:bg-primary transition-colors">
+                START YOUR PROJECT
+                <span class="material-symbols-outlined" data-icon="rocket_launch">rocket_launch</span>
+</button>
+</section>
+</main>
+<!-- Footer -->
+<footer class="w-full bg-surface border-t-4 border-ink-black dark:border-surface-container-highest flex flex-col gap-grid-gutter p-grid-margin text-center md:text-left">
+<div class="font-headline-md text-headline-md-mobile text-primary font-bold">OPTINEST</div>
+<div class="grid grid-cols-2 gap-4 text-left">
+<div class="flex flex-col gap-2">
+<span class="font-label-mono text-label-mono text-on-surface-variant uppercase">Navigation</span>
+<a class="font-body-md text-body-md text-primary underline" href="#">Services</a>
+<a class="font-body-md text-body-md text-on-surface hover:text-growth-orange transition-colors" href="#">Case Studies</a>
+<a class="font-body-md text-body-md text-on-surface hover:text-growth-orange transition-colors" href="#">SEO Audit</a>
+<a class="font-body-md text-body-md text-on-surface hover:text-growth-orange transition-colors" href="#">Contact</a>
+</div>
+<div class="flex flex-col gap-2">
+<span class="font-label-mono text-label-mono text-on-surface-variant uppercase">Social</span>
+<a class="font-body-md text-body-md text-on-surface hover:text-growth-orange transition-colors" href="#">LinkedIn</a>
+<a class="font-body-md text-body-md text-on-surface hover:text-growth-orange transition-colors" href="#">Twitter</a>
+</div>
+</div>
+<div class="font-body-md text-body-md pt-8 border-t border-ink-black/20 text-on-surface-variant">
+            © 2024 OPTINEST DIGITAL. ALL RIGHTS RESERVED.
+        </div>
+</footer>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="fixed bottom-0 left-0 w-full h-20 flex justify-around items-stretch overflow-hidden bg-surface border-t-4 border-ink-black dark:border-surface-container-highest z-50 md:hidden">
+<a class="flex flex-col items-center justify-center bg-primary text-on-primary-fixed rounded-none h-full w-full border-x-2 border-ink-black active:scale-95 transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-label-mono text-[10px]">HOME</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant h-full w-full border-x border-ink-black/20 hover:bg-primary-container active:scale-95 transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="grid_view">grid_view</span>
+<span class="font-label-mono text-[10px]">WORK</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant h-full w-full border-x border-ink-black/20 hover:bg-primary-container active:scale-95 transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="trending_up">trending_up</span>
+<span class="font-label-mono text-[10px]">RESULTS</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant h-full w-full border-x border-ink-black/20 hover:bg-primary-container active:scale-95 transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="calendar_today">calendar_today</span>
+<span class="font-label-mono text-[10px]">START</span>
+</a>
+</nav>
+<script>
+        // Simple Interaction logic
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('mousedown', () => {
+                btn.style.transform = 'translateY(2px)';
+                btn.classList.remove('neo-shadow');
+            });
+            btn.addEventListener('mouseup', () => {
+                btn.style.transform = 'translateY(0)';
+                btn.classList.add('neo-shadow');
+            });
+            btn.addEventListener('mouseleave', () => {
+                btn.style.transform = 'translateY(0)';
+                btn.classList.add('neo-shadow');
+            });
+        });
+
+        // Horizontal scrolling for metrics if needed
+        const metrics = document.querySelector('.growth-metric-section');
+        if(metrics) {
+            // Logic for reveal animation
+        }
+    </script>
+</body></html>
