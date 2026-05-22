@@ -1221,7 +1221,7 @@ export default function PortalBlogManagerPage() {
           <button
             type="button"
             onClick={handleStartCreate}
-            className="w-full rounded-full border-2 border-[#1f56c2] bg-[#2d6cdf] px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white transition hover:-translate-y-0.5 hover:bg-[#245cc3]"
+            className="w-full rounded-full border-2 border-[#1f56c2] bg-[#1f56c2] px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white transition hover:-translate-y-0.5 hover:bg-[#1a4aa8]"
           >
             + New Post
           </button>
@@ -1723,7 +1723,7 @@ export default function PortalBlogManagerPage() {
                   type="button"
                   onClick={() => void handleSavePost()}
                   disabled={isSavingPost || isDeletingPost || isUploadingImage || isUploadingMarkdownImage}
-                  className="inline-flex items-center rounded-full border-2 border-[#1f56c2] bg-[#2d6cdf] px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white transition hover:-translate-y-0.5 hover:bg-[#245cc3] disabled:cursor-not-allowed disabled:opacity-70"
+                  className="inline-flex items-center rounded-full border-2 border-[#1f56c2] bg-[#1f56c2] px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white transition hover:-translate-y-0.5 hover:bg-[#1a4aa8] disabled:cursor-not-allowed disabled:opacity-70"
                 >
                   {isSavingPost ? "Saving..." : isCreateMode ? "Create Post" : "Update Post"}
                 </button>

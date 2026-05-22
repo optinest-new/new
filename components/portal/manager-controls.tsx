@@ -100,7 +100,7 @@ export function ManagerControls({
                 </div>
                 <label className="block text-xs font-semibold uppercase tracking-[0.1em] text-ink/65">Project Summary (HTML / Markdown)</label>
                 <textarea rows={3} value={newProjectSummary} onChange={(e) => onSetNewProjectSummary(e.target.value)} className="w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm text-ink outline-none focus:border-ink/60" placeholder="Use HTML or Markdown, e.g. ## Launch prep or <p>Launch prep</p>" />
-                <button type="submit" disabled={isCreatingProject} className="inline-flex items-center rounded-full border-2 border-[#1f56c2] bg-[#2d6cdf] px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white transition hover:-translate-y-0.5 hover:bg-[#245cc3] disabled:cursor-not-allowed disabled:opacity-70">
+                <button type="submit" disabled={isCreatingProject} className="inline-flex items-center rounded-full border-2 border-[#1f56c2] bg-[#1f56c2] px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white transition hover:-translate-y-0.5 hover:bg-[#1a4aa8] disabled:cursor-not-allowed disabled:opacity-70">
                   {isCreatingProject ? "Creating..." : "Create & Assign"}
                 </button>
               </div>

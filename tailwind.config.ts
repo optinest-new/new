@@ -9,13 +9,14 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        page: "#131313",
-        ink: "#f5f6ef",
-        mist: "#1b1b1b",
+        page: "var(--page)",
+        ink: "var(--ink)",
+        mist: "var(--page-elevated)",
         fog: "#2a2a2a",
-        surface: "#131313",
-        "surface-dim": "#131313",
-        "surface-container": "#1f1f1f",
+        surface: "var(--page)",
+        "surface-dim": "var(--surface-dim)",
+        "surface-low": "var(--surface-low)",
+        "surface-container": "var(--page-panel)",
         "surface-container-high": "#2a2a2a",
         "surface-container-highest": "#353535",
         "surface-base": "#f5f6ef",
@@ -24,6 +25,7 @@ const config: Config = {
         "growth-orange": "#c98f00",
         tertiary: "#cec7a1",
         coral: "#ff6b6b",
+        line: "rgba(var(--line), <alpha-value>)",
         pop: {
           yellow: "#fcbb3b",
           red: "#ff6b6b",

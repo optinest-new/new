@@ -190,7 +190,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     <main className="mx-auto w-full max-w-7xl px-4 py-12 pb-24 sm:px-6 sm:py-16">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
 
-      <nav aria-label="Breadcrumb" className="mb-8 font-mono text-[0.68rem] uppercase tracking-[0.16em] text-white/55 sm:text-xs">
+      <nav aria-label="Breadcrumb" className="mb-8 font-mono text-[0.68rem] uppercase tracking-[0.16em] text-ink/55 sm:text-xs">
         <Link href="/" className="hover:text-primary">
           Home
         </Link>{" "}
@@ -201,14 +201,14 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         / <span aria-current="page" className="break-words text-primary">{post.title}</span>
       </nav>
 
-      <article className="border-2 border-white/85 bg-mist px-4 py-6 shadow-hard sm:px-8 sm:py-8 lg:px-10">
+      <article className="border-2 border-line/85 bg-mist px-4 py-6 shadow-hard sm:px-8 sm:py-8 lg:px-10">
         <header className="mx-auto w-full max-w-[78ch]">
           <p className="font-mono text-[0.68rem] uppercase tracking-[0.18em] text-primary">{post.category}</p>
           <h1 className="hero-title mt-4 font-display text-[clamp(2.5rem,7vw,5rem)] uppercase leading-[0.92] tracking-[-0.06em] text-ink">
             {post.title}
           </h1>
-          <p className="mt-4 text-base leading-8 text-white/78">{post.excerpt}</p>
-          <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-white/12 pt-4 font-mono text-[0.68rem] uppercase tracking-[0.14em] text-white/55 sm:text-xs">
+          <p className="mt-4 text-base leading-8 text-ink/78">{post.excerpt}</p>
+          <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-line/12 pt-4 font-mono text-[0.68rem] uppercase tracking-[0.14em] text-ink/55 sm:text-xs">
             <span className="text-primary">{post.author}</span>
             <time dateTime={post.date}>{post.date}</time>
             <span>{post.readingTime} min read</span>
@@ -216,7 +216,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         </header>
 
         <figure className="mx-auto mt-8 max-w-[78ch]">
-          <img src={post.featureImage} alt={`Feature image for ${post.title}`} className="w-full border-2 border-white/75 bg-white" />
+          <img src={post.featureImage} alt={`Feature image for ${post.title}`} className="w-full border-2 border-line/75 bg-white" />
         </figure>
 
         <section
@@ -229,15 +229,15 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           <LeadMagnetCard magnet={leadMagnet} postTitle={post.title} postSlug={post.slug} />
         </div>
 
-        <aside className="mx-auto mt-12 w-full max-w-[78ch] border-t-2 border-white/12 pt-8" aria-label="Related articles">
+        <aside className="mx-auto mt-12 w-full max-w-[78ch] border-t-2 border-line/12 pt-8" aria-label="Related articles">
           <p className="font-mono text-[0.68rem] uppercase tracking-[0.16em] text-primary">Keep reading</p>
           <h2 className="mt-3 font-display text-3xl uppercase leading-[0.94] tracking-[-0.04em] text-ink sm:text-4xl">
             Related resources
           </h2>
-          <p className="mt-3 text-sm leading-7 text-white/70">Keep exploring this topic with related guides from the blog.</p>
+          <p className="mt-3 text-sm leading-7 text-ink/70">Keep exploring this topic with related guides from the blog.</p>
           <ul className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {relatedPosts.map((related, index) => (
-              <li key={related.slug} className={`overflow-hidden border-2 border-white/75 ${index === 1 ? "bg-primary text-black" : "bg-[#101010] text-ink"}`}>
+              <li key={related.slug} className={`overflow-hidden border-2 border-line/75 ${index === 1 ? "bg-primary text-black" : "bg-surface-dim text-ink"}`}>
                 <Link href={`/blog/${related.slug}`} className="block">
                   <img
                     src={related.featureImage}

@@ -87,21 +87,21 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
         }}
       />
       <main className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 sm:py-16">
-        <nav aria-label="Breadcrumb" className="mb-7 font-mono text-[0.68rem] uppercase tracking-[0.16em] text-white/55 sm:text-xs">
+        <nav aria-label="Breadcrumb" className="mb-7 font-mono text-[0.68rem] uppercase tracking-[0.16em] text-ink/55 sm:text-xs">
           <Link href="/services" className="hover:text-primary">Services</Link> / <span aria-current="page" className="text-primary">{service.title}</span>
         </nav>
 
-        <header className="border-2 border-white/85 bg-mist p-5 shadow-hard sm:p-7">
+        <header className="border-2 border-line/85 bg-mist p-5 shadow-hard sm:p-7">
           <p className="font-mono text-[0.68rem] uppercase tracking-[0.18em] text-primary">{service.shortLabel}</p>
           <h1 className="hero-title mt-4 font-display text-[clamp(2.6rem,8vw,5.6rem)] uppercase leading-[0.92] tracking-[-0.06em] text-ink">
             {service.title}
           </h1>
-          <p className="mt-4 max-w-3xl text-base leading-8 text-white/78">{service.intro}</p>
+          <p className="mt-4 max-w-3xl text-base leading-8 text-ink/78">{service.intro}</p>
           <div className="mt-6 grid gap-4 lg:grid-cols-[1fr_360px]">
-            <div className="border-2 border-white/12 bg-[#101010] p-4">
+            <div className="border-2 border-line/12 bg-surface-dim p-4">
               <p className="font-mono text-[0.64rem] uppercase tracking-[0.16em] text-primary">Timeline</p>
               <p className="mt-2 font-display text-3xl uppercase leading-[0.92] tracking-[-0.04em] text-ink">{service.timeline}</p>
-              <p className="mt-2 text-sm leading-7 text-white/68">Timeline assumes timely feedback and content approvals.</p>
+              <p className="mt-2 text-sm leading-7 text-ink/68">Timeline assumes timely feedback and content approvals.</p>
             </div>
             <div className="border-2 border-black bg-primary p-4 text-black">
               <p className="font-mono text-[0.64rem] uppercase tracking-[0.16em]">Pricing</p>
@@ -118,9 +118,9 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
           <Card as="article">
             <p className="font-mono text-[0.66rem] uppercase tracking-[0.18em] text-primary">Scope</p>
             <h2 className="mt-3 font-display text-4xl uppercase leading-[0.92] tracking-[-0.05em] text-ink">Deliverables</h2>
-            <ul className="mt-4 space-y-2 text-sm text-white/80">
+            <ul className="mt-4 space-y-2 text-sm text-ink/80">
               {service.deliverables.map((item) => (
-                <li key={item} className="border border-white/12 bg-[#101010] px-3 py-3">{item}</li>
+                <li key={item} className="border border-line/12 bg-surface-dim px-3 py-3">{item}</li>
               ))}
             </ul>
           </Card>
@@ -128,9 +128,9 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
           <Card as="article">
             <p className="font-mono text-[0.66rem] uppercase tracking-[0.18em] text-primary">Results</p>
             <h2 className="mt-3 font-display text-4xl uppercase leading-[0.92] tracking-[-0.05em] text-ink">Expected outcomes</h2>
-            <ul className="mt-4 space-y-2 text-sm text-white/80">
+            <ul className="mt-4 space-y-2 text-sm text-ink/80">
               {service.outcomes.map((item) => (
-                <li key={item} className="border border-white/12 bg-[#101010] px-3 py-3">{item}</li>
+                <li key={item} className="border border-line/12 bg-surface-dim px-3 py-3">{item}</li>
               ))}
             </ul>
           </Card>
@@ -142,12 +142,12 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
             <h2 id="implementation-flow-heading" className="mt-3 font-display text-4xl uppercase leading-[0.92] tracking-[-0.05em] text-ink">Implementation flow</h2>
             <ol className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {service.process.map((step, idx) => (
-                <li key={step} className="border-2 border-white/14 bg-[#101010] p-4">
+                <li key={step} className="border-2 border-line/14 bg-surface-dim p-4">
                   <p className="inline-flex items-center gap-2 border-2 border-black bg-primary px-3 py-2 font-mono text-[0.62rem] uppercase tracking-[0.16em] text-black">
                     {getFlowIcon(step)}
                     Step {idx + 1}
                   </p>
-                  <p className="mt-4 text-sm leading-7 text-white/78">{step}</p>
+                  <p className="mt-4 text-sm leading-7 text-ink/78">{step}</p>
                 </li>
               ))}
             </ol>
@@ -158,7 +158,7 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
           <Card as="div">
             <p className="font-mono text-[0.66rem] uppercase tracking-[0.18em] text-primary">Ready to start?</p>
             <h2 id="start-service-heading" className="mt-3 font-display text-4xl uppercase leading-[0.92] tracking-[-0.05em] text-ink">Start this service</h2>
-            <p className="mt-3 text-sm leading-7 text-white/72">Book a short call and we will confirm scope, timeline, and execution plan.</p>
+            <p className="mt-3 text-sm leading-7 text-ink/72">Book a short call and we will confirm scope, timeline, and execution plan.</p>
             <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
               <ScheduleCallModal label="Schedule a Call" className="inline-flex items-center border-2 border-black bg-primary px-4 py-3 font-mono text-xs font-semibold uppercase tracking-[0.16em] text-black shadow-hard hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-hard-lg" />
               <Link href="/portal">

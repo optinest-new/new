@@ -310,12 +310,12 @@ function WebsiteMockup({ project }: { project: ClientProject }) {
   })();
 
   return (
-    <figure className="mt-5 overflow-hidden border-2 border-white/75 bg-[#171717] shadow-[6px_6px_0_rgba(252,187,59,0.55)]">
-      <div className="flex items-center gap-2 border-b-2 border-white/15 bg-[#111111] px-3 py-2">
+    <figure className="mt-5 overflow-hidden border-2 border-line/75 bg-surface-low shadow-[6px_6px_0_rgba(252,187,59,0.55)]">
+      <div className="flex items-center gap-2 border-b-2 border-line/15 bg-surface-dim px-3 py-2">
         <span className="h-2.5 w-2.5 rounded-full bg-red-400" />
         <span className="h-2.5 w-2.5 rounded-full bg-yellow-400" />
         <span className="h-2.5 w-2.5 rounded-full bg-green-400" />
-        <span className="ml-2 truncate border border-white/10 bg-[#1c1c1c] px-2 py-1 font-mono text-[0.64rem] font-semibold uppercase tracking-[0.12em] text-primary sm:text-[0.7rem]">
+        <span className="ml-2 truncate border border-line/10 bg-surface-dim px-2 py-1 font-mono text-[0.64rem] font-semibold uppercase tracking-[0.12em] text-primary sm:text-[0.7rem]">
           {host}
         </span>
       </div>
@@ -372,15 +372,15 @@ export default function ClientsPage() {
           <div className="neo-muted-panel grid gap-3 px-4 py-4 sm:px-5">
             <p className="font-mono text-[0.66rem] uppercase tracking-[0.16em] text-primary/80">Proof stack</p>
             <div className="grid grid-cols-3 gap-2">
-              <div className="border border-white/12 bg-[#171717] px-3 py-3 text-center">
+              <div className="border border-line/12 bg-surface-low px-3 py-3 text-center">
                 <p className="font-display text-2xl uppercase text-ink">6</p>
                 <p className="mt-1 font-mono text-[0.62rem] uppercase tracking-[0.14em] text-ink/62">Showcases</p>
               </div>
-              <div className="border border-white/12 bg-[#171717] px-3 py-3 text-center">
+              <div className="border border-line/12 bg-surface-low px-3 py-3 text-center">
                 <p className="font-display text-2xl uppercase text-ink">4</p>
                 <p className="mt-1 font-mono text-[0.62rem] uppercase tracking-[0.14em] text-ink/62">Industries</p>
               </div>
-              <div className="border border-white/12 bg-[#171717] px-3 py-3 text-center">
+              <div className="border border-line/12 bg-surface-low px-3 py-3 text-center">
                 <p className="font-display text-2xl uppercase text-ink">100%</p>
                 <p className="mt-1 font-mono text-[0.62rem] uppercase tracking-[0.14em] text-ink/62">Custom</p>
               </div>
@@ -424,7 +424,7 @@ export default function ClientsPage() {
                 {project.technologies.map((tech) => (
                   <li
                     key={tech}
-                    className="border border-white/14 bg-[#171717] px-2.5 py-1 font-mono text-[0.68rem] font-semibold uppercase tracking-[0.08em] text-ink/80"
+                    className="border border-line/14 bg-surface-low px-2.5 py-1 font-mono text-[0.68rem] font-semibold uppercase tracking-[0.08em] text-ink/80"
                   >
                     {tech}
                   </li>
@@ -432,7 +432,7 @@ export default function ClientsPage() {
               </ul>
             </div>
 
-            <section className="mt-4 border border-white/14 bg-[#171717] p-3.5" aria-label={`${project.name} case study`}>
+            <section className="mt-4 border border-line/14 bg-surface-low p-3.5" aria-label={`${project.name} case study`}>
               <h3 className="font-display text-base uppercase leading-none text-ink">Case Study Snapshot</h3>
               <dl className="mt-3 space-y-2.5 text-[0.82rem] leading-relaxed text-ink/82 sm:text-[0.86rem]">
                 <div>

@@ -139,7 +139,7 @@ export default async function ServicesPage() {
           <h1 className="hero-title mt-6 font-display text-[clamp(2.6rem,8vw,5.8rem)] uppercase leading-[0.9] tracking-[-0.06em] text-ink">
             Services built for technical growth.
           </h1>
-          <p className="tagline-pop mx-auto mt-5 max-w-3xl border-2 border-white/85 px-5 py-5 text-sm leading-7 text-white/80 sm:text-base">
+          <p className="tagline-pop mx-auto mt-5 max-w-3xl border-2 border-line/85 px-5 py-5 text-sm leading-7 text-ink/80 sm:text-base">
             Choose focused support for SEO, web design, or web development with transparent scope, better visual hierarchy, and practical execution.
           </p>
         </header>
@@ -155,22 +155,22 @@ export default async function ServicesPage() {
           <Card as="div">
             <p className="font-mono text-[0.66rem] uppercase tracking-[0.18em] text-primary">Execution flow</p>
             <h2 className="mt-3 font-display text-4xl uppercase leading-[0.92] tracking-[-0.05em] text-ink">How we work</h2>
-            <p className="mt-3 max-w-3xl text-sm leading-7 text-white/72">
+            <p className="mt-3 max-w-3xl text-sm leading-7 text-ink/72">
               A simple engagement flow designed to reduce delays, clarify expectations, and keep decisions easy for your team.
             </p>
             <ol className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {journeySteps.map((step, index) => {
                 const Icon = journeyIcons[step.key];
                 return (
-                  <li key={step.key} className="border-2 border-white/14 bg-[#101010] p-4">
+                  <li key={step.key} className="border-2 border-line/14 bg-surface-dim p-4">
                     <div className="flex items-center justify-between">
                       <span className="inline-flex h-10 w-10 items-center justify-center border-2 border-black bg-primary text-black">
                         {Icon ? <Icon size={16} /> : null}
                       </span>
-                      <span className="font-mono text-[0.62rem] uppercase tracking-[0.16em] text-white/42">Step {index + 1}</span>
+                      <span className="font-mono text-[0.62rem] uppercase tracking-[0.16em] text-ink/42">Step {index + 1}</span>
                     </div>
                     <h3 className="mt-4 font-display text-2xl uppercase leading-[0.95] tracking-[-0.03em] text-ink">{step.title}</h3>
-                    <p className="mt-2 text-sm leading-7 text-white/72">{step.detail}</p>
+                    <p className="mt-2 text-sm leading-7 text-ink/72">{step.detail}</p>
                   </li>
                 );
               })}
@@ -183,9 +183,9 @@ export default async function ServicesPage() {
             <p className="font-mono text-[0.66rem] uppercase tracking-[0.18em] text-primary">Need a direction?</p>
             <h2 className="mt-3 font-display text-4xl uppercase leading-[0.92] tracking-[-0.05em] text-ink">Choose the right entry point.</h2>
             <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
-              <Link href="/services/seo" className="border border-white/14 bg-[#101010] px-3 py-2 font-mono text-[0.66rem] uppercase tracking-[0.16em] text-ink hover:border-primary hover:text-primary">I need more qualified traffic</Link>
-              <Link href="/services/web-design" className="border border-white/14 bg-[#101010] px-3 py-2 font-mono text-[0.66rem] uppercase tracking-[0.16em] text-ink hover:border-primary hover:text-primary">I need better conversion UX</Link>
-              <Link href="/services/web-development" className="border border-white/14 bg-[#101010] px-3 py-2 font-mono text-[0.66rem] uppercase tracking-[0.16em] text-ink hover:border-primary hover:text-primary">I need a faster build</Link>
+              <Link href="/services/seo" className="border border-line/14 bg-surface-dim px-3 py-2 font-mono text-[0.66rem] uppercase tracking-[0.16em] text-ink hover:border-primary hover:text-primary">I need more qualified traffic</Link>
+              <Link href="/services/web-design" className="border border-line/14 bg-surface-dim px-3 py-2 font-mono text-[0.66rem] uppercase tracking-[0.16em] text-ink hover:border-primary hover:text-primary">I need better conversion UX</Link>
+              <Link href="/services/web-development" className="border border-line/14 bg-surface-dim px-3 py-2 font-mono text-[0.66rem] uppercase tracking-[0.16em] text-ink hover:border-primary hover:text-primary">I need a faster build</Link>
             </div>
             <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
               <ScheduleCallModal label="Schedule a Call" className="inline-flex items-center border-2 border-black bg-primary px-4 py-3 font-mono text-xs font-semibold uppercase tracking-[0.16em] text-black shadow-hard hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-hard-lg" />
@@ -200,23 +200,23 @@ export default async function ServicesPage() {
           <Card as="div">
             <p className="font-mono text-[0.66rem] uppercase tracking-[0.18em] text-primary">Delivery stack</p>
             <h2 className="mt-3 font-display text-4xl uppercase leading-[0.92] tracking-[-0.05em] text-ink">Stack we use</h2>
-            <p className="mt-3 text-sm leading-7 text-white/72">Core platforms we use across JAMstack builds, SEO execution, analytics, and client portal delivery.</p>
+            <p className="mt-3 text-sm leading-7 text-ink/72">Core platforms we use across JAMstack builds, SEO execution, analytics, and client portal delivery.</p>
             <div className="mt-6 space-y-5">
               {stackCategoryBlocks.map((category) => {
                 const items = stackItems.filter((item) => item.category === category.id);
                 if (items.length === 0) return null;
                 return (
-                  <article key={category.id} className="border-2 border-white/14 bg-[#101010] p-4">
+                  <article key={category.id} className="border-2 border-line/14 bg-surface-dim p-4">
                     <h3 className="font-display text-3xl uppercase leading-[0.94] tracking-[-0.04em] text-ink">{category.title}</h3>
-                    <p className="mt-2 text-sm leading-7 text-white/62">{category.description}</p>
+                    <p className="mt-2 text-sm leading-7 text-ink/62">{category.description}</p>
                     <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                       {items.map((item) => (
-                        <li key={item.key} className="border border-white/10 bg-mist p-3">
+                        <li key={item.key} className="border border-line/10 bg-mist p-3">
                           <span className={`inline-flex h-10 w-10 items-center justify-center border ${techBadgeStyles[item.key]}`}>
                             <TechIcon tech={item.key} />
                           </span>
                           <p className="mt-3 font-display text-xl uppercase leading-none text-ink">{item.label}</p>
-                          <p className="mt-2 text-sm leading-7 text-white/70">{item.detail}</p>
+                          <p className="mt-2 text-sm leading-7 text-ink/70">{item.detail}</p>
                         </li>
                       ))}
                     </ul>
@@ -233,9 +233,9 @@ export default async function ServicesPage() {
             <h2 className="mt-3 font-display text-4xl uppercase leading-[0.92] tracking-[-0.05em] text-ink">Frequently asked questions</h2>
             <div className="mt-5 space-y-3">
               {serviceFaqs.map((faq) => (
-                <details key={faq.question} className="border-2 border-white/14 bg-[#101010] p-4">
+                <details key={faq.question} className="border-2 border-line/14 bg-surface-dim p-4">
                   <summary className="cursor-pointer font-mono text-[0.74rem] uppercase tracking-[0.14em] text-ink">{faq.question}</summary>
-                  <p className="mt-3 text-sm leading-7 text-white/72">{faq.answer}</p>
+                  <p className="mt-3 text-sm leading-7 text-ink/72">{faq.answer}</p>
                 </details>
               ))}
             </div>
@@ -258,12 +258,12 @@ function ServiceCard({
   highlighted?: boolean;
 }) {
   return (
-    <article className={`flex h-full flex-col border-2 ${highlighted ? "border-black bg-primary text-black" : "border-white/85 bg-mist text-ink"} p-5 shadow-hard`}>
+    <article className={`flex h-full flex-col border-2 ${highlighted ? "border-black bg-primary text-black" : "border-line/85 bg-mist text-ink"} p-5 shadow-hard`}>
       <p className="font-mono text-[0.66rem] uppercase tracking-[0.18em] opacity-75">{service.shortLabel}</p>
       <h2 className="mt-3 font-display text-4xl uppercase leading-[0.92] tracking-[-0.05em]">{service.title}</h2>
       <p className="mt-3 text-sm leading-7 opacity-80">{service.summary}</p>
       <p className="mt-4 font-mono text-[0.64rem] uppercase tracking-[0.16em] opacity-75">{service.timeline}</p>
-      <div className={`mt-4 border-2 p-3 ${highlighted ? "border-black/20 bg-black text-primary" : "border-white/12 bg-[#101010] text-ink"}`}>
+      <div className={`mt-4 border-2 p-3 ${highlighted ? "border-black/20 bg-black text-primary" : "border-line/12 bg-surface-dim text-ink"}`}>
         <p className={`font-mono text-[0.62rem] uppercase tracking-[0.16em] ${highlighted ? "text-primary" : "text-primary"}`}>Pricing</p>
         <ul className="mt-2 space-y-2">
           {pricingTiers.map((tier) => (

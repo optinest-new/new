@@ -30,7 +30,7 @@ export function BlogList({ posts, currentPage, totalPages, title, description }:
         <h1 className="hero-title mt-6 font-display text-[clamp(2.6rem,8vw,5.8rem)] uppercase leading-[0.9] tracking-[-0.06em] text-ink">
           {title}
         </h1>
-        <p className="tagline-pop mx-auto mt-5 max-w-3xl border-2 border-white/85 px-5 py-5 text-sm leading-7 text-white/80 sm:text-base">
+        <p className="tagline-pop mx-auto mt-5 max-w-3xl border-2 border-line/85 px-5 py-5 text-sm leading-7 text-ink/80 sm:text-base">
           {description}
         </p>
       </header>
@@ -39,7 +39,7 @@ export function BlogList({ posts, currentPage, totalPages, title, description }:
         {posts.map((post, index) => (
           <article
             key={post.slug}
-            className={`overflow-hidden border-2 border-white/85 ${index % 3 === 0 ? "bg-primary text-black" : "bg-mist text-ink"} shadow-hard transition hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-hard-lg`}
+            className={`overflow-hidden border-2 border-line/85 ${index % 3 === 0 ? "bg-primary text-black" : "bg-mist text-ink"} shadow-hard transition hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-hard-lg`}
           >
             <Link href={`/blog/${post.slug}`} className="block h-full">
               <img
@@ -68,8 +68,8 @@ export function BlogList({ posts, currentPage, totalPages, title, description }:
           aria-disabled={currentPage === 1}
           className={`border-2 px-3 py-2 font-mono text-[0.68rem] uppercase tracking-[0.16em] transition ${
             currentPage === 1
-              ? "pointer-events-none border-white/10 bg-mist text-white/25"
-              : "border-white/80 bg-mist text-ink shadow-hard hover:-translate-x-0.5 hover:-translate-y-0.5"
+              ? "pointer-events-none border-line/10 bg-mist text-ink/25"
+              : "border-line/80 bg-mist text-ink shadow-hard hover:-translate-x-0.5 hover:-translate-y-0.5"
           }`}
         >
           Prev
@@ -82,14 +82,14 @@ export function BlogList({ posts, currentPage, totalPages, title, description }:
 
           return (
             <span key={page} className="inline-flex items-center gap-2">
-              {showEllipsis ? <span className="px-1 text-xs font-semibold text-white/45">...</span> : null}
+              {showEllipsis ? <span className="px-1 text-xs font-semibold text-ink/45">...</span> : null}
               <Link
                 href={pageHref(page)}
                 aria-current={active ? "page" : undefined}
                 className={`border-2 px-4 py-2 font-mono text-[0.72rem] uppercase tracking-[0.14em] transition ${
                   active
                     ? "border-black bg-primary text-black shadow-hard"
-                    : "border-white/80 bg-mist text-ink hover:-translate-x-0.5 hover:-translate-y-0.5 hover:text-primary"
+                    : "border-line/80 bg-mist text-ink hover:-translate-x-0.5 hover:-translate-y-0.5 hover:text-primary"
                 }`}
               >
                 {page}
@@ -103,8 +103,8 @@ export function BlogList({ posts, currentPage, totalPages, title, description }:
           aria-disabled={currentPage === totalPages}
           className={`border-2 px-3 py-2 font-mono text-[0.68rem] uppercase tracking-[0.16em] transition ${
             currentPage === totalPages
-              ? "pointer-events-none border-white/10 bg-mist text-white/25"
-              : "border-white/80 bg-mist text-ink shadow-hard hover:-translate-x-0.5 hover:-translate-y-0.5"
+              ? "pointer-events-none border-line/10 bg-mist text-ink/25"
+              : "border-line/80 bg-mist text-ink shadow-hard hover:-translate-x-0.5 hover:-translate-y-0.5"
           }`}
         >
           Next

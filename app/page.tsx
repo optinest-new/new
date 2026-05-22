@@ -153,7 +153,7 @@ export default function Home() {
                 <span className="hero-line hero-line-bottom">that drives growth</span>
               </h1>
               <p
-                className="tagline-pop mt-6 max-w-3xl border-2 border-white/85 px-5 py-5 text-base font-medium leading-8 text-white/88 animate-fade-up opacity-0 sm:text-lg"
+                className="tagline-pop mt-6 max-w-3xl border-2 border-line/85 px-5 py-5 text-base font-medium leading-8 text-ink/88 animate-fade-up opacity-0 sm:text-lg"
                 style={{ animationDelay: "240ms" }}
               >
                 We build high-performance websites, SEO systems, and conversion-focused user journeys for businesses that need clearer positioning and more qualified leads.
@@ -179,7 +179,7 @@ export default function Home() {
                   ))}
                 </div>
               </div>
-              <div className="border-2 border-white/85 bg-[#101010] p-5">
+              <div className="border-2 border-line/85 bg-surface-dim p-5">
                 <p className="font-mono text-[0.68rem] uppercase tracking-[0.18em] text-primary">Positioning</p>
                 <p className="mt-3 font-display text-3xl uppercase leading-[0.92] tracking-[-0.04em] text-ink">
                   Built for serious brands that want sharper digital systems.
@@ -189,15 +189,15 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="border-y-2 border-white/15 bg-[#101010]">
+        <section className="border-y-2 border-line/15 bg-surface-dim">
           <div className="mx-auto grid w-full max-w-7xl gap-0 px-4 sm:px-6 lg:grid-cols-3">
             {metrics.map((metric, index) => (
               <div
                 key={`${metric.label}-rail`}
-                className={`border-white/15 px-5 py-6 ${index < metrics.length - 1 ? "lg:border-r-2" : ""}`}
+                className={`border-line/15 px-5 py-6 ${index < metrics.length - 1 ? "lg:border-r-2" : ""}`}
               >
                 <p className="font-display text-5xl uppercase leading-none tracking-[-0.05em] text-primary">{metric.value}</p>
-                <p className="mt-2 font-mono text-[0.68rem] uppercase tracking-[0.18em] text-white/62">{metric.label}</p>
+                <p className="mt-2 font-mono text-[0.68rem] uppercase tracking-[0.18em] text-ink/62">{metric.label}</p>
               </div>
             ))}
           </div>
@@ -211,7 +211,7 @@ export default function Home() {
                 Services built on a harder visual system.
               </h2>
             </div>
-            <Link href="/clients" className="font-mono text-xs uppercase tracking-[0.16em] text-white/65 hover:text-primary">
+            <Link href="/clients" className="font-mono text-xs uppercase tracking-[0.16em] text-ink/65 hover:text-primary">
               View client work →
             </Link>
           </div>
@@ -220,14 +220,14 @@ export default function Home() {
             {services.map((service, index) => (
               <article
                 key={service.title}
-                className={`${index === 2 ? "bg-primary text-black" : "bg-mist text-ink"} border-2 border-white/85 p-6 shadow-hard transition hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-hard-lg`}
+                className={`${index === 2 ? "bg-primary text-black" : "bg-mist text-ink"} border-2 border-line/85 p-6 shadow-hard transition hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-hard-lg`}
               >
                 <p className="font-mono text-[0.68rem] uppercase tracking-[0.18em] opacity-75">Service {index + 1}</p>
                 <h3 className="mt-4 font-display text-3xl uppercase leading-[0.94] tracking-[-0.04em]">{service.title}</h3>
                 <p className="mt-4 text-sm leading-7 opacity-85">{service.description}</p>
                 <div className="mt-5 flex flex-wrap gap-2">
                   {service.tags.map((tag) => (
-                    <span key={tag} className={`border px-2 py-1 font-mono text-[0.62rem] uppercase tracking-[0.14em] ${index === 2 ? "border-black/35 bg-black text-primary" : "border-white/15 bg-[#101010] text-primary"}`}>
+                    <span key={tag} className={`border px-2 py-1 font-mono text-[0.62rem] uppercase tracking-[0.14em] ${index === 2 ? "border-black/35 bg-black text-primary" : "border-line/15 bg-surface-dim text-primary"}`}>
                       {tag}
                     </span>
                   ))}

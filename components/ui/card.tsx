@@ -10,13 +10,13 @@ type CardProps = HTMLAttributes<HTMLElement> & {
 
 const variantStyles: Record<CardVariant, string> = {
   primary:
-    "border-2 border-white/85 bg-mist shadow-hard transition-all duration-200 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-hard-lg",
+    "border-2 border-line/85 bg-mist shadow-hard transition-all duration-200 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-hard-lg",
   yellow:
     "border-2 border-black bg-primary text-black shadow-hard transition-all duration-200 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-hard-lg",
-  tagline: "border-2 border-white/85 bg-mist/95 tagline-pop",
-  flat: "border border-white/14 bg-surface-container",
+  tagline: "border-2 border-line/85 bg-mist/95 tagline-pop",
+  flat: "border border-line/14 bg-surface-container",
   blog:
-    "border-2 border-white/85 bg-mist shadow-hard transition-all duration-200 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-hard-lg"
+    "border-2 border-line/85 bg-mist shadow-hard transition-all duration-200 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-hard-lg"
 };
 
 const paddingStyles: Record<string, string> = {

@@ -19,9 +19,9 @@
   body {
     margin: 0;
     background:
-      radial-gradient(circle at top left, rgba(252, 187, 59, 0.14), transparent 32%),
-      linear-gradient(180deg, #131313 0%, #0e0e0e 100%);
-    color: #f5f6ef;
+      radial-gradient(circle at top left, var(--bg-gradient-1), transparent 32%),
+      linear-gradient(180deg, var(--bg-gradient-2) 0%, var(--bg-gradient-3) 100%);
+    color: var(--ink);
     overflow-x: hidden;
   }
 
@@ -53,7 +53,8 @@
   }
 }
 
-:root {
+:root,
+[data-theme="dark"] {
   color-scheme: dark;
   --page: #131313;
   --page-elevated: #1b1b1b;
@@ -65,14 +66,54 @@
   --accent-strong: #c98f00;
   --accent-soft: #cec7a1;
   --alert: #ff6b6b;
+  --line: 245, 246, 239;
+  --surface-dim: #101010;
+  --surface-low: #1b1b1b;
+  --bg-gradient-1: rgba(252, 187, 59, 0.14);
+  --bg-gradient-2: #131313;
+  --bg-gradient-3: #0e0e0e;
+  --checker-color: rgba(245, 246, 239, 0.06);
+  --tagline-bg: rgba(27, 27, 27, 0.94);
+  --neo-bg: rgba(27, 27, 27, 0.95);
+  --neo-muted-bg: rgba(31, 31, 31, 0.94);
+  --eyebrow-border: rgba(245, 246, 239, 0.9);
+  --eyebrow-bg: rgba(252, 187, 59, 0.14);
+  --white-rgb: 255, 255, 255;
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+  --page: #f5f6ef;
+  --page-elevated: #ffffff;
+  --page-panel: #ffffff;
+  --page-line: rgba(19, 19, 19, 0.12);
+  --ink: #131313;
+  --ink-muted: rgba(19, 19, 19, 0.7);
+  --accent: #fcbb3b;
+  --accent-strong: #c98f00;
+  --accent-soft: #cec7a1;
+  --alert: #e85050;
+  --line: 19, 19, 19;
+  --surface-dim: #e8e9e2;
+  --surface-low: #ffffff;
+  --bg-gradient-1: rgba(252, 187, 59, 0.08);
+  --bg-gradient-2: #f0f1ea;
+  --bg-gradient-3: #e8e9e2;
+  --checker-color: rgba(19, 19, 19, 0.04);
+  --tagline-bg: rgba(255, 255, 255, 0.94);
+  --neo-bg: rgba(255, 255, 255, 0.95);
+  --neo-muted-bg: rgba(255, 255, 255, 0.94);
+  --eyebrow-border: rgba(19, 19, 19, 0.9);
+  --eyebrow-bg: rgba(252, 187, 59, 0.14);
+  --white-rgb: 19, 19, 19;
 }
 
 .checker-bg {
   position: absolute;
   inset: 0;
   background-image:
-    linear-gradient(rgba(245, 246, 239, 0.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(245, 246, 239, 0.06) 1px, transparent 1px);
+    linear-gradient(var(--checker-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--checker-color) 1px, transparent 1px);
   background-size: 48px 48px;
   mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.92), rgba(0, 0, 0, 0.2));
   opacity: 0.55;
@@ -101,8 +142,8 @@
   align-items: center;
   gap: 0.6rem;
   padding: 0.7rem 1rem;
-  border: 2px solid rgba(245, 246, 239, 0.9);
-  background: rgba(252, 187, 59, 0.14);
+  border: 2px solid var(--eyebrow-border);
+  background: var(--eyebrow-bg);
   color: var(--accent);
   font-family: var(--font-mono), monospace;
   font-size: 0.78rem;
@@ -114,7 +155,7 @@
 }
 
 .tagline-pop {
-  background: rgba(27, 27, 27, 0.94);
+  background: var(--tagline-bg);
   color: var(--ink);
   box-shadow: 6px 6px 0 rgba(252, 187, 59, 0.72);
 }
@@ -122,18 +163,18 @@
 .section-divider {
   height: 2px;
   width: 100%;
-  background: linear-gradient(90deg, rgba(252, 187, 59, 0.9), rgba(245, 246, 239, 0.2));
+  background: linear-gradient(90deg, rgba(252, 187, 59, 0.9), rgba(var(--line), 0.2));
 }
 
 .neo-panel {
-  border: 2px solid rgba(245, 246, 239, 0.9);
-  background: rgba(27, 27, 27, 0.95);
+  border: 2px solid rgba(var(--line), 0.9);
+  background: var(--neo-bg);
   box-shadow: 6px 6px 0 rgba(252, 187, 59, 0.72);
 }
 
 .neo-muted-panel {
-  border: 1px solid rgba(245, 246, 239, 0.16);
-  background: rgba(31, 31, 31, 0.94);
+  border: 1px solid rgba(var(--line), 0.16);
+  background: var(--neo-muted-bg);
 }
 
 .blog-prose {
@@ -238,8 +279,13 @@
 }
 
 .tool-workspace {
-  --workspace-border: rgba(245, 246, 239, 0.82);
+  --workspace-border: rgba(var(--line), 0.82);
   --workspace-panel: rgba(20, 20, 20, 0.98);
+}
+
+[data-theme="light"] .tool-workspace {
+  --workspace-border: rgba(var(--line), 0.82);
+  --workspace-panel: rgba(245, 246, 239, 0.98);
 }
 
 .tool-shell {
@@ -262,8 +308,8 @@
 .portal-workspace textarea {
   border-radius: 0 !important;
   border-width: 2px !important;
-  border-color: rgba(245, 246, 239, 0.45) !important;
-  background: rgba(245, 246, 239, 0.08) !important;
+  border-color: rgba(var(--line), 0.45) !important;
+  background: rgba(var(--line), 0.08) !important;
   color: var(--ink) !important;
   box-shadow: none !important;
 }
@@ -272,7 +318,7 @@
 .tool-workspace textarea::placeholder,
 .portal-workspace input::placeholder,
 .portal-workspace textarea::placeholder {
-  color: rgba(245, 246, 239, 0.55) !important;
+  color: rgba(var(--line), 0.55) !important;
 }
 
 .tool-workspace label,
@@ -320,8 +366,21 @@
 .portal-workspace > section > article,
 .portal-workspace > div > aside,
 .portal-workspace > aside {
-  border-color: rgba(245, 246, 239, 0.84) !important;
+  border-color: rgba(var(--line), 0.84) !important;
   background: rgba(20, 20, 20, 0.98) !important;
+}
+
+[data-theme="light"] .portal-workspace > header,
+[data-theme="light"] .portal-workspace > section,
+[data-theme="light"] .portal-workspace > div > section,
+[data-theme="light"] .portal-workspace > div > article,
+[data-theme="light"] .portal-workspace > section > aside,
+[data-theme="light"] .portal-workspace > section > section,
+[data-theme="light"] .portal-workspace > section > article,
+[data-theme="light"] .portal-workspace > div > aside,
+[data-theme="light"] .portal-workspace > aside {
+  border-color: rgba(var(--line), 0.84) !important;
+  background: #f5f6ef !important;
 }
 
 .portal-workspace [class*="bg-white"],
@@ -332,14 +391,22 @@
   color: var(--ink) !important;
 }
 
+[data-theme="light"] .portal-workspace [class*="bg-white"],
+[data-theme="light"] .portal-workspace [class*="bg-mist"],
+[data-theme="light"] .tool-workspace [class*="bg-white"],
+[data-theme="light"] .tool-workspace [class*="bg-mist"] {
+  background: #ffffff !important;
+  color: var(--ink) !important;
+}
+
 .portal-workspace [class*="text-ink/"],
 .tool-workspace [class*="text-ink/"] {
-  color: rgba(245, 246, 239, 0.85) !important;
+  color: rgba(var(--line), 0.85) !important;
 }
 
 .portal-workspace [class*="border-ink/"],
 .tool-workspace [class*="border-ink/"] {
-  border-color: rgba(245, 246, 239, 0.2) !important;
+  border-color: rgba(var(--line), 0.2) !important;
 }
 
 @media (prefers-reduced-motion: reduce) {

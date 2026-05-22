@@ -27,11 +27,11 @@ const variantStyles: Record<ButtonVariant, string> = {
   primary:
     "border-2 border-black bg-primary text-black shadow-hard hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-hard-lg active:translate-x-1 active:translate-y-1 active:shadow-none",
   secondary:
-    "border-2 border-white/80 bg-transparent text-ink hover:-translate-x-0.5 hover:-translate-y-0.5 hover:border-primary hover:text-primary active:translate-x-1 active:translate-y-1 active:shadow-none",
+    "border-2 border-line/80 bg-transparent text-ink hover:-translate-x-0.5 hover:-translate-y-0.5 hover:border-primary hover:text-primary active:translate-x-1 active:translate-y-1 active:shadow-none",
   ghost:
-    "border border-white/18 bg-mist text-ink hover:border-primary hover:text-primary",
+    "border border-line/18 bg-mist text-ink hover:border-primary hover:text-primary",
   cancel:
-    "border border-white/18 bg-transparent text-white/78 hover:border-white/40 hover:text-white",
+    "border border-line/18 bg-transparent text-ink/78 hover:border-line/40 hover:text-white",
   link:
     "border-0 bg-transparent px-0 text-primary underline-offset-4 hover:underline",
   danger:
@@ -47,7 +47,7 @@ const variantStyles: Record<ButtonVariant, string> = {
   purple:
     "border-2 border-black bg-[#d8b4fe] text-black shadow-hard hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-hard-lg active:translate-x-1 active:translate-y-1 active:shadow-none",
   slate:
-    "border-2 border-white/22 bg-fog text-ink hover:-translate-x-0.5 hover:-translate-y-0.5 hover:border-primary hover:text-primary active:translate-x-1 active:translate-y-1 active:shadow-none",
+    "border-2 border-line/22 bg-fog text-ink hover:-translate-x-0.5 hover:-translate-y-0.5 hover:border-primary hover:text-primary active:translate-x-1 active:translate-y-1 active:shadow-none",
   "dark-red":
     "border-2 border-black bg-[#b91c1c] text-white shadow-hard hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-hard-lg active:translate-x-1 active:translate-y-1 active:shadow-none"
 };

@@ -9,11 +9,11 @@ type SelectProps = SelectHTMLAttributes<HTMLSelectElement> & {
 
 const variantStyles = {
   default:
-    "border-2 border-white/16 bg-surface-container px-3 py-2.5 text-sm text-ink outline-none ring-0 focus:border-primary focus:shadow-hard",
+    "border-2 border-line/16 bg-surface-container px-3 py-2.5 text-sm text-ink outline-none ring-0 focus:border-primary focus:shadow-hard",
   portal:
-    "border-2 border-white/16 bg-surface-container px-3 py-3 text-sm text-ink outline-none focus:border-primary focus:shadow-hard",
+    "border-2 border-line/16 bg-surface-container px-3 py-3 text-sm text-ink outline-none focus:border-primary focus:shadow-hard",
   schedule:
-    "border-2 border-white/16 bg-surface-container px-3 py-2.5 text-base text-ink outline-none ring-0 focus:border-primary focus:shadow-hard sm:text-sm"
+    "border-2 border-line/16 bg-surface-container px-3 py-2.5 text-base text-ink outline-none ring-0 focus:border-primary focus:shadow-hard sm:text-sm"
 };
 
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(

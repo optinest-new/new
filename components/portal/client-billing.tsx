@@ -98,7 +98,7 @@ export function ClientBilling({
                   </div>
                   <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
                     <input type="date" value={draft.next_payment_due_at} onChange={(event) => onBillingDraftChange(row.project.id, "next_payment_due_at", event.target.value)} disabled={!recurringPaymentsEnabled || !draft.recurring_enabled} className="rounded border border-ink/25 bg-white px-2 py-1 text-xs text-ink outline-none disabled:cursor-not-allowed disabled:bg-fog disabled:text-ink/50" />
-                    <button type="button" onClick={() => void onSaveBillingProfile(row.project.id)} disabled={isSaving} className="inline-flex items-center rounded-full border border-[#1f56c2] bg-[#2d6cdf] px-3 py-1 text-[0.64rem] font-semibold uppercase tracking-[0.1em] text-white transition hover:bg-[#245cc3] disabled:cursor-not-allowed disabled:opacity-70">
+                    <button type="button" onClick={() => void onSaveBillingProfile(row.project.id)} disabled={isSaving} className="inline-flex items-center rounded-full border border-[#1f56c2] bg-[#1f56c2] px-3 py-1 text-[0.64rem] font-semibold uppercase tracking-[0.1em] text-white transition hover:bg-[#1a4aa8] disabled:cursor-not-allowed disabled:opacity-70">
                       {isSaving ? "Saving..." : "Save"}
                     </button>
                   </div>

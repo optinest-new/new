@@ -67,7 +67,7 @@ export default function ToolsPage() {
           <h1 className="hero-title mt-6 font-display text-[clamp(2.6rem,8vw,5.8rem)] uppercase leading-[0.9] tracking-[-0.06em] text-ink">
             Practical generators for faster SEO and site ops.
           </h1>
-          <p className="tagline-pop mx-auto mt-5 max-w-3xl border-2 border-white/85 px-5 py-5 text-sm leading-7 text-white/80 sm:text-base">
+          <p className="tagline-pop mx-auto mt-5 max-w-3xl border-2 border-line/85 px-5 py-5 text-sm leading-7 text-ink/80 sm:text-base">
             Create audit reports, snippets, markup, redirects, content briefs, and tracking assets with clean copy-ready outputs built for real production work.
           </p>
         </header>

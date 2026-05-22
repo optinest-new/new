@@ -8,13 +8,13 @@ type TextareaProps = TextareaHTMLAttributes<HTMLTextAreaElement> & {
 
 const variantStyles = {
   default:
-    "border-2 border-white/16 bg-surface-container px-3 py-2.5 text-sm text-ink outline-none ring-0 resize-y placeholder:text-white/35 focus:border-primary focus:shadow-hard",
+    "border-2 border-line/16 bg-surface-container px-3 py-2.5 text-sm text-ink outline-none ring-0 resize-y placeholder:text-ink/35 focus:border-primary focus:shadow-hard",
   portal:
-    "border-2 border-white/16 bg-surface-container px-3 py-3 text-sm text-ink outline-none resize-y placeholder:text-white/35 focus:border-primary focus:shadow-hard",
+    "border-2 border-line/16 bg-surface-container px-3 py-3 text-sm text-ink outline-none resize-y placeholder:text-ink/35 focus:border-primary focus:shadow-hard",
   schedule:
-    "border-2 border-white/16 bg-surface-container px-3 py-2.5 text-sm text-ink outline-none ring-0 resize-y placeholder:text-white/35 focus:border-primary focus:shadow-hard",
+    "border-2 border-line/16 bg-surface-container px-3 py-2.5 text-sm text-ink outline-none ring-0 resize-y placeholder:text-ink/35 focus:border-primary focus:shadow-hard",
   mono:
-    "border-2 border-white/16 bg-surface-container px-3 py-2.5 font-mono text-xs text-ink resize-y placeholder:text-white/35 focus:border-primary focus:shadow-hard disabled:bg-fog"
+    "border-2 border-line/16 bg-surface-container px-3 py-2.5 font-mono text-xs text-ink resize-y placeholder:text-ink/35 focus:border-primary focus:shadow-hard disabled:bg-fog"
 };
 
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(

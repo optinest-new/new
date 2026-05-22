@@ -4617,7 +4617,7 @@ export default function PortalPage() {
                 </Link>
                 <Link
                   href="/portal/onboarding"
-                  className="inline-flex items-center rounded-full border-2 border-[#0f7663] bg-[#16a085] px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white transition hover:-translate-y-0.5 hover:bg-[#0f8d74]"
+                  className="inline-flex items-center rounded-full border-2 border-[#0f7663] bg-[#0f7663] px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white transition hover:-translate-y-0.5 hover:bg-[#0c5f4f]"
                 >
                   Onboarding Pipeline
                 </Link>
@@ -4820,7 +4820,7 @@ export default function PortalPage() {
                 <button
                   type="button"
                   onClick={() => setIsClientProjectRequestOpen((current) => !current)}
-                  className="inline-flex items-center rounded-full border-2 border-[#1f56c2] bg-[#2d6cdf] px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white transition hover:-translate-y-0.5 hover:bg-[#245cc3]"
+                  className="inline-flex items-center rounded-full border-2 border-[#1f56c2] bg-[#1f56c2] px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white transition hover:-translate-y-0.5 hover:bg-[#1a4aa8]"
                 >
                   {isClientProjectRequestOpen ? "Close" : "Add Project"}
                 </button>
@@ -4891,7 +4891,7 @@ export default function PortalPage() {
                     <button
                       type="submit"
                       disabled={isSubmittingClientProjectRequest}
-                      className="inline-flex items-center rounded-full border-2 border-[#9a5300] bg-[#cc6d00] px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white transition hover:-translate-y-0.5 hover:bg-[#b85f00] disabled:cursor-not-allowed disabled:opacity-70"
+className="inline-flex items-center rounded-full border-2 border-[#9a5300] bg-[#9a5300] px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white transition hover:-translate-y-0.5 hover:bg-[#7f4400] disabled:cursor-not-allowed disabled:opacity-70"
                     >
                       {isSubmittingClientProjectRequest ? "Submitting..." : "Submit Project Request"}
                     </button>
@@ -5006,7 +5006,7 @@ export default function PortalPage() {
                   type="button"
                   onClick={() => void handleSavePaymentFeatureSettings()}
                   disabled={isSavingPaymentFeatureSettings}
-                  className="inline-flex items-center rounded-full border border-[#1f56c2] bg-[#2d6cdf] px-3 py-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-white transition hover:bg-[#245cc3] disabled:cursor-not-allowed disabled:opacity-70"
+                  className="inline-flex items-center rounded-full border border-[#1f56c2] bg-[#1f56c2] px-3 py-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-white transition hover:bg-[#1a4aa8] disabled:cursor-not-allowed disabled:opacity-70"
                 >
                   {isSavingPaymentFeatureSettings ? "Saving..." : "Save Settings"}
                 </button>
